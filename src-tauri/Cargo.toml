@@ -3,7 +3,7 @@ name = "Flux"
 version = "1.0.0"
 description = "Flux is a desktop automation and workflow orchestration engine."
 authors = ["Brad Moyetones"]
-edition = "2026"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
