@@ -15,7 +15,9 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
-            args: --target universal-apple-darwin
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
           - platform: ubuntu-22.04
             args: ''
           - platform: windows-latest
@@ -41,11 +43,10 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install macOS Rust targets (Universal Binary)
+      - name: Install macOS Rust targets
         if: matrix.platform == 'macos-latest'
         run: |
-          rustup target add aarch64-apple-darwin
-          rustup target add x86_64-apple-darwin
+          rustup target add ${{ matrix.args == '--target aarch64-apple-darwin' && 'aarch64-apple-darwin' || 'x86_64-apple-darwin' }}
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -56,6 +57,18 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Read release notes
+        id: notes
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "body<<$EOF" >> "$GITHUB_OUTPUT"
+          if [ -f releases/latest.md ]; then
+            cat releases/latest.md >> "$GITHUB_OUTPUT"
+          else
+            echo "Nueva versión de Flux disponible." >> "$GITHUB_OUTPUT"
+          fi
+          echo "$EOF" >> "$GITHUB_OUTPUT"
+
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -65,7 +78,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: 'Flux v__VERSION__'
-          releaseBody: ''
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
