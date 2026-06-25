@@ -1,8 +1,54 @@
 import { Edit, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 function App() {
+    useEffect(() => {
+        checkForUpdates();
+    }, []);
+
+    async function checkForUpdates() {
+        try {
+            const update = await check();
+            if (update) {
+                toast(`Nueva versión disponible: v${update.version}`, {
+                    description: update.body || "Hay mejoras y correcciones disponibles.",
+                    duration: Infinity,
+                    action: {
+                        label: "Actualizar",
+                        onClick: async () => {
+                            const installingToast = toast.loading("Descargando actualización...");
+                            try {
+                                await update.downloadAndInstall((event) => {
+                                    if (event.event === "Started" && event.data.contentLength) {
+                                        toast.loading("Descargando actualización...", {
+                                            id: installingToast,
+                                        });
+                                    } else if (event.event === "Finished") {
+                                        toast.success("Actualización instalada. Reiniciando...", {
+                                            id: installingToast,
+                                        });
+                                    }
+                                });
+                                await relaunch();
+                            } catch (e) {
+                                toast.error(`Error al actualizar: ${e}`, {
+                                    id: installingToast,
+                                });
+                            }
+                        },
+                    },
+                });
+            }
+        } catch (e) {
+            console.error("Error checking for updates:", e);
+        }
+    }
+
     return (
         <main className="layout">
             <aside data-tauri-drag-region className="sidebar border-r shadow-2xl flex flex-col bg-background/80">

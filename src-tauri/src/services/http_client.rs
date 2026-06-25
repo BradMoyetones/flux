@@ -76,8 +76,8 @@ impl HttpClient {
             .await
             .map_err(|e| AppError::HttpClient(format!("Error leyendo respuesta: {}", e)))?;
 
-        let data = serde_json::from_str::<Value>(&body_text)
-            .unwrap_or_else(|_| Value::String(body_text));
+        let data =
+            serde_json::from_str::<Value>(&body_text).unwrap_or_else(|_| Value::String(body_text));
 
         Ok(StepOutput {
             data,

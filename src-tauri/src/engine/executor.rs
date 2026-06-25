@@ -1,7 +1,5 @@
 use crate::engine::context::PipelineContext;
-use crate::models::execution::{
-    ExecutionResult, ExecutionStatus, StepResult, StepStatus,
-};
+use crate::models::execution::{ExecutionResult, ExecutionStatus, StepResult, StepStatus};
 use crate::models::workflow::Workflow;
 use crate::steps;
 

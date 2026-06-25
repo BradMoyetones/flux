@@ -28,10 +28,7 @@ pub async fn update_workflow(
 }
 
 #[tauri::command]
-pub async fn delete_workflow(
-    state: State<'_, AppState>,
-    id: String,
-) -> Result<(), AppError> {
+pub async fn delete_workflow(state: State<'_, AppState>, id: String) -> Result<(), AppError> {
     let mut workflows = state.workflows.lock().await;
     if workflows.remove(&id).is_none() {
         return Err(AppError::WorkflowNotFound(id));
@@ -40,18 +37,13 @@ pub async fn delete_workflow(
 }
 
 #[tauri::command]
-pub async fn list_workflows(
-    state: State<'_, AppState>,
-) -> Result<Vec<Workflow>, AppError> {
+pub async fn list_workflows(state: State<'_, AppState>) -> Result<Vec<Workflow>, AppError> {
     let workflows = state.workflows.lock().await;
     Ok(workflows.values().cloned().collect())
 }
 
 #[tauri::command]
-pub async fn get_workflow(
-    state: State<'_, AppState>,
-    id: String,
-) -> Result<Workflow, AppError> {
+pub async fn get_workflow(state: State<'_, AppState>, id: String) -> Result<Workflow, AppError> {
     let workflows = state.workflows.lock().await;
     workflows
         .get(&id)

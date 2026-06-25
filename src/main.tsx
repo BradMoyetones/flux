@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import "./styles/index.css";
 import { RouterProvider } from "react-router";
 import router from "./router";
+import { Toaster } from "./components/ui/sonner";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
@@ -12,6 +13,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       defaultTheme="dark"
     >
       <RouterProvider router={router} />
+      <Toaster />
     </ThemeProvider>
   </React.StrictMode>,
 );

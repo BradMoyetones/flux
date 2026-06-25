@@ -4,10 +4,10 @@ pub mod whatsapp;
 
 use async_trait::async_trait;
 
+use crate::engine::context::PipelineContext;
 use crate::errors::AppError;
 use crate::models::execution::StepOutput;
 use crate::models::workflow::{StepConfig, StepType};
-use crate::engine::context::PipelineContext;
 
 /// Trait que todos los tipos de step deben implementar.
 /// Para agregar un nuevo tipo de step, crea un archivo en steps/ e implementa este trait.
@@ -26,14 +26,14 @@ pub trait Step: Send + Sync {
 /// Crea la instancia correcta de Step a partir de un StepConfig
 pub fn create_step(config: &StepConfig) -> Result<Box<dyn Step>, AppError> {
     match config.step_type {
-        StepType::HttpRequest => {
-            Ok(Box::new(http_request::HttpRequestStep::from_config(&config.config)?))
-        }
-        StepType::DataTransform => {
-            Ok(Box::new(data_transform::DataTransformStep::from_config(&config.config)?))
-        }
-        StepType::WhatsApp => {
-            Ok(Box::new(whatsapp::WhatsAppStep::from_config(&config.config)?))
-        }
+        StepType::HttpRequest => Ok(Box::new(http_request::HttpRequestStep::from_config(
+            &config.config,
+        )?)),
+        StepType::DataTransform => Ok(Box::new(data_transform::DataTransformStep::from_config(
+            &config.config,
+        )?)),
+        StepType::WhatsApp => Ok(Box::new(whatsapp::WhatsAppStep::from_config(
+            &config.config,
+        )?)),
     }
 }

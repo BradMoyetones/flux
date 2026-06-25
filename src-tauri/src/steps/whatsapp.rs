@@ -23,8 +23,9 @@ pub struct WhatsAppStep {
 
 impl WhatsAppStep {
     pub fn from_config(config: &Value) -> Result<Self, AppError> {
-        let config: WhatsAppConfig = serde_json::from_value(config.clone())
-            .map_err(|e| AppError::InvalidConfig(format!("WhatsApp step config inválida: {}", e)))?;
+        let config: WhatsAppConfig = serde_json::from_value(config.clone()).map_err(|e| {
+            AppError::InvalidConfig(format!("WhatsApp step config inválida: {}", e))
+        })?;
         Ok(Self { config })
     }
 }
@@ -65,7 +66,9 @@ impl Step for WhatsAppStep {
 
     fn validate_config(&self) -> Result<(), AppError> {
         if self.config.chat_id.is_empty() {
-            return Err(AppError::InvalidConfig("chat_id no puede estar vacío".into()));
+            return Err(AppError::InvalidConfig(
+                "chat_id no puede estar vacío".into(),
+            ));
         }
         if self.config.message_template.is_empty() {
             return Err(AppError::InvalidConfig(

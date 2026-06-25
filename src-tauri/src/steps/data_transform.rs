@@ -37,8 +37,9 @@ pub struct DataTransformStep {
 
 impl DataTransformStep {
     pub fn from_config(config: &Value) -> Result<Self, AppError> {
-        let config: DataTransformConfig = serde_json::from_value(config.clone())
-            .map_err(|e| AppError::InvalidConfig(format!("Transform step config inválida: {}", e)))?;
+        let config: DataTransformConfig = serde_json::from_value(config.clone()).map_err(|e| {
+            AppError::InvalidConfig(format!("Transform step config inválida: {}", e))
+        })?;
         Ok(Self { config })
     }
 }
@@ -52,11 +53,9 @@ impl Step for DataTransformStep {
     async fn execute(&self, context: &PipelineContext) -> Result<StepOutput, AppError> {
         let input = context
             .get_step_output(&self.config.input_ref)
-            .ok_or_else(|| {
-                AppError::StepExecution {
-                    step_id: self.config.input_ref.clone(),
-                    message: "Output del step referenciado no encontrado".into(),
-                }
+            .ok_or_else(|| AppError::StepExecution {
+                step_id: self.config.input_ref.clone(),
+                message: "Output del step referenciado no encontrado".into(),
             })?;
 
         let result = match self.config.transform_type {
@@ -89,10 +88,14 @@ impl Step for DataTransformStep {
 
     fn validate_config(&self) -> Result<(), AppError> {
         if self.config.input_ref.is_empty() {
-            return Err(AppError::InvalidConfig("input_ref no puede estar vacío".into()));
+            return Err(AppError::InvalidConfig(
+                "input_ref no puede estar vacío".into(),
+            ));
         }
         if self.config.expression.is_empty() {
-            return Err(AppError::InvalidConfig("expression no puede estar vacía".into()));
+            return Err(AppError::InvalidConfig(
+                "expression no puede estar vacía".into(),
+            ));
         }
         Ok(())
     }

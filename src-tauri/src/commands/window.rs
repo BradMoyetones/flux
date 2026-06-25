@@ -4,13 +4,17 @@ use crate::errors::AppError;
 
 #[tauri::command]
 pub async fn minimize_window(window: Window) -> Result<(), AppError> {
-    window.minimize().map_err(|e| AppError::Internal(e.to_string()))?;
+    window
+        .minimize()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
     Ok(())
 }
 
 #[tauri::command]
 pub async fn close_window(window: Window) -> Result<(), AppError> {
-    window.close().map_err(|e| AppError::Internal(e.to_string()))?;
+    window
+        .close()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
     Ok(())
 }
 

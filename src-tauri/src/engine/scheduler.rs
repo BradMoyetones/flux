@@ -29,10 +29,7 @@ impl CronScheduler {
     /// # Retorna
     /// - `Ok(())` si se programó exitosamente
     /// - `Err(AppError::Scheduler)` si la expression es inválida o no tiene schedule
-    pub fn schedule_workflow(
-        &mut self,
-        workflow: Arc<Mutex<Workflow>>,
-    ) -> Result<(), AppError> {
+    pub fn schedule_workflow(&mut self, workflow: Arc<Mutex<Workflow>>) -> Result<(), AppError> {
         let wf = workflow.blocking_lock();
         let workflow_id = wf.id.clone();
         let cron_expr = wf
@@ -60,9 +57,7 @@ impl CronScheduler {
         let handle = tokio::spawn(async move {
             // TODO: loop con cron timing real
             // Por ahora es un placeholder que no ejecuta nada
-            println!(
-                "[Scheduler] Job placeholder para workflow en ejecución"
-            );
+            println!("[Scheduler] Job placeholder para workflow en ejecución");
         });
 
         self.scheduled_jobs.insert(workflow_id, handle);

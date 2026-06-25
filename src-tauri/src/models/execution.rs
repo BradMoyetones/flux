@@ -48,9 +48,6 @@ pub struct ExecutionResult {
 pub enum ExecutionStatus {
     Running,
     Completed,
-    Failed {
-        step_id: String,
-        error: String,
-    },
+    Failed { step_id: String, error: String },
     Cancelled,
 }

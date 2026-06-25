@@ -14,8 +14,8 @@ use super::Step;
 /// Configuración para un step de petición HTTP
 #[derive(Debug, Clone, Deserialize)]
 pub struct HttpRequestConfig {
-    pub method: String,           // GET, POST, PUT, DELETE, etc.
-    pub url: String,              // Soporta templates: "https://api.com/{{step_1.data.id}}"
+    pub method: String, // GET, POST, PUT, DELETE, etc.
+    pub url: String,    // Soporta templates: "https://api.com/{{step_1.data.id}}"
     pub headers: Option<HashMap<String, String>>,
     pub body: Option<Value>,
 }
@@ -52,7 +52,12 @@ impl Step for HttpRequestStep {
 
         let client = HttpClient::new();
         client
-            .execute_request(&resolved_url, &self.config.method, resolved_headers, resolved_body)
+            .execute_request(
+                &resolved_url,
+                &self.config.method,
+                resolved_headers,
+                resolved_body,
+            )
             .await
     }
 
@@ -61,7 +66,9 @@ impl Step for HttpRequestStep {
             return Err(AppError::InvalidConfig("URL no puede estar vacía".into()));
         }
         if self.config.method.is_empty() {
-            return Err(AppError::InvalidConfig("Método HTTP no puede estar vacío".into()));
+            return Err(AppError::InvalidConfig(
+                "Método HTTP no puede estar vacío".into(),
+            ));
         }
         Ok(())
     }
