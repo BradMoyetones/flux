@@ -54,7 +54,9 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
 
       - name: Install frontend dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+        env:
+          PNPM_ALLOW_BUILDS: 'true'
 
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
