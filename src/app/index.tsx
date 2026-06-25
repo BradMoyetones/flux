@@ -29,12 +29,23 @@ function App() {
                                             id: installingToast,
                                         });
                                     } else if (event.event === "Finished") {
-                                        toast.success("Actualización instalada. Reiniciando...", {
+                                        toast.success("Actualización lista", {
                                             id: installingToast,
+                                            description: "La nueva versión se aplicará al reiniciar.",
+                                            duration: Infinity,
+                                            action: {
+                                                label: "Reiniciar ahora",
+                                                onClick: async () => {
+                                                    await relaunch();
+                                                }
+                                            },
+                                            cancel: {
+                                                label: "Más tarde",
+                                                onClick: () => toast.dismiss(installingToast)
+                                            }
                                         });
                                     }
                                 });
-                                await relaunch();
                             } catch (e) {
                                 toast.error(`Error al actualizar: ${e}`, {
                                     id: installingToast,
