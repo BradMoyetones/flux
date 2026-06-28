@@ -1,13 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
-import { CircleCheck } from "lucide-react";
+import { CircleCheck, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getVersion } from '@tauri-apps/api/app';
+import { CustomToast, CustomToastActions, CustomToastContent, CustomToastDescription, CustomToastHeader, CustomToastIcon, CustomToastTitle } from "@/components/ui/custom-toast";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Streamdown } from "streamdown";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const useUpdater = () => {
     const [appVersion, setAppVersion] = useState('');
+    const [isNotesOpen, setIsNotesOpen] = useState(false);
+    const [notesContent, setNotesContent] = useState('');
 
     useEffect(() => {
         getVersion().then((v) => setAppVersion(v));
@@ -17,107 +23,119 @@ const useUpdater = () => {
         try {
             const update = await check();
             if (update) {
-                toast(`Nueva versión disponible: v${update.version}`, {
-                    description: update.body || 'Hay mejoras y correcciones disponibles.',
-                    duration: Infinity,
-                    classNames: {
-                        toast: 'flex flex-col items-start!',
-                    },
-                    action: {
-                        label: 'Actualizar',
-                        onClick: async () => {
-                            const installingToast = toast.loading('Descargando actualización...');
-                            try {
-                                await update.downloadAndInstall((event) => {
-                                    if (event.event === 'Started' && event.data.contentLength) {
-                                        console.log(event.data.contentLength);
+                // Guarda las notas para poder mostrarlas en el Dialog
+                setNotesContent(update.body || "Hay mejoras y correcciones disponibles.");
 
-                                        toast.loading('Descargando actualización...', {
-                                            id: installingToast,
-                                        });
-                                    } else if (event.event === 'Finished') {
-                                        toast.custom(
-                                            (t) => (
-                                                <li
-                                                    className="cn-toast flex flex-col items-start! gap-4!"
-                                                    data-sonner-toast=""
-                                                    data-styled="true"
-                                                    data-mounted="true"
-                                                    data-promise="false"
-                                                    data-swiped="false"
-                                                    data-removed="false"
-                                                    data-visible="true"
-                                                    data-y-position="bottom"
-                                                    data-x-position="right"
-                                                    data-index="0"
-                                                    data-front="true"
-                                                    data-swiping="false"
-                                                    data-dismissible="true"
-                                                    data-type="success"
-                                                    data-swipe-out="false"
-                                                    data-expanded="false"
-                                                >
-                                                    <div className="flex gap-2">
-                                                        <div data-icon="" className="">
-                                                            <CircleCheck className='size-4' />
-                                                        </div>
-                                                        <div data-content="" className="">
-                                                            <div data-title="" className="">
-                                                                Actualización lista
-                                                            </div>
-                                                            <div data-description="" className="">
-                                                                La nueva versión se aplicará al reiniciar.
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-2 w-fit! ml-auto">
-                                                        <Button
-                                                            onClick={() => toast.dismiss(t)}
-                                                            variant={'secondary'}
-                                                            data-button="true"
-                                                            data-cancel="true"
-                                                            className=""
-                                                        >
-                                                            Más tarde
-                                                        </Button>
-                                                        <Button
-                                                            onClick={async () => {
-                                                                toast.dismiss(t);
-                                                                await relaunch();
-                                                            }}
-                                                            variant={'default'}
-                                                            data-button="true"
-                                                            data-action="true"
-                                                            className=""
-                                                        >
-                                                            Reiniciar ahora
-                                                        </Button>
-                                                    </div>
-
-                                                </li>
-                                            ),
-                                            {
-                                                id: installingToast,
-                                                duration: Infinity,
+                toast.custom((t) => (
+                    <CustomToast type="info">
+                        <CustomToastHeader>
+                            <CustomToastIcon>
+                                <Info className='size-4' />
+                            </CustomToastIcon>
+                            <CustomToastContent>
+                                <CustomToastTitle>Nueva versión disponible: v{update.version}</CustomToastTitle>
+                                <CustomToastDescription>
+                                    Hay mejoras y correcciones disponibles.
+                                </CustomToastDescription>
+                            </CustomToastContent>
+                        </CustomToastHeader>
+                        <CustomToastActions className="mt-4">
+                            <Button
+                                onClick={() => {
+                                    setIsNotesOpen(true);
+                                }}
+                                variant="outline"
+                                size="sm"
+                            >
+                                Notas de la versión
+                            </Button>
+                            <Button
+                                onClick={async () => {
+                                    toast.dismiss(t);
+                                    const installingToast = toast.loading('Descargando actualización...');
+                                    try {
+                                        await update.downloadAndInstall((event) => {
+                                            if (event.event === 'Started' && event.data.contentLength) {
+                                                toast.loading('Descargando actualización...', {
+                                                    id: installingToast,
+                                                });
+                                            } else if (event.event === 'Finished') {
+                                                toast.dismiss(installingToast);
+                                                toast.custom(
+                                                    (t2) => (
+                                                        <CustomToast type="success">
+                                                            <CustomToastHeader>
+                                                                <CustomToastIcon>
+                                                                    <CircleCheck className='size-4' />
+                                                                </CustomToastIcon>
+                                                                <CustomToastContent>
+                                                                    <CustomToastTitle>Actualización lista</CustomToastTitle>
+                                                                    <CustomToastDescription>
+                                                                        La nueva versión se aplicará al reiniciar.
+                                                                    </CustomToastDescription>
+                                                                </CustomToastContent>
+                                                            </CustomToastHeader>
+                                                            <CustomToastActions>
+                                                                <Button
+                                                                    onClick={() => toast.dismiss(t2)}
+                                                                    variant={'secondary'}
+                                                                    size="sm"
+                                                                >
+                                                                    Más tarde
+                                                                </Button>
+                                                                <Button
+                                                                    onClick={async () => {
+                                                                        toast.dismiss(t2);
+                                                                        await relaunch();
+                                                                    }}
+                                                                    variant={'default'}
+                                                                    size="sm"
+                                                                >
+                                                                    Reiniciar ahora
+                                                                </Button>
+                                                            </CustomToastActions>
+                                                        </CustomToast>
+                                                    ),
+                                                    { id: installingToast, duration: Infinity }
+                                                );
                                             }
-                                        );
+                                        });
+                                    } catch (e) {
+                                        toast.error(`Error al actualizar: ${e}`, { id: installingToast });
                                     }
-                                });
-                            } catch (e) {
-                                toast.error(`Error al actualizar: ${e}`, {
-                                    id: installingToast,
-                                });
-                            }
-                        },
-                    },
-                });
+                                }}
+                                variant="default"
+                                size="sm"
+                            >
+                                Actualizar
+                            </Button>
+                        </CustomToastActions>
+                    </CustomToast>
+                ), { duration: Infinity });
             }
         } catch (e) {
             console.error('Error checking for updates:', e);
         }
     }
 
-    return { appVersion, checkForUpdates };
+    // El componente Dialog que el consumidor del hook deberá renderizar
+    const UpdaterDialog = () => (
+        <Dialog open={isNotesOpen} onOpenChange={setIsNotesOpen}>
+            <DialogContent className="max-w-2xl! w-full">
+                <DialogHeader>
+                    <DialogTitle>Notas de la versión</DialogTitle>
+                    <DialogDescription>
+                        Descubre qué hay de nuevo en esta actualización
+                    </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="max-h-[calc(100vh-16rem)]">
+                    <Streamdown>{notesContent}</Streamdown>
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
+    );
+
+    return { appVersion, checkForUpdates, UpdaterDialog };
 }
 
 export { useUpdater };

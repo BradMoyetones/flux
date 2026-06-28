@@ -8,13 +8,13 @@ import { Toaster } from "./components/ui/sonner";
 import { useUpdater } from "./hooks/use-updater";
 
 function UpdaterComponent() {
-  const { checkForUpdates } = useUpdater();
+  const { UpdaterDialog, checkForUpdates } = useUpdater();
 
   useEffect(() => {
     checkForUpdates();
   }, []);
 
-  return null;
+  return <UpdaterDialog />;
 }
 
 function FloatVersionComponent() {
