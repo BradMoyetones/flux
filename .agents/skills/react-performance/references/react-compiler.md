@@ -7,21 +7,18 @@ React Compiler automatically memoizes components and hooks at build time. When e
 ```tsx
 // What you write
 const Component = ({ items }: Props) => {
-  const sorted = items.slice().sort((a, b) => a.name.localeCompare(b.name));
-  const handlePress = (id: string) => console.log(id);
-  
-  return <List data={sorted} onItemPress={handlePress} />;
+    const sorted = items.slice().sort((a, b) => a.name.localeCompare(b.name));
+    const handlePress = (id: string) => console.log(id);
+
+    return <List data={sorted} onItemPress={handlePress} />;
 };
 
 // What the compiler produces (conceptually)
 const Component = ({ items }: Props) => {
-  const sorted = useMemo(
-    () => items.slice().sort((a, b) => a.name.localeCompare(b.name)),
-    [items]
-  );
-  const handlePress = useCallback((id: string) => console.log(id), []);
-  
-  return <List data={sorted} onItemPress={handlePress} />;
+    const sorted = useMemo(() => items.slice().sort((a, b) => a.name.localeCompare(b.name)), [items]);
+    const handlePress = useCallback((id: string) => console.log(id), []);
+
+    return <List data={sorted} onItemPress={handlePress} />;
 };
 ```
 
@@ -36,16 +33,16 @@ The compiler can only optimize code that follows these rules. Violations break o
 ```tsx
 // ❌ Side effect during render → compiler can't optimize
 const Bad = () => {
-  document.title = 'Hello'; // Side effect!
-  return <Text>Hello</Text>;
+    document.title = 'Hello'; // Side effect!
+    return <Text>Hello</Text>;
 };
 
 // ✅ Side effect in useEffect → compiler optimizes
 const Good = () => {
-  useEffect(() => {
-    document.title = 'Hello';
-  }, []);
-  return <Text>Hello</Text>;
+    useEffect(() => {
+        document.title = 'Hello';
+    }, []);
+    return <Text>Hello</Text>;
 };
 ```
 
@@ -54,14 +51,14 @@ const Good = () => {
 ```tsx
 // ❌ Mutating props → compiler can't optimize
 const Bad = ({ user }: Props) => {
-  user.name = 'Modified'; // Mutation!
-  return <Text>{user.name}</Text>;
+    user.name = 'Modified'; // Mutation!
+    return <Text>{user.name}</Text>;
 };
 
 // ✅ Create new object → compiler optimizes
 const Good = ({ user }: Props) => {
-  const modified = { ...user, name: 'Modified' };
-  return <Text>{modified.name}</Text>;
+    const modified = { ...user, name: 'Modified' };
+    return <Text>{modified.name}</Text>;
 };
 ```
 
@@ -70,16 +67,16 @@ const Good = ({ user }: Props) => {
 ```tsx
 // ❌ Mutating hook return → compiler can't optimize
 const Component = () => {
-  const items = useItems();
-  items.push(newItem); // Mutation!
-  return <List data={items} />;
+    const items = useItems();
+    items.push(newItem); // Mutation!
+    return <List data={items} />;
 };
 
 // ✅ Copy before mutating → compiler optimizes
 const Component = () => {
-  const items = useItems();
-  const newItems = [...items, newItem];
-  return <List data={newItems} />;
+    const items = useItems();
+    const newItems = [...items, newItem];
+    return <List data={newItems} />;
 };
 ```
 
@@ -88,15 +85,15 @@ const Component = () => {
 ```tsx
 // ❌ Conditional hook → compiler can't optimize
 const Bad = ({ condition }: Props) => {
-  if (condition) {
-    const [value] = useState(0); // Hook called conditionally!
-  }
+    if (condition) {
+        const [value] = useState(0); // Hook called conditionally!
+    }
 };
 
 // ✅ Always call hooks at top level → compiler optimizes
 const Good = ({ condition }: Props) => {
-  const [value] = useState(0);
-  // Use value conditionally instead
+    const [value] = useState(0);
+    // Use value conditionally instead
 };
 ```
 
@@ -104,13 +101,13 @@ const Good = ({ condition }: Props) => {
 
 The compiler skips optimization for:
 
-| Scenario | Why | Solution |
-|----------|-----|----------|
-| Class components | Not supported | Convert to function component |
-| Rules violation | Can't safely memoize | Fix the violation |
-| `'use no memo'` directive | Explicitly opted out | Remove directive if unintended |
-| Dynamic patterns | Can't analyze statically | Manual memoization |
-| Refs read during render | Breaks purity | Move ref read to useEffect |
+| Scenario                  | Why                      | Solution                       |
+| ------------------------- | ------------------------ | ------------------------------ |
+| Class components          | Not supported            | Convert to function component  |
+| Rules violation           | Can't safely memoize     | Fix the violation              |
+| `'use no memo'` directive | Explicitly opted out     | Remove directive if unintended |
+| Dynamic patterns          | Can't analyze statically | Manual memoization             |
+| Refs read during render   | Breaks purity            | Move ref read to useEffect     |
 
 ### Detecting Unoptimized Components
 
@@ -145,7 +142,7 @@ const filtered = items.filter(x => x.active);
 ```tsx
 // 1. Expensive computations the compiler can't detect
 const result = useMemo(() => {
-  return veryExpensiveOperation(data); // Compiler doesn't know this is expensive
+    return veryExpensiveOperation(data); // Compiler doesn't know this is expensive
 }, [data]);
 
 // 2. Values passed to non-React APIs
@@ -154,7 +151,7 @@ const stableRef = useMemo(() => createExternalLibraryInstance(), []);
 // 3. Intentional referential equality for effects
 const config = useMemo(() => ({ threshold: 10 }), []);
 useEffect(() => {
-  subscribe(config); // Effect should only run once
+    subscribe(config); // Effect should only run once
 }, [config]);
 ```
 
@@ -164,10 +161,10 @@ If a component breaks with compiler optimization:
 
 ```tsx
 function ProblematicComponent() {
-  'use no memo'; // Compiler skips this component
-  
-  // Legacy code that violates Rules of React
-  // Fix later, but unblock for now
+    'use no memo'; // Compiler skips this component
+
+    // Legacy code that violates Rules of React
+    // Fix later, but unblock for now
 }
 ```
 
@@ -180,18 +177,18 @@ Existing `useMemo`/`useCallback`/`memo()` are preserved. The compiler doesn't re
 ```tsx
 // Both work together
 const Component = memo(({ items }: Props) => {
-  // Your manual memo() is kept
-  // Compiler adds memoization for things you missed
-  const processed = items.map(transform); // Compiler memoizes this
-  return <List data={processed} />;
+    // Your manual memo() is kept
+    // Compiler adds memoization for things you missed
+    const processed = items.map(transform); // Compiler memoizes this
+    return <List data={processed} />;
 });
 ```
 
 ## Quick Reference
 
-| Question | Answer |
-|----------|--------|
+| Question                                      | Answer                                                      |
+| --------------------------------------------- | ----------------------------------------------------------- |
 | Should I remove existing useMemo/useCallback? | Optional. They still work, but code is cleaner without them |
-| Component re-renders unexpectedly? | Check ESLint for Rules violations |
-| Need to force re-render? | Use key prop or explicit state |
-| Compiler not optimizing? | Check for mutations, side effects, conditional hooks |
+| Component re-renders unexpectedly?            | Check ESLint for Rules violations                           |
+| Need to force re-render?                      | Use key prop or explicit state                              |
+| Compiler not optimizing?                      | Check for mutations, side effects, conditional hooks        |

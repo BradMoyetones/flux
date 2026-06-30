@@ -91,11 +91,11 @@ protocol SessionRepositoryProtocol {
 
 class UserDefaultsSessionRepository: SessionRepositoryProtocol {
     private let monitor: MonitorProtocol
-    
+
     init(monitor: MonitorProtocol) {
         self.monitor = monitor
     }
-    
+
     func save(_ session: Session) async throws {
         // Implementation
     }
@@ -104,10 +104,10 @@ class UserDefaultsSessionRepository: SessionRepositoryProtocol {
 
 ### Placement Rules
 
-| Adapter Type | Location | Example |
-|--------------|----------|---------|
+| Adapter Type                  | Location           | Example                                       |
+| ----------------------------- | ------------------ | --------------------------------------------- |
 | Shared across apps/extensions | `domain/Adapters/` | UserDefaultsRepository, DeviceActivityManager |
-| UI-specific | `{app}/Adapters/` | RevenueCatAdapter, StoreKitAdapter |
+| UI-specific                   | `{app}/Adapters/`  | RevenueCatAdapter, StoreKitAdapter            |
 
 ## Error Handling
 
@@ -154,7 +154,7 @@ enum SessionError: Error, LocalizedError {
     case alreadyActive
     case invalidConfiguration
     case storageFailed(underlying: Error)
-    
+
     var errorDescription: String? {
         switch self {
         case .notFound: return "Session not found"
@@ -177,7 +177,7 @@ extension DIContainer {
         // Infrastructure
         register(MonitorProtocol.self, implementation: AppleLogMonitor())
         register(TrackerProtocol.self, implementation: AppleLogTracker())
-        
+
         // Repositories (resolve dependencies)
         let monitor = try! resolve(MonitorProtocol.self)
         register(
@@ -196,17 +196,17 @@ extension DIContainer {
 @main
 struct retimeApp: App {
     @StateObject var sessionViewModel: SessionViewModel
-    
+
     init() {
         // Configure DI
         let container = DIContainer.shared
         container.configureServices()
-        
+
         // Resolve Ports
         let sessionRepository = try! container.resolve(SessionRepositoryProtocol.self)
         let shieldManager = try! container.resolve(ShieldManagerProtocol.self)
         let monitor = try! container.resolve(MonitorProtocol.self)
-        
+
         // Inject Ports into ViewModels
         _sessionViewModel = StateObject(
             wrappedValue: SessionViewModel(
@@ -216,7 +216,7 @@ struct retimeApp: App {
             )
         )
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -234,14 +234,14 @@ Extensions cannot use `DIContainer` (different process). Instantiate dependencie
 class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     private let startSession: StartSessionUseCase
     private let stopSession: StopSessionUseCase
-    
+
     override init() {
         // Manual instantiation (no DIContainer in extensions)
         let monitor = AppleLogMonitor()
         let tracker = AppleLogTracker()
         let sessionRepository = UserDefaultsSessionRepository(monitor: monitor, tracker: tracker)
         let shieldManager = ShieldManager(monitor: monitor, tracker: tracker)
-        
+
         // Create UseCases
         self.startSession = StartSessionUseCase(
             sessionRepository: sessionRepository,
@@ -253,10 +253,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             shieldManager: shieldManager,
             monitor: monitor
         )
-        
+
         super.init()
     }
-    
+
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
         Task {
@@ -270,10 +270,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
 ### When to Use UseCase vs Port Direct
 
-| Situation | Use | Example |
-|-----------|-----|---------|
-| Business logic, orchestration, validation | **UseCase** | `startSession.execute()` |
-| Simple read/write, no transformation | **Port direct** | `repository.getAll()` |
+| Situation                                 | Use             | Example                  |
+| ----------------------------------------- | --------------- | ------------------------ |
+| Business logic, orchestration, validation | **UseCase**     | `startSession.execute()` |
+| Simple read/write, no transformation      | **Port direct** | `repository.getAll()`    |
 
 ### Standard Pattern
 
@@ -285,16 +285,16 @@ class SessionViewModel: ObservableObject {
     @Published var session: Session?
     @Published var isLoading = false
     @Published var error: SessionError?
-    
+
     // Ports (injected)
     private let sessionRepository: SessionRepositoryProtocol
     private let shieldManager: ShieldManagerProtocol
     private let monitor: MonitorProtocol
-    
+
     // UseCases (created internally)
     private let startSession: StartSessionUseCase
     private let stopSession: StopSessionUseCase
-    
+
     init(
         sessionRepository: SessionRepositoryProtocol,
         shieldManager: ShieldManagerProtocol,
@@ -303,7 +303,7 @@ class SessionViewModel: ObservableObject {
         self.sessionRepository = sessionRepository
         self.shieldManager = shieldManager
         self.monitor = monitor
-        
+
         // Create UseCases with injected Ports
         self.startSession = StartSessionUseCase(
             sessionRepository: sessionRepository,
@@ -316,7 +316,7 @@ class SessionViewModel: ObservableObject {
             monitor: monitor
         )
     }
-    
+
     // Action using UseCase (business logic)
     func start(config: SessionConfig) {
         isLoading = true
@@ -329,7 +329,7 @@ class SessionViewModel: ObservableObject {
             isLoading = false
         }
     }
-    
+
     // Action using Port direct (simple read)
     func loadCurrent() {
         Task { @MainActor in
@@ -349,7 +349,7 @@ class SessionFormViewModel: ObservableObject {
         var breakInterval: TimeInterval?
         var isValid: Bool { duration > 0 && !selectedApps.isEmpty }
     }
-    
+
     @Published var state = State()
 }
 ```
@@ -383,12 +383,12 @@ See [references/file-templates.md](references/file-templates.md) for all templat
 class PauseSessionUseCase {
     private let repository: SessionRepositoryProtocol
     private let shieldManager: ShieldManagerProtocol
-    
+
     init(repository: SessionRepositoryProtocol, shieldManager: ShieldManagerProtocol) {
         self.repository = repository
         self.shieldManager = shieldManager
     }
-    
+
     func execute(sessionId: String) async throws {
         guard var session = try await repository.getCurrent() else {
             throw SessionError.notFound

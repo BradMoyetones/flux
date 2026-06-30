@@ -71,6 +71,7 @@ Old Architecture:                 New Architecture:
 ```
 
 **Benefits of JSI**:
+
 - No serialization overhead
 - Synchronous calls when needed
 - Direct memory access
@@ -83,13 +84,14 @@ C++ rendering layer with direct JSI integration.
 ```tsx
 // Same React code, but Fabric handles rendering
 const Component = () => (
-  <View style={styles.container}>
-    <Text>Hello Fabric</Text>
-  </View>
+    <View style={styles.container}>
+        <Text>Hello Fabric</Text>
+    </View>
 );
 ```
 
 **Fabric benefits**:
+
 - Synchronous layout
 - Better scroll performance
 - Concurrent rendering support
@@ -107,6 +109,7 @@ const MyModule = TurboModuleRegistry.get<MyModuleSpec>('MyModule');
 ```
 
 **Benefits**:
+
 - Lazy initialization (faster startup)
 - Synchronous calls via JSI
 - Type-safe with codegen
@@ -156,14 +159,14 @@ JS Thread                           Native
 ```tsx
 // ❌ Heavy work on UI thread (via useLayoutEffect)
 useLayoutEffect(() => {
-  const result = expensiveCalculation(); // Blocks UI
-  setData(result);
+    const result = expensiveCalculation(); // Blocks UI
+    setData(result);
 }, []);
 
 // ✅ Heavy work on JS thread
 useEffect(() => {
-  const result = expensiveCalculation(); // On JS thread
-  setData(result);
+    const result = expensiveCalculation(); // On JS thread
+    setData(result);
 }, []);
 ```
 
@@ -172,23 +175,23 @@ useEffect(() => {
 ```tsx
 // ❌ Blocks JS thread
 const processData = (items: Item[]) => {
-  return items.map(heavyTransform); // Long-running
+    return items.map(heavyTransform); // Long-running
 };
 
 // ✅ Chunk work to stay responsive
 const processData = async (items: Item[]) => {
-  const results: Item[] = [];
-  const chunkSize = 100;
-  
-  for (let i = 0; i < items.length; i += chunkSize) {
-    const chunk = items.slice(i, i + chunkSize);
-    results.push(...chunk.map(heavyTransform));
-    
-    // Yield to allow other updates
-    await new Promise(resolve => setTimeout(resolve, 0));
-  }
-  
-  return results;
+    const results: Item[] = [];
+    const chunkSize = 100;
+
+    for (let i = 0; i < items.length; i += chunkSize) {
+        const chunk = items.slice(i, i + chunkSize);
+        results.push(...chunk.map(heavyTransform));
+
+        // Yield to allow other updates
+        await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    return results;
 };
 ```
 
@@ -197,7 +200,7 @@ const processData = async (items: Item[]) => {
 ```tsx
 // Modern: defer with transition
 startTransition(() => {
-  setProcessedData(heavyComputation(data));
+    setProcessedData(heavyComputation(data));
 });
 
 // For truly background work: Turbo Module
@@ -211,18 +214,19 @@ const result = await TurboModule.computeInBackground(data);
 ### Perf Monitor
 
 Shows FPS for both threads:
+
 - **UI FPS drops** → Native/UI thread issue
 - **JS FPS drops** → JavaScript thread issue
 - **Both drop** → Complex issue, often JS triggering UI work
 
 ### Common Patterns
 
-| Symptom | Likely Cause | Solution |
-|---------|--------------|----------|
-| UI jank, JS FPS fine | Heavy native work | Optimize layouts, use native driver |
-| JS FPS drops, UI fine | Heavy JS computation | Defer work, optimize algorithms |
-| Both drop during scroll | Re-renders during scroll | Memoize, optimize FlatList |
-| Lag on navigation | Heavy screen initialization | Lazy load, defer work |
+| Symptom                 | Likely Cause                | Solution                            |
+| ----------------------- | --------------------------- | ----------------------------------- |
+| UI jank, JS FPS fine    | Heavy native work           | Optimize layouts, use native driver |
+| JS FPS drops, UI fine   | Heavy JS computation        | Defer work, optimize algorithms     |
+| Both drop during scroll | Re-renders during scroll    | Memoize, optimize FlatList          |
+| Lag on navigation       | Heavy screen initialization | Lazy load, defer work               |
 
 ## Thread-Aware Patterns
 
@@ -231,8 +235,8 @@ Shows FPS for both threads:
 ```tsx
 // Run on UI thread (via native driver or Reanimated)
 Animated.timing(opacity, {
-  toValue: 1,
-  useNativeDriver: true, // UI thread
+    toValue: 1,
+    useNativeDriver: true, // UI thread
 });
 ```
 
@@ -249,7 +253,7 @@ const result = await computeInBackground(data);
 ```tsx
 // Non-blocking updates with transitions
 startTransition(() => {
-  setExpensiveState(newValue); // Can be interrupted
+    setExpensiveState(newValue); // Can be interrupted
 });
 ```
 

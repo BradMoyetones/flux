@@ -59,19 +59,19 @@ UI:
 
 1. **Identify scope** — files to review
 2. **For each file:**
-   - Determine layer (Core/Infrastructure/UI)
-   - Check imports against layer rules
-   - Verify patterns for file type
-   - Check naming conventions
+    - Determine layer (Core/Infrastructure/UI)
+    - Check imports against layer rules
+    - Verify patterns for file type
+    - Check naming conventions
 3. **Output:** List of violations with severity, location, and fix suggestion
 
 ### Codebase Review
 
 1. **Discovery** — Map project structure
 2. **Sampling** — Prioritize:
-   - All files in `modules/*/core/` (business critical)
-   - Largest files (likely problem areas)
-   - Entry points and DI setup
+    - All files in `modules/*/core/` (business critical)
+    - Largest files (likely problem areas)
+    - Entry points and DI setup
 3. **Analysis** — Check each category
 4. **Health Score** — Calculate based on violations
 5. **Roadmap** — Prioritized fix suggestions for refactor agent
@@ -158,11 +158,11 @@ Run `/codebase-ca-react-refactor` to apply fixes.
 ```typescript
 // 🔴 Core importing React
 // File: modules/auth/core/usecases/Login.usecase.ts
-import { useState } from "react"; // VIOLATION
+import { useState } from 'react'; // VIOLATION
 
 // 🔴 Core importing Infrastructure
 // File: modules/auth/core/usecases/Login.usecase.ts
-import { AuthApiAdapter } from "../../infrastructure/adapters/AuthApi.adapter"; // VIOLATION
+import { AuthApiAdapter } from '../../infrastructure/adapters/AuthApi.adapter'; // VIOLATION
 ```
 
 ### Pattern Violations
@@ -170,26 +170,26 @@ import { AuthApiAdapter } from "../../infrastructure/adapters/AuthApi.adapter"; 
 ```typescript
 // 🟠 Business logic in ViewModel
 const useLoginViewModel = () => {
-  const login = async (email, password) => {
-    if (!email.includes("@")) {
-      // VIOLATION: validation belongs in UseCase
-      return;
-    }
-  };
+    const login = async (email, password) => {
+        if (!email.includes('@')) {
+            // VIOLATION: validation belongs in UseCase
+            return;
+        }
+    };
 };
 
 // 🟠 UseCase not returning Result
 export class LoginUseCase {
-  async execute(): Promise<User> {
-    // VIOLATION: should be Promise<Result<User, AuthError>>
-    // ...
-  }
+    async execute(): Promise<User> {
+        // VIOLATION: should be Promise<Result<User, AuthError>>
+        // ...
+    }
 }
 
 // 🟠 ViewModel not exposing {state, handlers}
 export const useLoginViewModel = () => {
-  const [email, setEmail] = useState("");
-  return { email, setEmail }; // VIOLATION: should be { state, handlers }
+    const [email, setEmail] = useState('');
+    return { email, setEmail }; // VIOLATION: should be { state, handlers }
 };
 ```
 
@@ -210,13 +210,13 @@ export const useLoginViewModel = () => {
 ```typescript
 // 🟡 Inline query keys
 useQuery({
-  queryKey: ["users", id], // VIOLATION: use usersKeys.detail(id)
+    queryKey: ['users', id], // VIOLATION: use usersKeys.detail(id)
 });
 
 // 🟡 Missing invalidation
 useMutation({
-  mutationFn: createUser,
-  // VIOLATION: missing onSuccess with invalidateQueries
+    mutationFn: createUser,
+    // VIOLATION: missing onSuccess with invalidateQueries
 });
 ```
 
@@ -225,14 +225,14 @@ useMutation({
 ```typescript
 // 🟠 UseCase instantiated inside function body
 const handleLogin = () => {
-  const useCase = new LoginUseCase(authRepository); // VIOLATION
-  useCase.execute();
+    const useCase = new LoginUseCase(authRepository); // VIOLATION
+    useCase.execute();
 };
 
 // ✅ Correct
 const loginUseCase = new LoginUseCase(authRepository);
 const handleLogin = () => {
-  loginUseCase.execute();
+    loginUseCase.execute();
 };
 ```
 

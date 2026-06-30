@@ -20,22 +20,22 @@ Use this file when setting up TypeScript types for React Flow, creating typed cu
 
 ```tsx
 import {
-  type Node,
-  type Edge,
-  type NodeProps,
-  type EdgeProps,
-  type OnConnect,
-  type OnNodesChange,
-  type OnEdgesChange,
-  type OnNodeDrag,
-  type FitViewOptions,
-  type DefaultEdgeOptions,
-  type BuiltInNode,
-  type BuiltInEdge,
-  type Connection,
-  type Viewport,
-  type XYPosition,
-  type ReactFlowInstance,
+    type Node,
+    type Edge,
+    type NodeProps,
+    type EdgeProps,
+    type OnConnect,
+    type OnNodesChange,
+    type OnEdgesChange,
+    type OnNodeDrag,
+    type FitViewOptions,
+    type DefaultEdgeOptions,
+    type BuiltInNode,
+    type BuiltInEdge,
+    type Connection,
+    type Viewport,
+    type XYPosition,
+    type ReactFlowInstance,
 } from '@xyflow/react';
 ```
 
@@ -44,9 +44,7 @@ import {
 ### Basic node typing
 
 ```tsx
-const initialNodes: Node[] = [
-  { id: '1', position: { x: 0, y: 0 }, data: { label: 'Hello' } },
-];
+const initialNodes: Node[] = [{ id: '1', position: { x: 0, y: 0 }, data: { label: 'Hello' } }];
 ```
 
 ### Custom node types
@@ -73,13 +71,13 @@ type NumberNodeData = { value: number };
 type NumberNode = Node<NumberNodeData, 'number'>;
 
 function NumberNode({ data }: NodeProps<NumberNode>) {
-  return (
-    <div>
-      <Handle type="target" position={Position.Top} />
-      <span>{data.value}</span>
-      <Handle type="source" position={Position.Bottom} />
-    </div>
-  );
+    return (
+        <div>
+            <Handle type="target" position={Position.Top} />
+            <span>{data.value}</span>
+            <Handle type="source" position={Position.Bottom} />
+        </div>
+    );
 }
 ```
 
@@ -102,13 +100,13 @@ import { type EdgeProps, BaseEdge, getBezierPath } from '@xyflow/react';
 type WeightedEdge = Edge<{ weight: number }, 'weighted'>;
 
 function WeightedEdge({ id, sourceX, sourceY, targetX, targetY, data }: EdgeProps<WeightedEdge>) {
-  const [edgePath] = getBezierPath({ sourceX, sourceY, targetX, targetY });
-  return (
-    <>
-      <BaseEdge id={id} path={edgePath} />
-      <text>{data?.weight}</text>
-    </>
-  );
+    const [edgePath] = getBezierPath({ sourceX, sourceY, targetX, targetY });
+    return (
+        <>
+            <BaseEdge id={id} path={edgePath} />
+            <text>{data?.weight}</text>
+        </>
+    );
 }
 ```
 
@@ -118,8 +116,8 @@ function WeightedEdge({ id, sourceX, sourceY, targetX, targetY, data }: EdgeProp
 
 ```tsx
 const onNodesChange: OnNodesChange<AppNode> = useCallback(
-  (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-  [setNodes],
+    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    [setNodes]
 );
 ```
 
@@ -127,27 +125,24 @@ const onNodesChange: OnNodesChange<AppNode> = useCallback(
 
 ```tsx
 const onEdgesChange: OnEdgesChange<AppEdge> = useCallback(
-  (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-  [setEdges],
+    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+    [setEdges]
 );
 ```
 
 ### OnConnect
 
 ```tsx
-const onConnect: OnConnect = useCallback(
-  (connection) => setEdges((eds) => addEdge(connection, eds)),
-  [setEdges],
-);
+const onConnect: OnConnect = useCallback((connection) => setEdges((eds) => addEdge(connection, eds)), [setEdges]);
 ```
 
 ### OnNodeDrag with type narrowing
 
 ```tsx
 const onNodeDrag: OnNodeDrag<AppNode> = useCallback((event, node) => {
-  if (node.type === 'number') {
-    console.log(node.data.value); // Type-safe: TypeScript knows this is NumberNode
-  }
+    if (node.type === 'number') {
+        console.log(node.data.value); // Type-safe: TypeScript knows this is NumberNode
+    }
 }, []);
 ```
 
@@ -184,11 +179,11 @@ Create type guard functions for safe runtime type narrowing:
 
 ```tsx
 function isNumberNode(node: AppNode): node is NumberNode {
-  return node.type === 'number';
+    return node.type === 'number';
 }
 
 function isTextNode(node: AppNode): node is TextNode {
-  return node.type === 'text';
+    return node.type === 'text';
 }
 
 // Usage
@@ -200,19 +195,19 @@ const numberNodes = nodes.filter(isNumberNode); // Type: NumberNode[]
 ```tsx
 import { useState, useCallback } from 'react';
 import {
-  ReactFlow,
-  Background,
-  Controls,
-  applyNodeChanges,
-  applyEdgeChanges,
-  addEdge,
-  type Node,
-  type Edge,
-  type NodeProps,
-  type OnNodesChange,
-  type OnEdgesChange,
-  type OnConnect,
-  type BuiltInNode,
+    ReactFlow,
+    Background,
+    Controls,
+    applyNodeChanges,
+    applyEdgeChanges,
+    addEdge,
+    type Node,
+    type Edge,
+    type NodeProps,
+    type OnNodesChange,
+    type OnEdgesChange,
+    type OnConnect,
+    type BuiltInNode,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -223,58 +218,49 @@ type AppEdge = Edge;
 
 // Custom node component
 function ColorNodeComponent({ data }: NodeProps<ColorNode>) {
-  return (
-    <div style={{ background: data.color, padding: 10 }}>
-      {data.label}
-    </div>
-  );
+    return <div style={{ background: data.color, padding: 10 }}>{data.label}</div>;
 }
 
 // Define outside component
 const nodeTypes = { color: ColorNodeComponent };
 
 const initialNodes: AppNode[] = [
-  { id: '1', type: 'color', position: { x: 0, y: 0 }, data: { color: '#ff0000', label: 'Red' } },
-  { id: '2', type: 'color', position: { x: 200, y: 100 }, data: { color: '#0000ff', label: 'Blue' } },
+    { id: '1', type: 'color', position: { x: 0, y: 0 }, data: { color: '#ff0000', label: 'Red' } },
+    { id: '2', type: 'color', position: { x: 200, y: 100 }, data: { color: '#0000ff', label: 'Blue' } },
 ];
 
-const initialEdges: AppEdge[] = [
-  { id: 'e1-2', source: '1', target: '2' },
-];
+const initialEdges: AppEdge[] = [{ id: 'e1-2', source: '1', target: '2' }];
 
 export default function TypedFlow() {
-  const [nodes, setNodes] = useState<AppNode[]>(initialNodes);
-  const [edges, setEdges] = useState<AppEdge[]>(initialEdges);
+    const [nodes, setNodes] = useState<AppNode[]>(initialNodes);
+    const [edges, setEdges] = useState<AppEdge[]>(initialEdges);
 
-  const onNodesChange: OnNodesChange<AppNode> = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    [],
-  );
-  const onEdgesChange: OnEdgesChange<AppEdge> = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [],
-  );
-  const onConnect: OnConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
-    [],
-  );
+    const onNodesChange: OnNodesChange<AppNode> = useCallback(
+        (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+        []
+    );
+    const onEdgesChange: OnEdgesChange<AppEdge> = useCallback(
+        (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+        []
+    );
+    const onConnect: OnConnect = useCallback((connection) => setEdges((eds) => addEdge(connection, eds)), []);
 
-  return (
-    <div style={{ width: '100%', height: '100vh' }}>
-      <ReactFlow<AppNode, AppEdge>
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        fitView
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
-    </div>
-  );
+    return (
+        <div style={{ width: '100%', height: '100vh' }}>
+            <ReactFlow<AppNode, AppEdge>
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                nodeTypes={nodeTypes}
+                fitView
+            >
+                <Background />
+                <Controls />
+            </ReactFlow>
+        </div>
+    );
 }
 ```
 
@@ -283,43 +269,43 @@ export default function TypedFlow() {
 ```tsx
 import { create } from 'zustand';
 import {
-  applyNodeChanges,
-  applyEdgeChanges,
-  addEdge,
-  type OnNodesChange,
-  type OnEdgesChange,
-  type OnConnect,
+    applyNodeChanges,
+    applyEdgeChanges,
+    addEdge,
+    type OnNodesChange,
+    type OnEdgesChange,
+    type OnConnect,
 } from '@xyflow/react';
 
 type FlowState = {
-  nodes: AppNode[];
-  edges: AppEdge[];
-  onNodesChange: OnNodesChange<AppNode>;
-  onEdgesChange: OnEdgesChange<AppEdge>;
-  onConnect: OnConnect;
-  setNodes: (nodes: AppNode[]) => void;
-  setEdges: (edges: AppEdge[]) => void;
+    nodes: AppNode[];
+    edges: AppEdge[];
+    onNodesChange: OnNodesChange<AppNode>;
+    onEdgesChange: OnEdgesChange<AppEdge>;
+    onConnect: OnConnect;
+    setNodes: (nodes: AppNode[]) => void;
+    setEdges: (edges: AppEdge[]) => void;
 };
 
 const useFlowStore = create<FlowState>((set, get) => ({
-  nodes: initialNodes,
-  edges: initialEdges,
-  onNodesChange: (changes) => set({ nodes: applyNodeChanges(changes, get().nodes) }),
-  onEdgesChange: (changes) => set({ edges: applyEdgeChanges(changes, get().edges) }),
-  onConnect: (connection) => set({ edges: addEdge(connection, get().edges) }),
-  setNodes: (nodes) => set({ nodes }),
-  setEdges: (edges) => set({ edges }),
+    nodes: initialNodes,
+    edges: initialEdges,
+    onNodesChange: (changes) => set({ nodes: applyNodeChanges(changes, get().nodes) }),
+    onEdgesChange: (changes) => set({ edges: applyEdgeChanges(changes, get().edges) }),
+    onConnect: (connection) => set({ edges: addEdge(connection, get().edges) }),
+    setNodes: (nodes) => set({ nodes }),
+    setEdges: (edges) => set({ edges }),
 }));
 ```
 
 ## Common type mistakes
 
-| Mistake | Fix |
-|---------|-----|
-| Using `interface` for node types | Use `type` — interfaces break union discriminators |
+| Mistake                               | Fix                                                        |
+| ------------------------------------- | ---------------------------------------------------------- |
+| Using `interface` for node types      | Use `type` — interfaces break union discriminators         |
 | Not passing generics to `<ReactFlow>` | Add `<ReactFlow<AppNode, AppEdge>>` for full type checking |
-| Accessing `data` without type guard | Use type guard function or check `node.type` first |
-| Using `any` for node data | Define specific data types per node type |
+| Accessing `data` without type guard   | Use type guard function or check `node.type` first         |
+| Using `any` for node data             | Define specific data types per node type                   |
 
 ## Do / Don't
 

@@ -38,9 +38,9 @@ Reference skill: `.claude/skills/react-clean-architecture/SKILL.md`
 1. **Load roadmap** — From previous `codebase-ca-react-review` or generate new
 2. **Plan phases** — Group changes by priority
 3. **For each phase:**
-   - Present phase scope
-   - Ask: `Continue / Skip phase / Abort`
-   - If continue: apply changes, verify
+    - Present phase scope
+    - Ask: `Continue / Skip phase / Abort`
+    - If continue: apply changes, verify
 4. **Summary** — List all changes, suggest commits
 
 ## Refactoring Patterns
@@ -52,23 +52,23 @@ Reference skill: `.claude/skills/react-clean-architecture/SKILL.md`
 ```typescript
 // modules/auth/ui/viewModels/useLogin.viewModel.tsx
 export const useLoginViewModel = () => {
-  const { authRepository } = useDependencies();
+    const { authRepository } = useDependencies();
 
-  const handlers = {
-    login: async (email: string, password: string) => {
-      // ❌ Business logic in ViewModel
-      if (!email.includes("@")) {
-        setState({ error: "Invalid email" });
-        return;
-      }
-      if (password.length < 8) {
-        setState({ error: "Password too short" });
-        return;
-      }
-      const result = await authRepository.login({ email, password });
-      // ...
-    },
-  };
+    const handlers = {
+        login: async (email: string, password: string) => {
+            // ❌ Business logic in ViewModel
+            if (!email.includes('@')) {
+                setState({ error: 'Invalid email' });
+                return;
+            }
+            if (password.length < 8) {
+                setState({ error: 'Password too short' });
+                return;
+            }
+            const result = await authRepository.login({ email, password });
+            // ...
+        },
+    };
 };
 ```
 
@@ -76,43 +76,40 @@ export const useLoginViewModel = () => {
 
 ```typescript
 // modules/auth/core/usecases/Login.usecase.ts
-import { Result, ok, fail } from "@/types/Result";
-import { AuthRepository } from "../ports/AuthRepository.port";
-import { User } from "../entities/User.entity";
-import { AuthError } from "../entities/AuthError.entity";
+import { Result, ok, fail } from '@/types/Result';
+import { AuthRepository } from '../ports/AuthRepository.port';
+import { User } from '../entities/User.entity';
+import { AuthError } from '../entities/AuthError.entity';
 
 export class LoginUseCase {
-  constructor(private authRepository: AuthRepository) {}
+    constructor(private authRepository: AuthRepository) {}
 
-  async execute(params: {
-    email: string;
-    password: string;
-  }): Promise<Result<User, AuthError>> {
-    if (!params.email.includes("@")) {
-      return fail({ type: "VALIDATION_ERROR", message: "Invalid email" });
+    async execute(params: { email: string; password: string }): Promise<Result<User, AuthError>> {
+        if (!params.email.includes('@')) {
+            return fail({ type: 'VALIDATION_ERROR', message: 'Invalid email' });
+        }
+        if (params.password.length < 8) {
+            return fail({ type: 'VALIDATION_ERROR', message: 'Password too short' });
+        }
+        return this.authRepository.login(params);
     }
-    if (params.password.length < 8) {
-      return fail({ type: "VALIDATION_ERROR", message: "Password too short" });
-    }
-    return this.authRepository.login(params);
-  }
 }
 
 // modules/auth/ui/viewModels/useLogin.viewModel.tsx
 export const useLoginViewModel = () => {
-  const { authRepository } = useDependencies();
-  const loginUseCase = new LoginUseCase(authRepository);
+    const { authRepository } = useDependencies();
+    const loginUseCase = new LoginUseCase(authRepository);
 
-  const handlers = {
-    login: async (email: string, password: string) => {
-      const result = await loginUseCase.execute({ email, password });
-      if (result.success) {
-        setState({ status: "success", user: result.data });
-      } else {
-        setState({ status: "error", error: result.error });
-      }
-    },
-  };
+    const handlers = {
+        login: async (email: string, password: string) => {
+            const result = await loginUseCase.execute({ email, password });
+            if (result.success) {
+                setState({ status: 'success', user: result.data });
+            } else {
+                setState({ status: 'error', error: result.error });
+            }
+        },
+    };
 };
 ```
 
@@ -123,14 +120,14 @@ export const useLoginViewModel = () => {
 ```typescript
 // modules/events/ui/screens/EventListScreen.tsx
 const EventListScreen = () => {
-  const [events, setEvents] = useState([]);
+    const [events, setEvents] = useState([]);
 
-  useEffect(() => {
-    // ❌ Direct API call in component
-    fetch("https://api.example.com/events")
-      .then((r) => r.json())
-      .then(setEvents);
-  }, []);
+    useEffect(() => {
+        // ❌ Direct API call in component
+        fetch('https://api.example.com/events')
+            .then((r) => r.json())
+            .then(setEvents);
+    }, []);
 };
 ```
 
@@ -139,36 +136,36 @@ const EventListScreen = () => {
 ```typescript
 // modules/events/core/ports/EventRepository.port.ts
 export interface EventRepository {
-  list(): Promise<Result<Event[], EventError>>;
+    list(): Promise<Result<Event[], EventError>>;
 }
 
 // modules/events/infrastructure/adapters/EventApi.adapter.ts
 export class EventApiAdapter implements EventRepository {
-  async list(): Promise<Result<Event[], EventError>> {
-    try {
-      const response = await fetch("https://api.example.com/events");
-      if (!response.ok) return fail({ type: "NETWORK_ERROR" });
-      const data = await response.json();
-      return ok(data.map(this.mapToEntity));
-    } catch {
-      return fail({ type: "NETWORK_ERROR" });
+    async list(): Promise<Result<Event[], EventError>> {
+        try {
+            const response = await fetch('https://api.example.com/events');
+            if (!response.ok) return fail({ type: 'NETWORK_ERROR' });
+            const data = await response.json();
+            return ok(data.map(this.mapToEntity));
+        } catch {
+            return fail({ type: 'NETWORK_ERROR' });
+        }
     }
-  }
 }
 
 // modules/events/ui/hooks/useEvents.query.ts
 export const useEventsQuery = () => {
-  const { eventRepository } = useDependencies();
-  return useQuery({
-    queryKey: eventsKeys.lists(),
-    queryFn: () => eventRepository.list(),
-  });
+    const { eventRepository } = useDependencies();
+    return useQuery({
+        queryKey: eventsKeys.lists(),
+        queryFn: () => eventRepository.list(),
+    });
 };
 
 // modules/events/ui/screens/EventListScreen.tsx
 const EventListScreen = () => {
-  const { data } = useEventsQuery();
-  const events = data?.success ? data.data : [];
+    const { data } = useEventsQuery();
+    const events = data?.success ? data.data : [];
 };
 ```
 
@@ -178,11 +175,11 @@ const EventListScreen = () => {
 
 ```typescript
 export const useProfileViewModel = (userId: string) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
 
-  return { name, setName, email, setEmail, isEditing, setIsEditing };
+    return { name, setName, email, setEmail, isEditing, setIsEditing };
 };
 ```
 
@@ -190,22 +187,22 @@ export const useProfileViewModel = (userId: string) => {
 
 ```typescript
 export const useProfileViewModel = (userId: string) => {
-  const [form, setForm] = useState({ name: "", email: "" });
-  const [isEditing, setIsEditing] = useState(false);
+    const [form, setForm] = useState({ name: '', email: '' });
+    const [isEditing, setIsEditing] = useState(false);
 
-  const state = {
-    form,
-    isEditing,
-  };
+    const state = {
+        form,
+        isEditing,
+    };
 
-  const handlers = {
-    updateName: (name: string) => setForm((f) => ({ ...f, name })),
-    updateEmail: (email: string) => setForm((f) => ({ ...f, email })),
-    startEditing: () => setIsEditing(true),
-    cancelEditing: () => setIsEditing(false),
-  };
+    const handlers = {
+        updateName: (name: string) => setForm((f) => ({ ...f, name })),
+        updateEmail: (email: string) => setForm((f) => ({ ...f, email })),
+        startEditing: () => setIsEditing(true),
+        cancelEditing: () => setIsEditing(false),
+    };
 
-  return { state, handlers };
+    return { state, handlers };
 };
 ```
 
@@ -215,9 +212,9 @@ export const useProfileViewModel = (userId: string) => {
 
 ```typescript
 // Scattered across hooks
-useQuery({ queryKey: ["users", "list"] });
-useQuery({ queryKey: ["users", "detail", id] });
-invalidateQueries({ queryKey: ["users"] });
+useQuery({ queryKey: ['users', 'list'] });
+useQuery({ queryKey: ['users', 'detail', id] });
+invalidateQueries({ queryKey: ['users'] });
 ```
 
 **After:**
@@ -225,11 +222,11 @@ invalidateQueries({ queryKey: ["users"] });
 ```typescript
 // modules/users/ui/hooks/users.queryKeys.ts
 export const usersKeys = {
-  all: ["users"] as const,
-  lists: () => [...usersKeys.all, "list"] as const,
-  list: (filters: UserFilters) => [...usersKeys.lists(), filters] as const,
-  details: () => [...usersKeys.all, "detail"] as const,
-  detail: (id: string) => [...usersKeys.details(), id] as const,
+    all: ['users'] as const,
+    lists: () => [...usersKeys.all, 'list'] as const,
+    list: (filters: UserFilters) => [...usersKeys.lists(), filters] as const,
+    details: () => [...usersKeys.all, 'detail'] as const,
+    detail: (id: string) => [...usersKeys.details(), id] as const,
 };
 
 // Usage
@@ -244,11 +241,11 @@ invalidateQueries({ queryKey: usersKeys.lists() });
 
 ```typescript
 const handlers = {
-  submit: async () => {
-    // ❌ UseCase created inside handler (new instance each call)
-    const useCase = new CreateEventUseCase(eventRepository);
-    await useCase.execute(form);
-  },
+    submit: async () => {
+        // ❌ UseCase created inside handler (new instance each call)
+        const useCase = new CreateEventUseCase(eventRepository);
+        await useCase.execute(form);
+    },
 };
 ```
 
@@ -259,9 +256,9 @@ const handlers = {
 const createEventUseCase = new CreateEventUseCase(eventRepository);
 
 const handlers = {
-  submit: async () => {
-    await createEventUseCase.execute(form);
-  },
+    submit: async () => {
+        await createEventUseCase.execute(form);
+    },
 };
 ```
 

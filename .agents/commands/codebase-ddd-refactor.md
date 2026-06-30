@@ -26,22 +26,22 @@ Invoke the codebase DDD refactor agent for architectural fixes.
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
+| Option          | Description                           |
+| --------------- | ------------------------------------- |
 | `--from-review` | Use last `codebase-ddd-review` output |
-| `--fix <type>` | Apply specific architectural fix |
-| `--dry-run` | Preview only, don't prompt for apply |
+| `--fix <type>`  | Apply specific architectural fix      |
+| `--dry-run`     | Preview only, don't prompt for apply  |
 
 ## Available fix types
 
-| Type | Description |
-|------|-------------|
-| `context-boundaries` | Enforce bounded context separation |
-| `add-acl <system>` | Create Anti-Corruption Layer |
-| `split-aggregate <name>` | Break oversized aggregate |
-| `extract-context <name>` | Extract new bounded context |
-| `add-domain-events` | Add event dispatch to aggregates |
-| `unify-language <term>` | Rename to consistent ubiquitous term |
+| Type                     | Description                          |
+| ------------------------ | ------------------------------------ |
+| `context-boundaries`     | Enforce bounded context separation   |
+| `add-acl <system>`       | Create Anti-Corruption Layer         |
+| `split-aggregate <name>` | Break oversized aggregate            |
+| `extract-context <name>` | Extract new bounded context          |
+| `add-domain-events`      | Add event dispatch to aggregates     |
+| `unify-language <term>`  | Rename to consistent ubiquitous term |
 
 ## Workflow
 

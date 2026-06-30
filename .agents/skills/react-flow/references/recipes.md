@@ -25,58 +25,55 @@ let id = 0;
 const getId = () => `node_${id++}`;
 
 function Flow() {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
-  const { screenToFlowPosition } = useReactFlow();
-  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+    const [nodes, setNodes] = useState<Node[]>([]);
+    const [edges, setEdges] = useState<Edge[]>([]);
+    const { screenToFlowPosition } = useReactFlow();
+    const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
-  const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
-    event.preventDefault();
-    setMenu({ x: event.clientX, y: event.clientY });
-  }, []);
+    const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+        setMenu({ x: event.clientX, y: event.clientY });
+    }, []);
 
-  const addNode = useCallback(
-    (type: string) => {
-      if (!menu) return;
-      const position = screenToFlowPosition({ x: menu.x, y: menu.y });
-      setNodes((nds) => [
-        ...nds,
-        { id: getId(), type, position, data: { label: `${type} node` } },
-      ]);
-      setMenu(null);
-    },
-    [menu, screenToFlowPosition, setNodes],
-  );
+    const addNode = useCallback(
+        (type: string) => {
+            if (!menu) return;
+            const position = screenToFlowPosition({ x: menu.x, y: menu.y });
+            setNodes((nds) => [...nds, { id: getId(), type, position, data: { label: `${type} node` } }]);
+            setMenu(null);
+        },
+        [menu, screenToFlowPosition, setNodes]
+    );
 
-  return (
-    <>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onPaneContextMenu={onPaneContextMenu}
-        onPaneClick={() => setMenu(null)}
-        fitView
-      />
-      {menu && (
-        <div
-          style={{
-            position: 'absolute',
-            top: menu.y,
-            left: menu.x,
-            background: 'white',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            padding: 8,
-            zIndex: 1000,
-          }}
-        >
-          <button onClick={() => addNode('default')}>Default Node</button>
-          <button onClick={() => addNode('input')}>Input Node</button>
-          <button onClick={() => addNode('output')}>Output Node</button>
-        </div>
-      )}
-    </>
-  );
+    return (
+        <>
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onPaneContextMenu={onPaneContextMenu}
+                onPaneClick={() => setMenu(null)}
+                fitView
+            />
+            {menu && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: menu.y,
+                        left: menu.x,
+                        background: 'white',
+                        border: '1px solid #ccc',
+                        borderRadius: 4,
+                        padding: 8,
+                        zIndex: 1000,
+                    }}
+                >
+                    <button onClick={() => addNode('default')}>Default Node</button>
+                    <button onClick={() => addNode('input')}>Input Node</button>
+                    <button onClick={() => addNode('output')}>Output Node</button>
+                </div>
+            )}
+        </>
+    );
 }
 ```
 
@@ -95,68 +92,62 @@ const getId = () => `dnd_${id++}`;
 
 // Sidebar component
 function Sidebar() {
-  const onDragStart = (event: React.DragEvent, nodeType: string) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
-  };
+    const onDragStart = (event: React.DragEvent, nodeType: string) => {
+        event.dataTransfer.setData('application/reactflow', nodeType);
+        event.dataTransfer.effectAllowed = 'move';
+    };
 
-  return (
-    <aside style={{ padding: 10 }}>
-      <div
-        draggable
-        onDragStart={(e) => onDragStart(e, 'default')}
-        style={{ padding: 8, border: '1px solid #ccc', marginBottom: 8, cursor: 'grab' }}
-      >
-        Default Node
-      </div>
-      <div
-        draggable
-        onDragStart={(e) => onDragStart(e, 'input')}
-        style={{ padding: 8, border: '1px solid #ccc', cursor: 'grab' }}
-      >
-        Input Node
-      </div>
-    </aside>
-  );
+    return (
+        <aside style={{ padding: 10 }}>
+            <div
+                draggable
+                onDragStart={(e) => onDragStart(e, 'default')}
+                style={{ padding: 8, border: '1px solid #ccc', marginBottom: 8, cursor: 'grab' }}
+            >
+                Default Node
+            </div>
+            <div
+                draggable
+                onDragStart={(e) => onDragStart(e, 'input')}
+                style={{ padding: 8, border: '1px solid #ccc', cursor: 'grab' }}
+            >
+                Input Node
+            </div>
+        </aside>
+    );
 }
 
 // Flow component
 function Flow() {
-  const { screenToFlowPosition, addNodes } = useReactFlow();
+    const { screenToFlowPosition, addNodes } = useReactFlow();
 
-  const onDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-  }, []);
+    const onDragOver = useCallback((event: React.DragEvent) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
 
-  const onDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault();
-      const type = event.dataTransfer.getData('application/reactflow');
-      if (!type) return;
+    const onDrop = useCallback(
+        (event: React.DragEvent) => {
+            event.preventDefault();
+            const type = event.dataTransfer.getData('application/reactflow');
+            if (!type) return;
 
-      const position = screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
+            const position = screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            });
 
-      addNodes({
-        id: getId(),
-        type,
-        position,
-        data: { label: `${type} node` },
-      });
-    },
-    [screenToFlowPosition, addNodes],
-  );
+            addNodes({
+                id: getId(),
+                type,
+                position,
+                data: { label: `${type} node` },
+            });
+        },
+        [screenToFlowPosition, addNodes]
+    );
 
-  return (
-    <ReactFlow
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      fitView
-    />
-  );
+    return <ReactFlow onDragOver={onDragOver} onDrop={onDrop} fitView />;
 }
 ```
 
@@ -171,48 +162,45 @@ import { useState, useCallback } from 'react';
 import { ReactFlow, Panel, useReactFlow, type Node } from '@xyflow/react';
 
 function Flow() {
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const { updateNodeData } = useReactFlow();
+    const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+    const { updateNodeData } = useReactFlow();
 
-  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-  }, []);
+    const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+        setSelectedNode(node);
+    }, []);
 
-  const onPaneClick = useCallback(() => {
-    setSelectedNode(null);
-  }, []);
+    const onPaneClick = useCallback(() => {
+        setSelectedNode(null);
+    }, []);
 
-  return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <div style={{ flex: 1 }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodeClick={onNodeClick}
-          onPaneClick={onPaneClick}
-          fitView
-        />
-      </div>
-      {selectedNode && (
-        <div style={{ width: 300, padding: 16, borderLeft: '1px solid #ccc' }}>
-          <h3>Node: {selectedNode.id}</h3>
-          <label>
-            Label:
-            <input
-              value={selectedNode.data.label ?? ''}
-              onChange={(e) => {
-                updateNodeData(selectedNode.id, { label: e.target.value });
-                setSelectedNode((n) => n && ({
-                  ...n,
-                  data: { ...n.data, label: e.target.value },
-                }));
-              }}
-            />
-          </label>
+    return (
+        <div style={{ display: 'flex', height: '100vh' }}>
+            <div style={{ flex: 1 }}>
+                <ReactFlow nodes={nodes} edges={edges} onNodeClick={onNodeClick} onPaneClick={onPaneClick} fitView />
+            </div>
+            {selectedNode && (
+                <div style={{ width: 300, padding: 16, borderLeft: '1px solid #ccc' }}>
+                    <h3>Node: {selectedNode.id}</h3>
+                    <label>
+                        Label:
+                        <input
+                            value={selectedNode.data.label ?? ''}
+                            onChange={(e) => {
+                                updateNodeData(selectedNode.id, { label: e.target.value });
+                                setSelectedNode(
+                                    (n) =>
+                                        n && {
+                                            ...n,
+                                            data: { ...n.data, label: e.target.value },
+                                        }
+                                );
+                            }}
+                        />
+                    </label>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }
 ```
 
@@ -227,19 +215,19 @@ import { useCallback } from 'react';
 import { Panel, useReactFlow } from '@xyflow/react';
 
 function DeleteButton() {
-  const { getNodes, getEdges, deleteElements } = useReactFlow();
+    const { getNodes, getEdges, deleteElements } = useReactFlow();
 
-  const onDelete = useCallback(() => {
-    const selectedNodes = getNodes().filter((n) => n.selected);
-    const selectedEdges = getEdges().filter((e) => e.selected);
-    deleteElements({ nodes: selectedNodes, edges: selectedEdges });
-  }, [getNodes, getEdges, deleteElements]);
+    const onDelete = useCallback(() => {
+        const selectedNodes = getNodes().filter((n) => n.selected);
+        const selectedEdges = getEdges().filter((e) => e.selected);
+        deleteElements({ nodes: selectedNodes, edges: selectedEdges });
+    }, [getNodes, getEdges, deleteElements]);
 
-  return (
-    <Panel position="top-right">
-      <button onClick={onDelete}>Delete Selected</button>
-    </Panel>
-  );
+    return (
+        <Panel position="top-right">
+            <button onClick={onDelete}>Delete Selected</button>
+        </Panel>
+    );
 }
 ```
 
@@ -262,38 +250,38 @@ const IMAGE_WIDTH = 1024;
 const IMAGE_HEIGHT = 768;
 
 function DownloadButton() {
-  const { getNodes } = useReactFlow();
+    const { getNodes } = useReactFlow();
 
-  const onClick = useCallback(() => {
-    const nodes = getNodes();
-    const bounds = getNodesBounds(nodes);
-    const viewport = getViewportForBounds(bounds, IMAGE_WIDTH, IMAGE_HEIGHT, 0.5, 2, 0.1);
+    const onClick = useCallback(() => {
+        const nodes = getNodes();
+        const bounds = getNodesBounds(nodes);
+        const viewport = getViewportForBounds(bounds, IMAGE_WIDTH, IMAGE_HEIGHT, 0.5, 2, 0.1);
 
-    const viewportEl = document.querySelector<HTMLElement>('.react-flow__viewport');
-    if (!viewportEl) return;
+        const viewportEl = document.querySelector<HTMLElement>('.react-flow__viewport');
+        if (!viewportEl) return;
 
-    toPng(viewportEl, {
-      backgroundColor: '#ffffff',
-      width: IMAGE_WIDTH,
-      height: IMAGE_HEIGHT,
-      style: {
-        width: `${IMAGE_WIDTH}px`,
-        height: `${IMAGE_HEIGHT}px`,
-        transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
-      },
-    }).then((dataUrl) => {
-      const link = document.createElement('a');
-      link.download = 'flow.png';
-      link.href = dataUrl;
-      link.click();
-    });
-  }, [getNodes]);
+        toPng(viewportEl, {
+            backgroundColor: '#ffffff',
+            width: IMAGE_WIDTH,
+            height: IMAGE_HEIGHT,
+            style: {
+                width: `${IMAGE_WIDTH}px`,
+                height: `${IMAGE_HEIGHT}px`,
+                transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+            },
+        }).then((dataUrl) => {
+            const link = document.createElement('a');
+            link.download = 'flow.png';
+            link.href = dataUrl;
+            link.click();
+        });
+    }, [getNodes]);
 
-  return (
-    <Panel position="top-right">
-      <button onClick={onClick}>Download PNG</button>
-    </Panel>
-  );
+    return (
+        <Panel position="top-right">
+            <button onClick={onClick}>Download PNG</button>
+        </Panel>
+    );
 }
 ```
 
@@ -307,22 +295,22 @@ When adding nodes programmatically, call `fitView` after the state update to ens
 import { useReactFlow } from '@xyflow/react';
 
 function AddAndFit() {
-  const { addNodes, fitView } = useReactFlow();
+    const { addNodes, fitView } = useReactFlow();
 
-  const handleAdd = useCallback(() => {
-    addNodes({
-      id: 'new',
-      position: { x: 500, y: 500 },
-      data: { label: 'Far away node' },
-    });
+    const handleAdd = useCallback(() => {
+        addNodes({
+            id: 'new',
+            position: { x: 500, y: 500 },
+            data: { label: 'Far away node' },
+        });
 
-    // fitView runs after the next render when nodes are measured
-    requestAnimationFrame(() => {
-      fitView({ padding: 0.2, duration: 300 });
-    });
-  }, [addNodes, fitView]);
+        // fitView runs after the next render when nodes are measured
+        requestAnimationFrame(() => {
+            fitView({ padding: 0.2, duration: 300 });
+        });
+    }, [addNodes, fitView]);
 
-  return <button onClick={handleAdd}>Add & Fit</button>;
+    return <button onClick={handleAdd}>Add & Fit</button>;
 }
 ```
 

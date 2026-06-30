@@ -22,27 +22,27 @@ Prefer simple solutions over clever ones. Code is read far more often than writt
 ```typescript
 // utils.ts — "clever" but unreadable
 const processUserData = <T extends Record<string, unknown>>(
-  data: T,
-  transforms: Array<(input: Partial<T>) => Partial<T>>,
-  validators: Array<(input: Partial<T>) => boolean>,
-  options?: { stopOnFirstError?: boolean; mergeStrategy?: 'shallow' | 'deep' }
+    data: T,
+    transforms: Array<(input: Partial<T>) => Partial<T>>,
+    validators: Array<(input: Partial<T>) => boolean>,
+    options?: { stopOnFirstError?: boolean; mergeStrategy?: 'shallow' | 'deep' }
 ) =>
-  transforms.reduce(
-    (acc, transform) =>
-      validators.every((v) => v(acc)) || options?.stopOnFirstError
-        ? options?.mergeStrategy === 'deep'
-          ? deepMerge(acc, transform(acc))
-          : { ...acc, ...transform(acc) }
-        : acc,
-    data as Partial<T>
-  );
+    transforms.reduce(
+        (acc, transform) =>
+            validators.every((v) => v(acc)) || options?.stopOnFirstError
+                ? options?.mergeStrategy === 'deep'
+                    ? deepMerge(acc, transform(acc))
+                    : { ...acc, ...transform(acc) }
+                : acc,
+        data as Partial<T>
+    );
 
 // Usage requires mental gymnastics
 const result = processUserData(
-  user,
-  [(u) => ({ ...u, name: u.name?.trim() }), (u) => ({ ...u, age: Number(u.age) })],
-  [(u) => !!u.name, (u) => !isNaN(u.age as number)],
-  { stopOnFirstError: true, mergeStrategy: 'shallow' }
+    user,
+    [(u) => ({ ...u, name: u.name?.trim() }), (u) => ({ ...u, age: Number(u.age) })],
+    [(u) => !!u.name, (u) => !isNaN(u.age as number)],
+    { stopOnFirstError: true, mergeStrategy: 'shallow' }
 );
 ```
 
@@ -51,33 +51,33 @@ const result = processUserData(
 ```typescript
 // utils.ts — readable and debuggable
 interface UserInput {
-  name?: string;
-  age?: string | number;
+    name?: string;
+    age?: string | number;
 }
 
 interface ValidatedUser {
-  name: string;
-  age: number;
+    name: string;
+    age: number;
 }
 
 function validateAndTransformUser(input: UserInput): ValidatedUser | null {
-  const name = input.name?.trim();
-  if (!name) {
-    return null;
-  }
+    const name = input.name?.trim();
+    if (!name) {
+        return null;
+    }
 
-  const age = Number(input.age);
-  if (isNaN(age)) {
-    return null;
-  }
+    const age = Number(input.age);
+    if (isNaN(age)) {
+        return null;
+    }
 
-  return { name, age };
+    return { name, age };
 }
 
 // Usage is obvious
 const result = validateAndTransformUser(user);
 if (!result) {
-  handleValidationError();
+    handleValidationError();
 }
 ```
 
@@ -88,33 +88,30 @@ Creating layers of abstraction that obscure simple operations:
 ```typescript
 // ❌ Over-abstracted
 interface StringProcessor {
-  process(input: string): string;
+    process(input: string): string;
 }
 
 class TrimProcessor implements StringProcessor {
-  process(input: string): string {
-    return input.trim();
-  }
+    process(input: string): string {
+        return input.trim();
+    }
 }
 
 class LowercaseProcessor implements StringProcessor {
-  process(input: string): string {
-    return input.toLowerCase();
-  }
+    process(input: string): string {
+        return input.toLowerCase();
+    }
 }
 
 class ProcessorChain {
-  constructor(private processors: StringProcessor[]) {}
-  
-  execute(input: string): string {
-    return this.processors.reduce((acc, p) => p.process(acc), input);
-  }
+    constructor(private processors: StringProcessor[]) {}
+
+    execute(input: string): string {
+        return this.processors.reduce((acc, p) => p.process(acc), input);
+    }
 }
 
-const result = new ProcessorChain([
-  new TrimProcessor(),
-  new LowercaseProcessor()
-]).execute(email);
+const result = new ProcessorChain([new TrimProcessor(), new LowercaseProcessor()]).execute(email);
 
 // ✅ Just write the code
 const normalizedEmail = email.trim().toLowerCase();

@@ -14,20 +14,20 @@ A component re-renders when:
 
 ```tsx
 const Parent = () => {
-  const [count, setCount] = useState(0);
-  
-  return (
-    <View>
-      <Text>{count}</Text>
-      <Child /> {/* Re-renders on every count change! */}
-      <Button onPress={() => setCount(c => c + 1)} />
-    </View>
-  );
+    const [count, setCount] = useState(0);
+
+    return (
+        <View>
+            <Text>{count}</Text>
+            <Child /> {/* Re-renders on every count change! */}
+            <Button onPress={() => setCount((c) => c + 1)} />
+        </View>
+    );
 };
 
 const Child = () => {
-  console.log('Child rendered'); // Logs on every parent update
-  return <Text>I never change</Text>;
+    console.log('Child rendered'); // Logs on every parent update
+    return <Text>I never change</Text>;
 };
 ```
 
@@ -36,6 +36,7 @@ const Child = () => {
 Use React DevTools Profiler with "Record why each component rendered" enabled.
 
 Common "why did this render" reasons:
+
 - "The parent component rendered" → Consider `memo()`
 - "Props changed: onPress" → Memoize callback with `useCallback`
 - "Props changed: style" → Memoize object with `useMemo`
@@ -48,18 +49,18 @@ Common "why did this render" reasons:
 ```tsx
 // ❌ Child re-renders on every parent update
 const Parent = () => {
-  const [count, setCount] = useState(0);
-  return (
-    <View>
-      <ExpensiveChild />
-      <Text>{count}</Text>
-    </View>
-  );
+    const [count, setCount] = useState(0);
+    return (
+        <View>
+            <ExpensiveChild />
+            <Text>{count}</Text>
+        </View>
+    );
 };
 
 // ✅ Child skips re-render if props unchanged
 const ExpensiveChild = memo(() => {
-  return <ComplexView />;
+    return <ComplexView />;
 });
 ```
 
@@ -68,25 +69,25 @@ const ExpensiveChild = memo(() => {
 ```tsx
 // ❌ New function on every render → child re-renders
 const Parent = () => {
-  const [items, setItems] = useState<string[]>([]);
-  
-  return (
-    <List 
-      items={items}
-      onItemPress={(id) => console.log(id)} // New ref every render!
-    />
-  );
+    const [items, setItems] = useState<string[]>([]);
+
+    return (
+        <List
+            items={items}
+            onItemPress={(id) => console.log(id)} // New ref every render!
+        />
+    );
 };
 
 // ✅ Stable reference with useCallback
 const Parent = () => {
-  const [items, setItems] = useState<string[]>([]);
-  
-  const handleItemPress = useCallback((id: string) => {
-    console.log(id);
-  }, []); // Empty deps = stable forever
-  
-  return <List items={items} onItemPress={handleItemPress} />;
+    const [items, setItems] = useState<string[]>([]);
+
+    const handleItemPress = useCallback((id: string) => {
+        console.log(id);
+    }, []); // Empty deps = stable forever
+
+    return <List items={items} onItemPress={handleItemPress} />;
 };
 ```
 
@@ -95,19 +96,19 @@ const Parent = () => {
 ```tsx
 // ❌ New object on every render
 const Parent = () => {
-  return <Child style={{ padding: 10 }} />; // New object!
+    return <Child style={{ padding: 10 }} />; // New object!
 };
 
 // ✅ Option 1: StyleSheet (best for static styles)
 const styles = StyleSheet.create({
-  container: { padding: 10 }
+    container: { padding: 10 },
 });
 const Parent = () => <Child style={styles.container} />;
 
 // ✅ Option 2: useMemo (for dynamic styles)
 const Parent = ({ size }: { size: number }) => {
-  const style = useMemo(() => ({ padding: size }), [size]);
-  return <Child style={style} />;
+    const style = useMemo(() => ({ padding: size }), [size]);
+    return <Child style={style} />;
 };
 ```
 
@@ -118,33 +119,33 @@ Move state closer to where it's used to reduce re-render scope.
 ```tsx
 // ❌ Entire form re-renders on any input change
 const Form = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  
-  return (
-    <View>
-      <Input value={name} onChangeText={setName} />
-      <Input value={email} onChangeText={setEmail} />
-      <Input value={phone} onChangeText={setPhone} />
-      <ExpensiveValidation /> {/* Re-renders on every keystroke! */}
-    </View>
-  );
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+
+    return (
+        <View>
+            <Input value={name} onChangeText={setName} />
+            <Input value={email} onChangeText={setEmail} />
+            <Input value={phone} onChangeText={setPhone} />
+            <ExpensiveValidation /> {/* Re-renders on every keystroke! */}
+        </View>
+    );
 };
 
 // ✅ Each input manages its own state
 const NameInput = () => {
-  const [name, setName] = useState('');
-  return <Input value={name} onChangeText={setName} />;
+    const [name, setName] = useState('');
+    return <Input value={name} onChangeText={setName} />;
 };
 
 const Form = () => (
-  <View>
-    <NameInput />
-    <EmailInput />
-    <PhoneInput />
-    <ExpensiveValidation /> {/* Only re-renders when needed */}
-  </View>
+    <View>
+        <NameInput />
+        <EmailInput />
+        <PhoneInput />
+        <ExpensiveValidation /> {/* Only re-renders when needed */}
+    </View>
 );
 ```
 
@@ -161,8 +162,8 @@ const SettingsContext = createContext<Settings>({});
 
 // Components only subscribe to what they need
 const Avatar = () => {
-  const user = useContext(UserContext); // Only re-renders on user change
-  return <Image source={user?.avatar} />;
+    const user = useContext(UserContext); // Only re-renders on user change
+    return <Image source={user?.avatar} />;
 };
 ```
 
@@ -171,32 +172,32 @@ const Avatar = () => {
 ```tsx
 // ❌ Children re-render with parent
 const Layout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  
-  return (
-    <View>
-      <Sidebar open={sidebarOpen} />
-      <ExpensiveContent /> {/* Re-renders on sidebar toggle! */}
-    </View>
-  );
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    return (
+        <View>
+            <Sidebar open={sidebarOpen} />
+            <ExpensiveContent /> {/* Re-renders on sidebar toggle! */}
+        </View>
+    );
 };
 
 // ✅ Children passed as props don't re-render
 const Layout = ({ children }: { children: ReactNode }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  
-  return (
-    <View>
-      <Sidebar open={sidebarOpen} />
-      {children} {/* Stable reference from parent */}
-    </View>
-  );
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    return (
+        <View>
+            <Sidebar open={sidebarOpen} />
+            {children} {/* Stable reference from parent */}
+        </View>
+    );
 };
 
 // Usage
 <Layout>
-  <ExpensiveContent /> {/* Doesn't re-render on sidebar toggle */}
-</Layout>
+    <ExpensiveContent /> {/* Doesn't re-render on sidebar toggle */}
+</Layout>;
 ```
 
 ## Anti-Patterns
@@ -206,20 +207,15 @@ const Layout = ({ children }: { children: ReactNode }) => {
 ```tsx
 // ❌ Recalculates on every render
 const UserList = ({ users }: { users: User[] }) => {
-  const sorted = users
-    .filter(u => u.active)
-    .sort((a, b) => a.name.localeCompare(b.name));
-  
-  return <FlatList data={sorted} renderItem={renderUser} />;
+    const sorted = users.filter((u) => u.active).sort((a, b) => a.name.localeCompare(b.name));
+
+    return <FlatList data={sorted} renderItem={renderUser} />;
 };
 
 // ✅ Memoize the transformation
 const UserList = ({ users }: { users: User[] }) => {
-  const sorted = useMemo(
-    () => users.filter(u => u.active).sort((a, b) => a.name.localeCompare(b.name)),
-    [users]
-  );
-  return <FlatList data={sorted} renderItem={renderUser} />;
+    const sorted = useMemo(() => users.filter((u) => u.active).sort((a, b) => a.name.localeCompare(b.name)), [users]);
+    return <FlatList data={sorted} renderItem={renderUser} />;
 };
 ```
 
@@ -228,27 +224,27 @@ const UserList = ({ users }: { users: User[] }) => {
 ```tsx
 // ❌ Complex calculation blocks render
 const PriceDisplay = ({ items }: { items: CartItem[] }) => {
-  const total = items.reduce((sum, item) => {
-    const discount = item.quantity > 10 ? 0.1 : 0;
-    return sum + (item.price * item.quantity * (1 - discount));
-  }, 0);
-  
-  return <Text>${total.toFixed(2)}</Text>;
+    const total = items.reduce((sum, item) => {
+        const discount = item.quantity > 10 ? 0.1 : 0;
+        return sum + item.price * item.quantity * (1 - discount);
+    }, 0);
+
+    return <Text>${total.toFixed(2)}</Text>;
 };
 
 // ✅ Extract to hook or useMemo
 const useCartTotal = (items: CartItem[]) => {
-  return useMemo(() => {
-    return items.reduce((sum, item) => {
-      const discount = item.quantity > 10 ? 0.1 : 0;
-      return sum + (item.price * item.quantity * (1 - discount));
-    }, 0);
-  }, [items]);
+    return useMemo(() => {
+        return items.reduce((sum, item) => {
+            const discount = item.quantity > 10 ? 0.1 : 0;
+            return sum + item.price * item.quantity * (1 - discount);
+        }, 0);
+    }, [items]);
 };
 
 const PriceDisplay = ({ items }: { items: CartItem[] }) => {
-  const total = useCartTotal(items);
-  return <Text>${total.toFixed(2)}</Text>;
+    const total = useCartTotal(items);
+    return <Text>${total.toFixed(2)}</Text>;
 };
 ```
 
@@ -257,12 +253,12 @@ const PriceDisplay = ({ items }: { items: CartItem[] }) => {
 ```tsx
 // ❌ Any extra prop change triggers re-render
 const Parent = (props: ParentProps) => {
-  return <Child {...props} />; // Opaque dependency
+    return <Child {...props} />; // Opaque dependency
 };
 
 // ✅ Explicit props = clear re-render triggers
 const Parent = ({ name, onPress }: ParentProps) => {
-  return <Child name={name} onPress={onPress} />;
+    return <Child name={name} onPress={onPress} />;
 };
 ```
 
@@ -270,11 +266,11 @@ const Parent = ({ name, onPress }: ParentProps) => {
 
 ```tsx
 // ❌ Always triggers re-render even with memo()
-<List 
-  data={items}
-  extraData={{ userId }} // New object every render
-  contentContainerStyle={{ padding: 10 }} // New object!
-/>
+<List
+    data={items}
+    extraData={{ userId }} // New object every render
+    contentContainerStyle={{ padding: 10 }} // New object!
+/>;
 
 // ✅ Stable references
 const extraData = useMemo(() => ({ userId }), [userId]);

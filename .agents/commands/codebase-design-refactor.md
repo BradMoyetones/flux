@@ -20,11 +20,11 @@ Large-scale refactoring across entire codebase. Plans strategically with Opus, e
 
 ## Arguments
 
-| Flag | Description |
-|------|-------------|
-| `[path]` | Optional directory to scope refactor |
-| `--phase <n>` | Execute specific phase from previous roadmap |
-| `--principles <list>` | Comma-separated list of principles to apply |
+| Flag                  | Description                                  |
+| --------------------- | -------------------------------------------- |
+| `[path]`              | Optional directory to scope refactor         |
+| `--phase <n>`         | Execute specific phase from previous roadmap |
+| `--principles <list>` | Comma-separated list of principles to apply  |
 
 ## Available Principles
 
@@ -42,6 +42,7 @@ Large-scale refactoring across entire codebase. Plans strategically with Opus, e
 ## Controls
 
 At each step:
+
 - `y` — Apply change, continue
 - `n` — Skip this file, continue
 - `skip phase` — Skip to next phase

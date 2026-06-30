@@ -10,15 +10,15 @@ category: ddd/tactical
 
 Scan for these patterns indicating missing or broken Value Object:
 
-| Pattern | Example |
-|---------|---------|
+| Pattern                      | Example                                              |
+| ---------------------------- | ---------------------------------------------------- |
 | Primitive for domain concept | `email: string`, `price: number`, `currency: string` |
-| Repeated validation | Same regex/check in multiple files |
-| Public mutable property | `public amount: number` |
-| Method mutates this | `this.amount += x` with `void` return |
-| Missing equals() | Class with value semantics, no equality method |
-| External validation | `EmailValidator.validate(str)` separate from class |
-| No behavior | Class with only constructor and getters |
+| Repeated validation          | Same regex/check in multiple files                   |
+| Public mutable property      | `public amount: number`                              |
+| Method mutates this          | `this.amount += x` with `void` return                |
+| Missing equals()             | Class with value semantics, no equality method       |
+| External validation          | `EmailValidator.validate(str)` separate from class   |
+| No behavior                  | Class with only constructor and getters              |
 
 ## Fix
 
@@ -26,31 +26,32 @@ Valid Value Object structure:
 
 ```typescript
 class Email {
-  private constructor(private readonly value: string) {}
+    private constructor(private readonly value: string) {}
 
-  static create(input: string): Email {
-    const normalized = input.trim().toLowerCase();
-    if (!Email.isValid(normalized)) {
-      throw new InvalidEmailError(input);
+    static create(input: string): Email {
+        const normalized = input.trim().toLowerCase();
+        if (!Email.isValid(normalized)) {
+            throw new InvalidEmailError(input);
+        }
+        return new Email(normalized);
     }
-    return new Email(normalized);
-  }
 
-  private static isValid(email: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
+    private static isValid(email: string): boolean {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
 
-  equals(other: Email): boolean {
-    return this.value === other.value;
-  }
+    equals(other: Email): boolean {
+        return this.value === other.value;
+    }
 
-  get domain(): string {
-    return this.value.split('@')[1];
-  }
+    get domain(): string {
+        return this.value.split('@')[1];
+    }
 }
 ```
 
 Checklist:
+
 - ✅ Private constructor
 - ✅ Static factory with validation
 - ✅ All properties `readonly`
@@ -60,10 +61,11 @@ Checklist:
 ## Violations
 
 ### Primitive Obsession
+
 ```typescript
 // ❌ Detect: primitive type + validation logic nearby
 function createUser(email: string) {
-  if (!email.includes('@')) throw new Error('Invalid');
+    if (!email.includes('@')) throw new Error('Invalid');
 }
 
 // ✅ Fix: extract Value Object
@@ -71,6 +73,7 @@ function createUser(email: Email) {}
 ```
 
 ### Mutation
+
 ```typescript
 // ❌ Detect: void return + this mutation
 add(other: Money): void {
@@ -84,34 +87,39 @@ add(other: Money): Money {
 ```
 
 ### External validation
+
 ```typescript
 // ❌ Detect: public constructor + separate validator
 class Email {
-  constructor(public readonly value: string) {}
+    constructor(public readonly value: string) {}
 }
 
 // ✅ Fix: private constructor + factory
 class Email {
-  private constructor(private readonly value: string) {}
-  static create(input: string): Email { /* validates here */ }
+    private constructor(private readonly value: string) {}
+    static create(input: string): Email {
+        /* validates here */
+    }
 }
 ```
 
 ### Reference equality
+
 ```typescript
 // ❌ Detect: no equals() method on value class
 // ✅ Fix: implement equals() comparing all properties
 ```
 
 ### Anemic Value Object
+
 ```typescript
 // ❌ Detect: logic outside, class is just data
-function isInRange(date: Date, range: DateRange): boolean
+function isInRange(date: Date, range: DateRange): boolean;
 
 // ✅ Fix: move logic inside
 class DateRange {
-  contains(date: Date): boolean
-  overlaps(other: DateRange): boolean
+    contains(date: Date): boolean;
+    overlaps(other: DateRange): boolean;
 }
 ```
 

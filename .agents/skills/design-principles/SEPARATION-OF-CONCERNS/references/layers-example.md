@@ -16,19 +16,19 @@ function UserProfileScreen({ route }: Props) {
     const fetchUser = async () => {
       try {
         const response = await fetch(`https://api.example.com/users/${userId}`, {
-          headers: { 
-            'Authorization': `Bearer ${await AsyncStorage.getItem('token')}` 
+          headers: {
+            'Authorization': `Bearer ${await AsyncStorage.getItem('token')}`
           }
         });
         const data = await response.json();
-        
+
         // Business logic in component
         if (data.status === 'suspended') {
           Alert.alert('Account Suspended', 'Contact support');
           navigation.goBack();
           return;
         }
-        
+
         // Data transformation in component
         setUser({
           ...data,
@@ -67,10 +67,10 @@ function UserProfileScreen({ route }: Props) {
         },
         body: JSON.stringify(formData)
       });
-      
+
       // Analytics in component
       analytics.track('profile_updated', { userId });
-      
+
       setEditing(false);
     } catch (error) {
       Alert.alert('Error', 'Failed to save');
@@ -78,7 +78,7 @@ function UserProfileScreen({ route }: Props) {
   };
 
   // 200 more lines of mixed concerns...
-  
+
   return (
     <View>
       {/* Rendering */}
@@ -94,54 +94,54 @@ function UserProfileScreen({ route }: Props) {
 ```typescript
 // domain/entities/User.ts — pure domain object
 interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  status: UserStatus;
-  createdAt: Date;
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    status: UserStatus;
+    createdAt: Date;
 }
 
 // domain/ports/UserPort.ts — abstract data access
 interface UserPort {
-  getById(id: string): Promise<User>;
-  update(id: string, data: UpdateUserDTO): Promise<User>;
+    getById(id: string): Promise<User>;
+    update(id: string, data: UpdateUserDTO): Promise<User>;
 }
 
 // domain/usecases/GetUserProfileUseCase.ts — business logic
 class GetUserProfileUseCase {
-  constructor(private readonly userPort: UserPort) {}
+    constructor(private readonly userPort: UserPort) {}
 
-  async execute(userId: string): Promise<UserProfile> {
-    const user = await this.userPort.getById(userId);
-    
-    if (user.status === 'suspended') {
-      throw new UserSuspendedError(userId);
+    async execute(userId: string): Promise<UserProfile> {
+        const user = await this.userPort.getById(userId);
+
+        if (user.status === 'suspended') {
+            throw new UserSuspendedError(userId);
+        }
+
+        return {
+            ...user,
+            fullName: `${user.firstName} ${user.lastName}`,
+            memberSince: user.createdAt,
+        };
     }
-
-    return {
-      ...user,
-      fullName: `${user.firstName} ${user.lastName}`,
-      memberSince: user.createdAt,
-    };
-  }
 }
 
 // domain/usecases/UpdateUserProfileUseCase.ts
 class UpdateUserProfileUseCase {
-  constructor(
-    private readonly userPort: UserPort,
-    private readonly validator: UserValidator
-  ) {}
+    constructor(
+        private readonly userPort: UserPort,
+        private readonly validator: UserValidator
+    ) {}
 
-  async execute(userId: string, data: UpdateProfileDTO): Promise<User> {
-    const validation = this.validator.validateProfileUpdate(data);
-    if (!validation.isValid) {
-      throw new ValidationError(validation.errors);
+    async execute(userId: string, data: UpdateProfileDTO): Promise<User> {
+        const validation = this.validator.validateProfileUpdate(data);
+        if (!validation.isValid) {
+            throw new ValidationError(validation.errors);
+        }
+
+        return this.userPort.update(userId, data);
     }
-
-    return this.userPort.update(userId, data);
-  }
 }
 ```
 
@@ -150,24 +150,24 @@ class UpdateUserProfileUseCase {
 ```typescript
 // infrastructure/adapters/ApiUserAdapter.ts — concrete data access
 class ApiUserAdapter implements UserPort {
-  constructor(private readonly httpClient: HttpClient) {}
+    constructor(private readonly httpClient: HttpClient) {}
 
-  async getById(id: string): Promise<User> {
-    const response = await this.httpClient.get<UserDTO>(`/users/${id}`);
-    return this.toDomain(response);
-  }
+    async getById(id: string): Promise<User> {
+        const response = await this.httpClient.get<UserDTO>(`/users/${id}`);
+        return this.toDomain(response);
+    }
 
-  async update(id: string, data: UpdateUserDTO): Promise<User> {
-    const response = await this.httpClient.patch<UserDTO>(`/users/${id}`, data);
-    return this.toDomain(response);
-  }
+    async update(id: string, data: UpdateUserDTO): Promise<User> {
+        const response = await this.httpClient.patch<UserDTO>(`/users/${id}`, data);
+        return this.toDomain(response);
+    }
 
-  private toDomain(dto: UserDTO): User {
-    return {
-      ...dto,
-      createdAt: new Date(dto.createdAt),
-    };
-  }
+    private toDomain(dto: UserDTO): User {
+        return {
+            ...dto,
+            createdAt: new Date(dto.createdAt),
+        };
+    }
 }
 ```
 
@@ -186,7 +186,7 @@ function useUserProfile(userId: string) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: UpdateProfileDTO) => 
+    mutationFn: (data: UpdateProfileDTO) =>
       updateUserProfile.execute(userId, data),
     onSuccess: () => {
       profileQuery.refetch();

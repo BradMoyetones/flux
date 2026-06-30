@@ -25,13 +25,13 @@ Testing conventions for Swift/SwiftUI projects with Clean Architecture (domain +
 
 ## FIRST Principles
 
-| Principle | Description |
-|-----------|-------------|
-| **Fast** | Unit tests < 100ms, Integration < 500ms |
-| **Independent** | No shared state, any order execution |
-| **Repeatable** | Same result every run, no external dependencies |
-| **Self-validating** | Pass/fail without manual inspection |
-| **Timely** | Written with or before production code |
+| Principle           | Description                                     |
+| ------------------- | ----------------------------------------------- |
+| **Fast**            | Unit tests < 100ms, Integration < 500ms         |
+| **Independent**     | No shared state, any order execution            |
+| **Repeatable**      | Same result every run, no external dependencies |
+| **Self-validating** | Pass/fail without manual inspection             |
+| **Timely**          | Written with or before production code          |
 
 ## File Organization
 
@@ -64,12 +64,12 @@ root/
 
 ### Naming Conventions
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Test file | `{ClassName}Tests.swift` | `SessionViewModelTests.swift` |
-| Stub | `{Protocol}Stub.swift` | `SessionRepositoryStub.swift` |
-| Builder | `{Entity}Builder.swift` | `SessionBuilder.swift` |
-| Page Object | `{Screen}Page.swift` | `HomePage.swift` |
+| Type        | Pattern                  | Example                       |
+| ----------- | ------------------------ | ----------------------------- |
+| Test file   | `{ClassName}Tests.swift` | `SessionViewModelTests.swift` |
+| Stub        | `{Protocol}Stub.swift`   | `SessionRepositoryStub.swift` |
+| Builder     | `{Entity}Builder.swift`  | `SessionBuilder.swift`        |
+| Page Object | `{Screen}Page.swift`     | `HomePage.swift`              |
 
 ## Test Anatomy (Swift Testing)
 
@@ -81,39 +81,39 @@ import Testing
 
 @Suite("SessionUseCase")
 struct SessionUseCaseTests {
-    
+
     // MARK: - Dependencies (recreated per test)
     var repository: SessionRepositoryStub
     var monitor: MonitorStub
     var sut: GetSessionUseCase
-    
+
     init() {
         repository = SessionRepositoryStub()
         monitor = MonitorStub()
         sut = GetSessionUseCase(repository: repository, monitor: monitor)
     }
-    
+
     @Test("should return session when repository has active session")
     func shouldReturnSession_whenRepositoryHasActiveSession() async {
         // Given
         let expected = SessionBuilder().withStatus(.active).build()
         repository.getSessionResult = .success(expected)
-        
+
         // When
         let result = await sut.execute()
-        
+
         // Then
         #expect(result == .success(expected))
     }
-    
+
     @Test("should return nil when repository is empty")
     func shouldReturnNil_whenRepositoryIsEmpty() async {
         // Given
         repository.getSessionResult = .success(nil)
-        
+
         // When
         let result = await sut.execute()
-        
+
         // Then
         #expect(try result.get() == nil)
     }
@@ -162,11 +162,11 @@ let unwrapped = try #require(optional)  // Fails test if nil
 
 ### Types by Layer
 
-| Layer | Test Double | Purpose |
-|-------|-------------|---------|
-| Domain (Entities, UseCases) | **Stub** | Return predefined data |
-| UI (ViewModels) | **Stub** | Return predefined data |
-| Infrastructure (Adapters) | **Spy/Mock** | Verify interactions |
+| Layer                       | Test Double  | Purpose                |
+| --------------------------- | ------------ | ---------------------- |
+| Domain (Entities, UseCases) | **Stub**     | Return predefined data |
+| UI (ViewModels)             | **Stub**     | Return predefined data |
+| Infrastructure (Adapters)   | **Spy/Mock** | Verify interactions    |
 
 ### Protocol Stub Pattern
 
@@ -182,14 +182,14 @@ final class SessionRepositoryStub: SessionRepositoryProtocol {
     // Configurable results
     var getSessionResult: Result<Session?, RepositoryError> = .success(nil)
     var saveSessionResult: Result<Void, RepositoryError> = .success(())
-    
+
     // Call tracking (Spy capability)
     private(set) var saveSessionCalls: [Session] = []
-    
+
     func getSession() async -> Result<Session?, RepositoryError> {
         getSessionResult
     }
-    
+
     func saveSession(_ session: Session) async -> Result<Void, RepositoryError> {
         saveSessionCalls.append(session)
         return saveSessionResult
@@ -203,16 +203,16 @@ final class SessionRepositoryStub: SessionRepositoryProtocol {
 // Stub: Testing output based on input
 @Test func shouldDisplayError_whenRepositoryFails() async {
     repository.getSessionResult = .failure(.notFound)  // Stub behavior
-    
+
     await sut.loadSession()
-    
+
     #expect(sut.errorMessage != nil)
 }
 
 // Spy: Verifying side effects
 @Test func shouldSaveSession_whenUserTapsConfirm() async {
     await sut.confirmSession()
-    
+
     #expect(repository.saveSessionCalls.count == 1)  // Spy verification
     #expect(repository.saveSessionCalls.first?.status == .confirmed)
 }
@@ -226,27 +226,27 @@ final class SessionBuilder {
     private var status: SessionStatus = .idle
     private var startDate: Date = Date()
     private var duration: TimeInterval = 3600
-    
+
     func withId(_ id: UUID) -> Self {
         self.id = id
         return self
     }
-    
+
     func withStatus(_ status: SessionStatus) -> Self {
         self.status = status
         return self
     }
-    
+
     func withStartDate(_ date: Date) -> Self {
         self.startDate = date
         return self
     }
-    
+
     func withDuration(_ duration: TimeInterval) -> Self {
         self.duration = duration
         return self
     }
-    
+
     func build() -> Session {
         Session(
             id: id,
@@ -274,7 +274,7 @@ Each test gets fresh instances via `init()`:
 @Suite struct ViewModelTests {
     var repository: SessionRepositoryStub
     var sut: SessionViewModel
-    
+
     init() {
         // Fresh instances for each test
         repository = SessionRepositoryStub()
@@ -293,17 +293,17 @@ For ViewModels with `@MainActor`:
 struct SessionViewModelTests {
     var sut: SessionViewModel
     var repository: SessionRepositoryStub
-    
+
     init() {
         repository = SessionRepositoryStub()
         sut = SessionViewModel(repository: repository)
     }
-    
+
     @Test func shouldUpdateState_whenLoaded() async {
         repository.getSessionResult = .success(SessionBuilder().build())
-        
+
         await sut.load()
-        
+
         #expect(sut.state == .loaded)
     }
 }
@@ -354,10 +354,10 @@ final class TestDIContainer {
 @Test func shouldUpdatePublishedState() async {
     // Given
     repository.getSessionResult = .success(SessionBuilder().build())
-    
+
     // When
     await sut.load()
-    
+
     // Then - MainActor ensures @Published updates are visible
     #expect(sut.session != nil)
 }
@@ -390,32 +390,32 @@ final class TestDIContainer {
 // Pages/HomePage.swift
 struct HomePage {
     let app: XCUIApplication
-    
+
     // MARK: - Elements
     var startButton: XCUIElement {
         app.buttons["start-session-button"]
     }
-    
+
     var sessionStatus: XCUIElement {
         app.staticTexts["session-status-label"]
     }
-    
+
     var settingsButton: XCUIElement {
         app.buttons["settings-button"]
     }
-    
+
     // MARK: - Actions
     @discardableResult
     func tapStart() -> SessionPage {
         startButton.tap()
         return SessionPage(app: app)
     }
-    
+
     func tapSettings() -> SettingsPage {
         settingsButton.tap()
         return SettingsPage(app: app)
     }
-    
+
     // MARK: - Assertions
     func assertSessionStatus(_ expected: String) -> Self {
         XCTAssertEqual(sessionStatus.label, expected)
@@ -445,7 +445,7 @@ Text(viewModel.statusText)
 final class StartButtonTests: XCTestCase {
     var app: XCUIApplication!
     var homePage: HomePage!
-    
+
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
@@ -453,12 +453,12 @@ final class StartButtonTests: XCTestCase {
         app.launch()
         homePage = HomePage(app: app)
     }
-    
+
     func test_startButton_shouldBeVisible_whenAppLaunches() {
         XCTAssertTrue(homePage.startButton.exists)
         XCTAssertTrue(homePage.startButton.isEnabled)
     }
-    
+
     func test_startButton_shouldNavigateToSession_whenTapped() {
         let sessionPage = homePage.tapStart()
         XCTAssertTrue(sessionPage.timerLabel.waitForExistence(timeout: 2))
@@ -472,14 +472,14 @@ final class StartButtonTests: XCTestCase {
 // {app}E2ETests/Flows/SessionFlowTests.swift
 final class SessionFlowTests: XCTestCase {
     var app: XCUIApplication!
-    
+
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["--e2e-testing", "--reset-state"]
         app.launch()
     }
-    
+
     func test_completeSessionFlow_shouldShowSummary() {
         HomePage(app: app)
             .tapStart()
@@ -596,14 +596,16 @@ let result = await sut.getItems()
 ## Workflows
 
 For step-by-step procedures, see [references/workflows.md](references/workflows.md):
+
 - **Write Tests Workflow** — Identify test type → Follow type-specific steps → Verify quality
 - **Refactor Test Workflow** — Identify problem → Diagnose root cause → Apply fix → Verify
 
 ## References
 
 For templates and utilities, see [references/test-utils.md](references/test-utils.md):
+
 - Protocol Stub template
-- Builder template  
+- Builder template
 - TestDIContainer
 - XCUITest helpers
 - Common assertions

@@ -28,24 +28,21 @@ A test that **documents current behavior**, not expected behavior. It creates a 
 
 ```typescript
 // Step 1-2: Write test with wrong assertion
-describe("PublishArticleUseCase", () => {
-  it("should characterize publish article behavior", async () => {
-    // Arrange
-    const articleRepository = new ArticleRepositoryStub().withArticle(
-      articleBuilder().id("123").status("draft").build()
-    );
-    const notificationService = new NotificationServiceSpy();
-    const useCase = new PublishArticleUseCase(
-      articleRepository,
-      notificationService
-    );
+describe('PublishArticleUseCase', () => {
+    it('should characterize publish article behavior', async () => {
+        // Arrange
+        const articleRepository = new ArticleRepositoryStub().withArticle(
+            articleBuilder().id('123').status('draft').build()
+        );
+        const notificationService = new NotificationServiceSpy();
+        const useCase = new PublishArticleUseCase(articleRepository, notificationService);
 
-    // Act
-    const result = await useCase.execute({ articleId: "123" });
+        // Act
+        const result = await useCase.execute({ articleId: '123' });
 
-    // Assert - Wrong on purpose
-    expect(result.success).toBe(false);
-  });
+        // Assert - Wrong on purpose
+        expect(result.success).toBe(false);
+    });
 });
 ```
 
@@ -60,7 +57,7 @@ jest --testNamePattern="should characterize publish article behavior"
 // Step 4-5: Parse output, update with actual value
 expect(result.success).toBe(true);
 if (result.success) {
-  expect(result.data.status).toBe("published");
+    expect(result.data.status).toBe('published');
 }
 ```
 
@@ -76,18 +73,15 @@ Capture service calls and interactions:
 ```typescript
 // Characterize notification calls
 const notificationService = new NotificationServiceSpy();
-const useCase = new PublishArticleUseCase(
-  articleRepository,
-  notificationService
-);
+const useCase = new PublishArticleUseCase(articleRepository, notificationService);
 
-await useCase.execute({ articleId: "123" });
+await useCase.execute({ articleId: '123' });
 
 expect(notificationService.sendEmailCallCount()).toBe(999); // Wrong
 
 // After failure: Expected: 999, Received: 1
 expect(notificationService.sendEmailCallCount()).toBe(1);
-expect(notificationService.lastEmailRecipient()).toBe("author@example.com");
+expect(notificationService.lastEmailRecipient()).toBe('author@example.com');
 ```
 
 ### 3. **API responses (Infrastructure)** — stable
@@ -96,22 +90,22 @@ Characterize fetch calls and HTTP interactions:
 
 ```typescript
 // Characterize fetch calls
-const fetchSpy = jest.spyOn(global, "fetch");
+const fetchSpy = jest.spyOn(global, 'fetch');
 const adapter = new ArticlesApiAdapter();
-await adapter.publish("123");
+await adapter.publish('123');
 
 expect(fetchSpy).toHaveBeenCalledWith(
-  "https://api.example.com/articles/999/publish", // Wrong endpoint
-  expect.any(Object)
+    'https://api.example.com/articles/999/publish', // Wrong endpoint
+    expect.any(Object)
 );
 
 // After failure: Expected: "/articles/999/publish", Received: "/articles/123/publish"
 expect(fetchSpy).toHaveBeenCalledWith(
-  "https://api.example.com/articles/123/publish",
-  expect.objectContaining({
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
+    'https://api.example.com/articles/123/publish',
+    expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+    })
 );
 ```
 
@@ -167,13 +161,13 @@ This makes it easy to:
 
 - **Always use filtering** — run only the specific test, never the full suite
 
-  ```bash
-  # By test name pattern
-  jest --testNamePattern="should characterize publish article behavior"
+    ```bash
+    # By test name pattern
+    jest --testNamePattern="should characterize publish article behavior"
 
-  # By file path (faster for characterization tests)
-  jest src/modules/articles/core/usecases/PublishArticle.usecase.characterization.test.ts
-  ```
+    # By file path (faster for characterization tests)
+    jest src/modules/articles/core/usecases/PublishArticle.usecase.characterization.test.ts
+    ```
 
 - **Don't fix bugs** — capture current behavior, even if wrong
 - **These tests are temporary** — replace with proper unit tests after refactoring
@@ -189,10 +183,10 @@ Add to `jest.config.js`:
 
 ```javascript
 module.exports = {
-  collectCoverageFrom: [
-    "src/**/*.{ts,tsx}",
-    "!src/**/*.characterization.test.ts", // Exclude characterization tests
-  ],
+    collectCoverageFrom: [
+        'src/**/*.{ts,tsx}',
+        '!src/**/*.characterization.test.ts', // Exclude characterization tests
+    ],
 };
 ```
 
@@ -202,9 +196,9 @@ Add to `package.json`:
 
 ```json
 {
-  "scripts": {
-    "test:characterize": "jest --testMatch='**/*.characterization.test.ts'"
-  }
+    "scripts": {
+        "test:characterize": "jest --testMatch='**/*.characterization.test.ts'"
+    }
 }
 ```
 
@@ -215,22 +209,22 @@ Add to `package.json`:
 Characterization tests can document inferred types:
 
 ```typescript
-it("should characterize return type structure", async () => {
-  const result = await legacyFunction();
+it('should characterize return type structure', async () => {
+    const result = await legacyFunction();
 
-  // This will fail and show you the actual structure
-  expect(result).toEqual({
-    wrongField: "wrong",
-  });
+    // This will fail and show you the actual structure
+    expect(result).toEqual({
+        wrongField: 'wrong',
+    });
 
-  // After seeing failure, update to actual structure
-  expect(result).toEqual({
-    id: expect.any(String),
-    status: "published",
-    metadata: expect.objectContaining({
-      publishedAt: expect.any(String),
-    }),
-  });
+    // After seeing failure, update to actual structure
+    expect(result).toEqual({
+        id: expect.any(String),
+        status: 'published',
+        metadata: expect.objectContaining({
+            publishedAt: expect.any(String),
+        }),
+    });
 });
 ```
 
@@ -238,7 +232,7 @@ it("should characterize return type structure", async () => {
 
 ```typescript
 // Capture actual types returned
-const result = await adapter.getArticle("123");
+const result = await adapter.getArticle('123');
 
 // Wrong on purpose to see what type is actually returned
 const wrongType: { id: number } = result; // Will show type error in IDE
@@ -259,31 +253,31 @@ const correctType: { id: string; title: string; status: string } = result;
 
 ```typescript
 // Before: Characterization test
-it("should characterize publish article behavior", async () => {
-  const result = await useCase.execute({ articleId: "123" });
-  expect(result.success).toBe(true);
-  expect(result.data.status).toBe("published");
-  expect(notificationService.sendEmailCallCount()).toBe(1);
+it('should characterize publish article behavior', async () => {
+    const result = await useCase.execute({ articleId: '123' });
+    expect(result.success).toBe(true);
+    expect(result.data.status).toBe('published');
+    expect(notificationService.sendEmailCallCount()).toBe(1);
 });
 
 // After refactoring → Multiple focused unit tests
-describe("PublishArticleUseCase", () => {
-  it("should return success when article is successfully published", async () => {
-    const repository = new ArticleRepositoryStub().withPublishSuccess();
-    const useCase = new PublishArticleUseCase(repository, notificationService);
+describe('PublishArticleUseCase', () => {
+    it('should return success when article is successfully published', async () => {
+        const repository = new ArticleRepositoryStub().withPublishSuccess();
+        const useCase = new PublishArticleUseCase(repository, notificationService);
 
-    const result = await useCase.execute({ articleId: "123" });
+        const result = await useCase.execute({ articleId: '123' });
 
-    expect(result.success).toBe(true);
-  });
+        expect(result.success).toBe(true);
+    });
 
-  it("should send notification when article is published", async () => {
-    const spy = new NotificationServiceSpy();
-    const useCase = new PublishArticleUseCase(repository, spy);
+    it('should send notification when article is published', async () => {
+        const spy = new NotificationServiceSpy();
+        const useCase = new PublishArticleUseCase(repository, spy);
 
-    await useCase.execute({ articleId: "123" });
+        await useCase.execute({ articleId: '123' });
 
-    expect(spy.sendEmailCallCount()).toBe(1);
-  });
+        expect(spy.sendEmailCallCount()).toBe(1);
+    });
 });
 ```

@@ -2,12 +2,12 @@
 name: react-test-refactor
 description: Improve test quality by detecting and fixing test smells
 arguments:
-  - name: path
-    description: Path to test file or folder (optional, detects current context if omitted)
-    required: false
-  - name: options
-    description: Options like --check-only, --auto-fix, --category
-    required: false
+    - name: path
+      description: Path to test file or folder (optional, detects current context if omitted)
+      required: false
+    - name: options
+      description: Options like --check-only, --auto-fix, --category
+      required: false
 ---
 
 # /react-test-refactor
@@ -22,10 +22,10 @@ Improve test quality using the `react-test-refactor` agent.
 
 ## Arguments
 
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `path` | No | Path to test file or folder. If omitted, uses current file or prompts. |
-| `options` | No | `--check-only`, `--auto-fix`, `--category <cat>` |
+| Argument  | Required | Description                                                            |
+| --------- | -------- | ---------------------------------------------------------------------- |
+| `path`    | No       | Path to test file or folder. If omitted, uses current file or prompts. |
+| `options` | No       | `--check-only`, `--auto-fix`, `--category <cat>`                       |
 
 ## Behavior
 
@@ -87,26 +87,27 @@ Pass: resolved path + options
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
-| `--check-only` | Report issues without fixing |
-| `--auto-fix` | Apply safe fixes automatically |
+| Option             | Description                      |
+| ------------------ | -------------------------------- |
+| `--check-only`     | Report issues without fixing     |
+| `--auto-fix`       | Apply safe fixes automatically   |
 | `--category <cat>` | Focus on specific smell category |
 
 ### Categories
 
-| Category | Description |
-|----------|-------------|
-| `flaky` | Timing-dependent, random, shared state |
-| `slow` | Real timers, network, heavy setup |
-| `fragile` | Tests implementation details |
-| `obscure` | Hard to understand, missing AAA |
-| `coupled` | Tests depend on each other |
-| `over-mocked` | Too many mocks (>3) |
+| Category      | Description                            |
+| ------------- | -------------------------------------- |
+| `flaky`       | Timing-dependent, random, shared state |
+| `slow`        | Real timers, network, heavy setup      |
+| `fragile`     | Tests implementation details           |
+| `obscure`     | Hard to understand, missing AAA        |
+| `coupled`     | Tests depend on each other             |
+| `over-mocked` | Too many mocks (>3)                    |
 
 ## Output
 
 Summary report:
+
 ```
 🔍 Test Quality Report: <path>
 
@@ -121,6 +122,7 @@ Issues found: X
 ```
 
 Per-issue detail:
+
 ```
 Issue #1: FLAKY — <file>:<line>
 
@@ -136,6 +138,7 @@ Apply fix? [Y/n]:
 ```
 
 After fixes:
+
 ```
 ✅ Test Refactoring Complete
 
@@ -148,10 +151,10 @@ Verification: ✅ All tests passing
 
 ## Errors
 
-| Error | Message |
-|-------|---------|
-| No path provided | `❌ No path specified. Usage: /react-test-refactor <path>` |
-| Path not found | `❌ Path not found: <path>` |
-| No test files | `⚠️ No test files found in <path>` |
+| Error            | Message                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| No path provided | `❌ No path specified. Usage: /react-test-refactor <path>`                               |
+| Path not found   | `❌ Path not found: <path>`                                                              |
+| No test files    | `⚠️ No test files found in <path>`                                                       |
 | Invalid category | `⚠️ Unknown category: <cat>. Valid: flaky, slow, fragile, obscure, coupled, over-mocked` |
-| Fix breaks tests | `⚠️ Fix introduced failures. Rolling back...` |
+| Fix breaks tests | `⚠️ Fix introduced failures. Rolling back...`                                            |

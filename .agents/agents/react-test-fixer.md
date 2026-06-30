@@ -340,19 +340,19 @@ Apply all fixes? [Y/n/selective]:
 
 ```typescript
 // ❌ Before
-it("should update state", () => {
-  const { result } = renderHook(() => useAuth());
-  result.current.login();
-  expect(result.current.isLoggedIn).toBe(true);
+it('should update state', () => {
+    const { result } = renderHook(() => useAuth());
+    result.current.login();
+    expect(result.current.isLoggedIn).toBe(true);
 });
 
 // ✅ After
-it("should update state", async () => {
-  const { result } = renderHook(() => useAuth());
-  await act(async () => {
-    await result.current.login();
-  });
-  expect(result.current.isLoggedIn).toBe(true);
+it('should update state', async () => {
+    const { result } = renderHook(() => useAuth());
+    await act(async () => {
+        await result.current.login();
+    });
+    expect(result.current.isLoggedIn).toBe(true);
 });
 ```
 
@@ -381,9 +381,7 @@ it("should show data", async () => {
 const stub = new UserRepositoryStub();
 
 // ✅ After — stub configured for test scenario
-const stub = new UserRepositoryStub().withGetUserSuccess(
-  userBuilder().email("john@test.com").build()
-);
+const stub = new UserRepositoryStub().withGetUserSuccess(userBuilder().email('john@test.com').build());
 ```
 
 ### Pattern 4: Shared state leak
@@ -393,18 +391,18 @@ const stub = new UserRepositoryStub().withGetUserSuccess(
 let user: User;
 
 beforeAll(() => {
-  user = createUser();
+    user = createUser();
 });
 
 // ✅ After — fresh state per test
 let user: User;
 
 beforeEach(() => {
-  user = createUser();
+    user = createUser();
 });
 
 afterEach(() => {
-  jest.clearAllMocks();
+    jest.clearAllMocks();
 });
 ```
 
@@ -417,7 +415,7 @@ expect(result).toBe(expected);
 
 // ✅ After — proper async handling
 await waitFor(() => {
-  expect(result).toBe(expected);
+    expect(result).toBe(expected);
 });
 ```
 

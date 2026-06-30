@@ -88,14 +88,14 @@
 
 ## Naming Conventions
 
-| Element | Convention | Example |
-|---------|------------|---------|
-| Protocol | `XxxProtocol` | `SessionRepositoryProtocol` |
-| Adapter | Descriptive name | `UserDefaultsSessionRepository` |
-| UseCase | `XxxUseCase` | `StartSessionUseCase` |
-| ViewModel | `XxxViewModel` | `SessionViewModel` |
-| Entity | Simple noun | `Session` |
-| Error | `XxxError` | `SessionError` |
+| Element   | Convention       | Example                         |
+| --------- | ---------------- | ------------------------------- |
+| Protocol  | `XxxProtocol`    | `SessionRepositoryProtocol`     |
+| Adapter   | Descriptive name | `UserDefaultsSessionRepository` |
+| UseCase   | `XxxUseCase`     | `StartSessionUseCase`           |
+| ViewModel | `XxxViewModel`   | `SessionViewModel`              |
+| Entity    | Simple noun      | `Session`                       |
+| Error     | `XxxError`       | `SessionError`                  |
 
 ## File Organization
 
@@ -147,7 +147,7 @@ class SessionViewModel {
 // GOOD - ViewModel receives Port (protocol)
 class SessionViewModel {
     private let repository: SessionRepositoryProtocol
-    
+
     init(repository: SessionRepositoryProtocol) {
         self.repository = repository
     }
@@ -160,7 +160,7 @@ class SessionViewModel {
 // BAD - ViewModel depends on DI infrastructure
 class SessionViewModel: ObservableObject {
     private let repository: SessionRepositoryProtocol
-    
+
     init() {
         self.repository = try! DIContainer.shared.resolve(SessionRepositoryProtocol.self)
     }
@@ -171,7 +171,7 @@ class SessionViewModel: ObservableObject {
 // GOOD - ViewModel receives Ports, App handles DI
 class SessionViewModel: ObservableObject {
     private let repository: SessionRepositoryProtocol
-    
+
     init(repository: SessionRepositoryProtocol) {
         self.repository = repository
     }
@@ -181,7 +181,7 @@ class SessionViewModel: ObservableObject {
 @main
 struct retimeApp: App {
     @StateObject var sessionViewModel: SessionViewModel
-    
+
     init() {
         let repo = try! DIContainer.shared.resolve(SessionRepositoryProtocol.self)
         _sessionViewModel = StateObject(wrappedValue: SessionViewModel(repository: repo))
@@ -195,7 +195,7 @@ struct retimeApp: App {
 // BAD - UseCase just wraps repository call
 class GetAllGroupsUseCase {
     private let repository: GroupRepositoryProtocol
-    
+
     func execute() async throws -> [Group] {
         return try await repository.getAll()  // No logic, just pass-through
     }
@@ -211,7 +211,7 @@ func loadGroups() async {
 // GOOD - Call Port directly for simple reads
 class GroupViewModel {
     private let repository: GroupRepositoryProtocol
-    
+
     func loadGroups() async {
         groups = (try? await repository.getAll()) ?? []
     }
@@ -240,7 +240,7 @@ let vm = SessionViewModel(startSessionUseCase: useCase1, stopSessionUseCase: use
 class SessionViewModel {
     private let startSession: StartSessionUseCase
     private let stopSession: StopSessionUseCase
-    
+
     init(
         sessionRepository: SessionRepositoryProtocol,
         shieldManager: ShieldManagerProtocol
@@ -276,7 +276,7 @@ struct SessionView: View {
 // GOOD
 struct SessionView: View {
     @StateObject var viewModel: SessionViewModel
-    
+
     var body: some View {
         Button("Start") {
             viewModel.startSession()

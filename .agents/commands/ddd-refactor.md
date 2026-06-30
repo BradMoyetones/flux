@@ -28,24 +28,24 @@ Invoke the DDD refactor agent to fix tactical pattern violations.
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
+| Option          | Description                                  |
+| --------------- | -------------------------------------------- |
 | `--from-review` | Use violations from last `ddd-review` output |
-| `--fix <type>` | Target specific violation type |
-| `--dry-run` | Preview only, don't prompt for apply |
+| `--fix <type>`  | Target specific violation type               |
+| `--dry-run`     | Preview only, don't prompt for apply         |
 
 ## Available fix types
 
-| Type | Description |
-|------|-------------|
-| `primitive-obsession` | Extract Value Objects from primitives |
-| `anemic-entity` | Move logic into entity methods |
-| `exposed-aggregate` | Protect aggregate internals |
-| `missing-factory` | Add factory methods |
-| `mutable-vo` | Make Value Object immutable |
-| `wrong-equality` | Fix equals() implementation |
-| `missing-domain-event` | Add domain event dispatch |
-| `stateful-service` | Make domain service stateless |
+| Type                   | Description                           |
+| ---------------------- | ------------------------------------- |
+| `primitive-obsession`  | Extract Value Objects from primitives |
+| `anemic-entity`        | Move logic into entity methods        |
+| `exposed-aggregate`    | Protect aggregate internals           |
+| `missing-factory`      | Add factory methods                   |
+| `mutable-vo`           | Make Value Object immutable           |
+| `wrong-equality`       | Fix equals() implementation           |
+| `missing-domain-event` | Add domain event dispatch             |
+| `stateful-service`     | Make domain service stateless         |
 
 ## Workflow
 

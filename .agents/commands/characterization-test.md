@@ -35,6 +35,7 @@ jest src/modules/articles/core/usecases/PublishArticle.usecase.characterization.
 ### Step 3: Parse failure output
 
 Look for patterns like:
+
 - `Expected: false, Received: true`
 - `Expected: 999, Received: 1`
 
@@ -112,6 +113,7 @@ describe("{AdapterName}", () => {
 ## Output to User
 
 After test is green, summarize:
+
 - What behavior was captured
 - Which assertions document the current behavior
 - Reminder that this is a temporary safety net

@@ -2,12 +2,12 @@
 name: react-test-coverage
 description: Identify missing test coverage in a module
 arguments:
-  - name: path
-    description: Path to module/folder (optional, detects current context if omitted)
-    required: false
-  - name: options
-    description: Options like --high-only, --generate, --json
-    required: false
+    - name: path
+      description: Path to module/folder (optional, detects current context if omitted)
+      required: false
+    - name: options
+      description: Options like --high-only, --generate, --json
+      required: false
 ---
 
 # /react-test-coverage
@@ -22,10 +22,10 @@ Identify missing test coverage using the `react-test-coverage-gap` agent.
 
 ## Arguments
 
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `path` | No | Path to module/folder. If omitted, uses current module or prompts. |
-| `options` | No | `--high-only`, `--generate`, `--json` |
+| Argument  | Required | Description                                                        |
+| --------- | -------- | ------------------------------------------------------------------ |
+| `path`    | No       | Path to module/folder. If omitted, uses current module or prompts. |
+| `options` | No       | `--high-only`, `--generate`, `--json`                              |
 
 ## Behavior
 
@@ -81,15 +81,16 @@ Pass: resolved path + options
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
-| `--high-only` | Show only HIGH priority gaps |
-| `--generate` | Auto-generate tests for gaps (calls react-test-writer) |
-| `--json` | Output as JSON for CI integration |
+| Option        | Description                                            |
+| ------------- | ------------------------------------------------------ |
+| `--high-only` | Show only HIGH priority gaps                           |
+| `--generate`  | Auto-generate tests for gaps (calls react-test-writer) |
+| `--json`      | Output as JSON for CI integration                      |
 
 ## Output
 
 Standard report:
+
 ```
 📊 Coverage Gap Report: <module>
 
@@ -106,6 +107,7 @@ Standard report:
 ```
 
 With `--generate`:
+
 ```
 🔧 Generating tests...
 
@@ -116,6 +118,7 @@ Total: X new tests generated
 ```
 
 With `--json`:
+
 ```json
 {
   "module": "...",
@@ -127,9 +130,9 @@ With `--json`:
 
 ## Errors
 
-| Error | Message |
-|-------|---------|
+| Error            | Message                                                      |
+| ---------------- | ------------------------------------------------------------ |
 | No path provided | `❌ No module specified. Usage: /react-test-coverage <path>` |
-| Path not found | `❌ Module not found: <path>` |
-| Not a directory | `⚠️ Path is not a directory: <path>` |
-| No source files | `⚠️ No .ts/.tsx files found in <path>` |
+| Path not found   | `❌ Module not found: <path>`                                |
+| Not a directory  | `⚠️ Path is not a directory: <path>`                         |
+| No source files  | `⚠️ No .ts/.tsx files found in <path>`                       |

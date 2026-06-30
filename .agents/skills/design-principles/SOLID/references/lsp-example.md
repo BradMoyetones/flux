@@ -5,21 +5,21 @@
 ```typescript
 // Bird.ts
 class Bird {
-  fly(): void {
-    console.log('Flying...');
-  }
+    fly(): void {
+        console.log('Flying...');
+    }
 }
 
 // Penguin.ts — violates LSP
 class Penguin extends Bird {
-  fly(): void {
-    throw new Error('Penguins cannot fly!'); // Breaks substitutability
-  }
+    fly(): void {
+        throw new Error('Penguins cannot fly!'); // Breaks substitutability
+    }
 }
 
 // BirdMigration.ts — consumer breaks with Penguin
 function migrateBirds(birds: Bird[]): void {
-  birds.forEach(bird => bird.fly()); // Throws for Penguin!
+    birds.forEach((bird) => bird.fly()); // Throws for Penguin!
 }
 ```
 
@@ -28,41 +28,41 @@ function migrateBirds(birds: Bird[]): void {
 ```typescript
 // Bird.ts — base with common behavior only
 interface Bird {
-  move(): void;
+    move(): void;
 }
 
 interface FlyingBird extends Bird {
-  fly(): void;
+    fly(): void;
 }
 
 interface SwimmingBird extends Bird {
-  swim(): void;
+    swim(): void;
 }
 
 // Sparrow.ts
 class Sparrow implements FlyingBird {
-  move(): void {
-    this.fly();
-  }
+    move(): void {
+        this.fly();
+    }
 
-  fly(): void {
-    console.log('Flying...');
-  }
+    fly(): void {
+        console.log('Flying...');
+    }
 }
 
 // Penguin.ts — no LSP violation
 class Penguin implements SwimmingBird {
-  move(): void {
-    this.swim();
-  }
+    move(): void {
+        this.swim();
+    }
 
-  swim(): void {
-    console.log('Swimming...');
-  }
+    swim(): void {
+        console.log('Swimming...');
+    }
 }
 
 // BirdMigration.ts — works with any Bird
 function migrateBirds(birds: Bird[]): void {
-  birds.forEach(bird => bird.move()); // Safe for all birds
+    birds.forEach((bird) => bird.move()); // Safe for all birds
 }
 ```

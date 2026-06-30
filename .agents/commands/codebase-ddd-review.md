@@ -24,20 +24,22 @@ Invoke the codebase DDD review agent for architectural analysis.
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
-| `--domain <path>` | Specify domain layer location |
+| Option              | Description                                 |
+| ------------------- | ------------------------------------------- |
+| `--domain <path>`   | Specify domain layer location               |
 | `--contexts <list>` | Comma-separated list of contexts to analyze |
 
 ## What it analyzes
 
 **Strategic patterns (Priority 1-4):**
+
 - Bounded context violations (cross-imports, shared DB)
 - Aggregate boundary violations (multi-aggregate transactions)
 - Ubiquitous language inconsistencies
 - Missing Anti-Corruption Layers
 
 **Tactical patterns (Priority 5-6):**
+
 - Repository violations
 - Anemic domain model
 

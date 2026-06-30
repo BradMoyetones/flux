@@ -19,11 +19,11 @@ Use this file when upgrading a project from the legacy `reactflow` package (v11 
 
 The package name changed across major versions:
 
-| Version | Package name | Import style |
-|---------|-------------|--------------|
+| Version         | Package name          | Import style                                  |
+| --------------- | --------------------- | --------------------------------------------- |
 | v10 and earlier | `react-flow-renderer` | `import ReactFlow from 'react-flow-renderer'` |
-| v11 | `reactflow` | `import ReactFlow from 'reactflow'` |
-| v12+ (current) | `@xyflow/react` | `import { ReactFlow } from '@xyflow/react'` |
+| v11             | `reactflow`           | `import ReactFlow from 'reactflow'`           |
+| v12+ (current)  | `@xyflow/react`       | `import { ReactFlow } from '@xyflow/react'`   |
 
 To migrate:
 
@@ -70,18 +70,18 @@ v11 tolerated mutations when updating nodes. v12 requires immutable updates — 
 ```tsx
 // v11 (old) — mutations worked
 setNodes((currentNodes) =>
-  currentNodes.map((node) => {
-    node.hidden = true;  // mutation
-    return node;
-  }),
+    currentNodes.map((node) => {
+        node.hidden = true; // mutation
+        return node;
+    })
 );
 
 // v12 (new) — must create new objects
 setNodes((currentNodes) =>
-  currentNodes.map((node) => ({
-    ...node,
-    hidden: true,
-  })),
+    currentNodes.map((node) => ({
+        ...node,
+        hidden: true,
+    }))
 );
 ```
 
@@ -94,12 +94,12 @@ The position props passed to custom nodes were renamed:
 ```tsx
 // v11 (old)
 function CustomNode({ xPos, yPos }) {
-  // ...
+    // ...
 }
 
 // v12 (new)
 function CustomNode({ positionAbsoluteX, positionAbsoluteY }) {
-  // ...
+    // ...
 }
 ```
 
@@ -125,20 +125,20 @@ Apply the union type to hooks and callbacks:
 ```ts
 const { getNodes, getEdges } = useReactFlow<AppNode, AppEdge>();
 const onNodesChange: OnNodesChange<AppNode> = useCallback(
-  (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-  [],
+    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    []
 );
 ```
 
 ## Hooks changes
 
-| v11 | v12 | Notes |
-|-----|-----|-------|
-| `useNodesState` | Still available | Works the same way |
-| `useEdgesState` | Still available | Works the same way |
-| `useHandleConnections` | `useNodeConnections` | Renamed |
-| `useReactFlow().project()` | `useReactFlow().screenToFlowPosition()` | Renamed |
-| `useReactFlow().setTransform()` | `useReactFlow().setViewport()` | Renamed (from v10) |
+| v11                             | v12                                     | Notes              |
+| ------------------------------- | --------------------------------------- | ------------------ |
+| `useNodesState`                 | Still available                         | Works the same way |
+| `useEdgesState`                 | Still available                         | Works the same way |
+| `useHandleConnections`          | `useNodeConnections`                    | Renamed            |
+| `useReactFlow().project()`      | `useReactFlow().screenToFlowPosition()` | Renamed            |
+| `useReactFlow().setTransform()` | `useReactFlow().setViewport()`          | Renamed (from v10) |
 
 New hooks in v12 (no v11 equivalent):
 
@@ -149,9 +149,9 @@ New hooks in v12 (no v11 equivalent):
 
 1. Replace the package: `npm uninstall reactflow && npm install @xyflow/react`
 2. Find-and-replace all imports:
-   - `from 'reactflow'` → `from '@xyflow/react'`
-   - `import ReactFlow` (default) → `import { ReactFlow }` (named)
-   - `'reactflow/dist/style.css'` → `'@xyflow/react/dist/style.css'`
+    - `from 'reactflow'` → `from '@xyflow/react'`
+    - `import ReactFlow` (default) → `import { ReactFlow }` (named)
+    - `'reactflow/dist/style.css'` → `'@xyflow/react/dist/style.css'`
 3. Remove any `@reactflow/*` subpackage dependencies
 4. Update custom node components: `xPos` → `positionAbsoluteX`, `yPos` → `positionAbsoluteY`
 5. Audit all `setNodes` / `setEdges` calls for mutations — convert to spread-based immutable updates

@@ -110,33 +110,33 @@ Store template with initial state for easy reset in tests:
 
 ```typescript
 // modules/[context]/ui/stores/[name].store.ts
-import { createStore } from "zustand";
+import { createStore } from 'zustand';
 
 interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
+    user: User | null;
+    isAuthenticated: boolean;
 }
 
 interface AuthActions {
-  setUser: (user: User) => void;
-  logout: VoidFunction;
+    setUser: (user: User) => void;
+    logout: VoidFunction;
 }
 
 type AuthStore = AuthState & AuthActions;
 
 // Export for test reset
 export const initialAuthState: AuthState = {
-  user: null,
-  isAuthenticated: false,
+    user: null,
+    isAuthenticated: false,
 };
 
 export const createAuthStore = (preloadedState?: Partial<AuthState>) => {
-  return createStore<AuthStore>()((set) => ({
-    ...initialAuthState,
-    ...preloadedState,
-    setUser: (user) => set({ user, isAuthenticated: true }),
-    logout: () => set(initialAuthState),
-  }));
+    return createStore<AuthStore>()((set) => ({
+        ...initialAuthState,
+        ...preloadedState,
+        setUser: (user) => set({ user, isAuthenticated: true }),
+        logout: () => set(initialAuthState),
+    }));
 };
 ```
 
@@ -146,37 +146,37 @@ Generic builder pattern for test fixtures:
 
 ```typescript
 // modules/[context]/core/entities/[Entity].builder.ts
-import { User } from "./User.entity";
+import { User } from './User.entity';
 
 export const userBuilder = () => {
-  const entity: User = {
-    id: "user-123",
-    email: "default@example.com",
-    displayName: "Default User",
-    createdAt: "2024-01-01T00:00:00Z",
-  };
+    const entity: User = {
+        id: 'user-123',
+        email: 'default@example.com',
+        displayName: 'Default User',
+        createdAt: '2024-01-01T00:00:00Z',
+    };
 
-  const builder = {
-    id: (value: string) => {
-      entity.id = value;
-      return builder;
-    },
-    email: (value: string) => {
-      entity.email = value;
-      return builder;
-    },
-    displayName: (value: string) => {
-      entity.displayName = value;
-      return builder;
-    },
-    createdAt: (value: string) => {
-      entity.createdAt = value;
-      return builder;
-    },
-    build: () => entity,
-  };
+    const builder = {
+        id: (value: string) => {
+            entity.id = value;
+            return builder;
+        },
+        email: (value: string) => {
+            entity.email = value;
+            return builder;
+        },
+        displayName: (value: string) => {
+            entity.displayName = value;
+            return builder;
+        },
+        createdAt: (value: string) => {
+            entity.createdAt = value;
+            return builder;
+        },
+        build: () => entity,
+    };
 
-  return builder;
+    return builder;
 };
 ```
 
@@ -186,44 +186,44 @@ Configurable stub for repositories:
 
 ```typescript
 // modules/[context]/core/ports/[Name]Repository.stub.ts
-import { Result, ok, fail } from "@/types/Result";
-import { User } from "../entities/User.entity";
-import { AuthError } from "../entities/AuthError.entity";
-import { AuthRepository, LoginParams } from "./AuthRepository.port";
-import { userBuilder } from "../entities/User.builder";
+import { Result, ok, fail } from '@/types/Result';
+import { User } from '../entities/User.entity';
+import { AuthError } from '../entities/AuthError.entity';
+import { AuthRepository, LoginParams } from './AuthRepository.port';
+import { userBuilder } from '../entities/User.builder';
 
 export class AuthRepositoryStub implements AuthRepository {
-  private loginResult: Result<User, AuthError> = ok(userBuilder().build());
-  private logoutResult: Result<void, AuthError> = ok(undefined);
+    private loginResult: Result<User, AuthError> = ok(userBuilder().build());
+    private logoutResult: Result<void, AuthError> = ok(undefined);
 
-  // Configurable responses
-  withLoginSuccess(user: User): this {
-    this.loginResult = ok(user);
-    return this;
-  }
+    // Configurable responses
+    withLoginSuccess(user: User): this {
+        this.loginResult = ok(user);
+        return this;
+    }
 
-  withLoginFailure(error: AuthError): this {
-    this.loginResult = fail(error);
-    return this;
-  }
+    withLoginFailure(error: AuthError): this {
+        this.loginResult = fail(error);
+        return this;
+    }
 
-  withLogoutSuccess(): this {
-    this.logoutResult = ok(undefined);
-    return this;
-  }
+    withLogoutSuccess(): this {
+        this.logoutResult = ok(undefined);
+        return this;
+    }
 
-  withLogoutFailure(error: AuthError): this {
-    this.logoutResult = fail(error);
-    return this;
-  }
+    withLogoutFailure(error: AuthError): this {
+        this.logoutResult = fail(error);
+        return this;
+    }
 
-  // Port implementation
-  async login(_params: LoginParams): Promise<Result<User, AuthError>> {
-    return this.loginResult;
-  }
+    // Port implementation
+    async login(_params: LoginParams): Promise<Result<User, AuthError>> {
+        return this.loginResult;
+    }
 
-  async logout(): Promise<Result<void, AuthError>> {
-    return this.logoutResult;
-  }
+    async logout(): Promise<Result<void, AuthError>> {
+        return this.logoutResult;
+    }
 }
 ```

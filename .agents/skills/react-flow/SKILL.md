@@ -1,6 +1,6 @@
 ---
 name: react-flow
-description: "Expert guidance for React Flow (@xyflow/react): building interactive node-based graphs, custom nodes and edges, handles, state management, layouting, TypeScript patterns, performance optimization, and theming. Use when writing React Flow code, creating custom nodes or edges, debugging flow issues, optimizing graph performance, integrating with Zustand, or building canvas-based UIs with React Flow."
+description: 'Expert guidance for React Flow (@xyflow/react): building interactive node-based graphs, custom nodes and edges, handles, state management, layouting, TypeScript patterns, performance optimization, and theming. Use when writing React Flow code, creating custom nodes or edges, debugging flow issues, optimizing graph performance, integrating with Zustand, or building canvas-based UIs with React Flow.'
 ---
 
 # React Flow
@@ -28,19 +28,19 @@ Use this skill to build, customize, debug, and optimize interactive node-based U
 
 - Clarify the goal: new flow setup, custom nodes/edges, state management, layout, performance, styling, E2E testing, advanced patterns (undo/redo, copy/paste, computed flows, collaboration), or debugging.
 - Collect minimal facts:
-  - React Flow version (v12+ uses `@xyflow/react`)
-  - TypeScript or JavaScript
-  - State management approach (local state, Zustand, Redux)
-  - Number of nodes expected (affects performance strategy)
-  - Styling approach (CSS, Tailwind, styled-components)
+    - React Flow version (v12+ uses `@xyflow/react`)
+    - TypeScript or JavaScript
+    - State management approach (local state, Zustand, Redux)
+    - Number of nodes expected (affects performance strategy)
+    - Styling approach (CSS, Tailwind, styled-components)
 - Branch quickly:
-  - migrating from legacy `reactflow` or `react-flow-renderer` -> package rename, import changes, API differences
-  - blank canvas or missing nodes -> container dimensions or missing CSS import
-  - edges not rendering -> missing handles, missing CSS, or `display: none` on handles
-  - re-renders or sluggish performance -> nodeTypes defined inside component, missing memoization
-  - connecting nodes not working -> missing `onConnect` handler or handle configuration
-  - layout/positioning -> external layout library integration (dagre, elkjs)
-  - type errors -> TypeScript generic patterns for Node/Edge types
+    - migrating from legacy `reactflow` or `react-flow-renderer` -> package rename, import changes, API differences
+    - blank canvas or missing nodes -> container dimensions or missing CSS import
+    - edges not rendering -> missing handles, missing CSS, or `display: none` on handles
+    - re-renders or sluggish performance -> nodeTypes defined inside component, missing memoization
+    - connecting nodes not working -> missing `onConnect` handler or handle configuration
+    - layout/positioning -> external layout library integration (dagre, elkjs)
+    - type errors -> TypeScript generic patterns for Node/Edge types
 
 ## Routing map (read the right reference fast)
 

@@ -28,22 +28,22 @@ Grant only the minimum permissions and access necessary to perform a task. Reduc
 ```typescript
 // ReportGenerator.ts — has access to way more than needed
 class ReportGenerator {
-  constructor(
-    private readonly db: Database,           // Full DB access!
-    private readonly userService: UserService // Can modify users!
-  ) {}
+    constructor(
+        private readonly db: Database, // Full DB access!
+        private readonly userService: UserService // Can modify users!
+    ) {}
 
-  async generateSalesReport(userId: string): Promise<Report> {
-    // Only needs to READ sales data for ONE user
-    // But has access to:
-    // - All database tables (can drop tables!)
-    // - All users (can delete accounts!)
-    
-    const user = await this.userService.getById(userId);
-    const sales = await this.db.query('SELECT * FROM sales WHERE user_id = ?', [userId]);
-    
-    return this.formatReport(user.name, sales);
-  }
+    async generateSalesReport(userId: string): Promise<Report> {
+        // Only needs to READ sales data for ONE user
+        // But has access to:
+        // - All database tables (can drop tables!)
+        // - All users (can delete accounts!)
+
+        const user = await this.userService.getById(userId);
+        const sales = await this.db.query('SELECT * FROM sales WHERE user_id = ?', [userId]);
+
+        return this.formatReport(user.name, sales);
+    }
 }
 
 // If this class has a bug or is compromised:
@@ -57,28 +57,28 @@ class ReportGenerator {
 ```typescript
 // Ports define minimal required access
 interface SalesReadPort {
-  getSalesByUserId(userId: string): Promise<Sale[]>;
+    getSalesByUserId(userId: string): Promise<Sale[]>;
 }
 
 interface UserNameResolver {
-  getNameById(userId: string): Promise<string>;
+    getNameById(userId: string): Promise<string>;
 }
 
 // ReportGenerator.ts — minimal authority
 class ReportGenerator {
-  constructor(
-    private readonly salesReader: SalesReadPort,    // Read-only, sales only
-    private readonly userNames: UserNameResolver     // Can only read names
-  ) {}
+    constructor(
+        private readonly salesReader: SalesReadPort, // Read-only, sales only
+        private readonly userNames: UserNameResolver // Can only read names
+    ) {}
 
-  async generateSalesReport(userId: string): Promise<Report> {
-    const [userName, sales] = await Promise.all([
-      this.userNames.getNameById(userId),
-      this.salesReader.getSalesByUserId(userId),
-    ]);
-    
-    return this.formatReport(userName, sales);
-  }
+    async generateSalesReport(userId: string): Promise<Report> {
+        const [userName, sales] = await Promise.all([
+            this.userNames.getNameById(userId),
+            this.salesReader.getSalesByUserId(userId),
+        ]);
+
+        return this.formatReport(userName, sales);
+    }
 }
 
 // If this class has a bug or is compromised:
@@ -93,17 +93,17 @@ class ReportGenerator {
 ```typescript
 // ❌ Function receives more than needed
 interface User {
-  id: string;
-  email: string;
-  passwordHash: string;
-  creditCard: CreditCardInfo;
-  ssn: string;
-  // ... 20 more sensitive fields
+    id: string;
+    email: string;
+    passwordHash: string;
+    creditCard: CreditCardInfo;
+    ssn: string;
+    // ... 20 more sensitive fields
 }
 
 function formatGreeting(user: User): string {
-  // Only uses name, but has access to everything
-  return `Hello, ${user.name}!`;
+    // Only uses name, but has access to everything
+    return `Hello, ${user.name}!`;
 }
 
 // If formatGreeting has a bug that logs its input...
@@ -111,16 +111,16 @@ function formatGreeting(user: User): string {
 
 // ✅ Receive only what's needed
 function formatGreeting(name: string): string {
-  return `Hello, ${name}!`;
+    return `Hello, ${name}!`;
 }
 
 // Or use a minimal interface
 interface Named {
-  name: string;
+    name: string;
 }
 
 function formatGreeting(entity: Named): string {
-  return `Hello, ${entity.name}!`;
+    return `Hello, ${entity.name}!`;
 }
 ```
 
@@ -164,22 +164,22 @@ function CartSummary() {
 ```typescript
 // ❌ Full admin access for a read operation
 const storage = new CloudStorage({
-  apiKey: process.env.ADMIN_API_KEY, // Can delete buckets!
+    apiKey: process.env.ADMIN_API_KEY, // Can delete buckets!
 });
 
 async function getUserAvatar(userId: string): Promise<Buffer> {
-  return storage.download(`avatars/${userId}.png`);
+    return storage.download(`avatars/${userId}.png`);
 }
 
 // ✅ Scoped credentials for specific operation
 const avatarStorage = new CloudStorage({
-  apiKey: process.env.AVATAR_READ_KEY, // Read-only, avatars bucket only
-  bucket: 'avatars',
-  permissions: ['read'],
+    apiKey: process.env.AVATAR_READ_KEY, // Read-only, avatars bucket only
+    bucket: 'avatars',
+    permissions: ['read'],
 });
 
 async function getUserAvatar(userId: string): Promise<Buffer> {
-  return avatarStorage.download(`${userId}.png`);
+    return avatarStorage.download(`${userId}.png`);
 }
 ```
 
@@ -188,34 +188,34 @@ async function getUserAvatar(userId: string): Promise<Buffer> {
 ```typescript
 // ❌ Service with authority over everything
 class AppService {
-  constructor(
-    private readonly db: Database,
-    private readonly cache: Cache,
-    private readonly email: EmailService,
-    private readonly payment: PaymentProcessor,
-    private readonly analytics: Analytics,
-    private readonly admin: AdminService
-  ) {}
+    constructor(
+        private readonly db: Database,
+        private readonly cache: Cache,
+        private readonly email: EmailService,
+        private readonly payment: PaymentProcessor,
+        private readonly analytics: Analytics,
+        private readonly admin: AdminService
+    ) {}
 
-  // Every method in this class can access everything
-  // A bug in formatDate() could theoretically process payments
+    // Every method in this class can access everything
+    // A bug in formatDate() could theoretically process payments
 }
 
 // ✅ Focused services with minimal authority
 class SalesReportService {
-  constructor(
-    private readonly salesReader: SalesReadPort,
-    private readonly analytics: AnalyticsReadPort
-  ) {}
-  // Can only read sales and analytics
+    constructor(
+        private readonly salesReader: SalesReadPort,
+        private readonly analytics: AnalyticsReadPort
+    ) {}
+    // Can only read sales and analytics
 }
 
 class PaymentService {
-  constructor(
-    private readonly paymentProcessor: PaymentPort,
-    private readonly orderWriter: OrderWritePort
-  ) {}
-  // Can only process payments and update orders
+    constructor(
+        private readonly paymentProcessor: PaymentPort,
+        private readonly orderWriter: OrderWritePort
+    ) {}
+    // Can only process payments and update orders
 }
 ```
 

@@ -22,33 +22,33 @@ Tell objects what to do; don't ask them for data and make decisions for them. Be
 ```typescript
 // OrderService.ts — asks Order for data, makes decisions externally
 class OrderService {
-  applyDiscount(order: Order, discountCode: string): void {
-    // ASK: Get data from order
-    const items = order.getItems();
-    const customer = order.getCustomer();
-    const currentTotal = order.getTotal();
+    applyDiscount(order: Order, discountCode: string): void {
+        // ASK: Get data from order
+        const items = order.getItems();
+        const customer = order.getCustomer();
+        const currentTotal = order.getTotal();
 
-    // External decision-making with order's data
-    if (items.length < 3) {
-      throw new Error('Minimum 3 items for discount');
+        // External decision-making with order's data
+        if (items.length < 3) {
+            throw new Error('Minimum 3 items for discount');
+        }
+
+        if (customer.getMembershipLevel() !== 'premium') {
+            throw new Error('Premium members only');
+        }
+
+        if (currentTotal < 100) {
+            throw new Error('Minimum order $100');
+        }
+
+        // Calculate discount externally
+        const discount = this.discountRepository.getDiscount(discountCode);
+        const discountedTotal = currentTotal * (1 - discount.percentage);
+
+        // ASK again, then mutate
+        order.setTotal(discountedTotal);
+        order.setDiscountCode(discountCode);
     }
-
-    if (customer.getMembershipLevel() !== 'premium') {
-      throw new Error('Premium members only');
-    }
-
-    if (currentTotal < 100) {
-      throw new Error('Minimum order $100');
-    }
-
-    // Calculate discount externally
-    const discount = this.discountRepository.getDiscount(discountCode);
-    const discountedTotal = currentTotal * (1 - discount.percentage);
-
-    // ASK again, then mutate
-    order.setTotal(discountedTotal);
-    order.setDiscountCode(discountCode);
-  }
 }
 
 // What's wrong:
@@ -62,61 +62,61 @@ class OrderService {
 ```typescript
 // Order.ts — encapsulates its own rules and behavior
 class Order {
-  private discountCode: string | null = null;
+    private discountCode: string | null = null;
 
-  constructor(
-    private readonly items: OrderItem[],
-    private readonly customer: Customer,
-    private total: number
-  ) {}
+    constructor(
+        private readonly items: OrderItem[],
+        private readonly customer: Customer,
+        private total: number
+    ) {}
 
-  applyDiscount(discount: Discount): void {
-    // TELL: Order decides if discount is applicable
-    this.validateDiscountEligibility(discount);
-    
-    // TELL: Order updates itself
-    this.total = this.total * (1 - discount.percentage);
-    this.discountCode = discount.code;
-  }
+    applyDiscount(discount: Discount): void {
+        // TELL: Order decides if discount is applicable
+        this.validateDiscountEligibility(discount);
 
-  private validateDiscountEligibility(discount: Discount): void {
-    if (discount.minimumItems && this.items.length < discount.minimumItems) {
-      throw new DiscountError(`Minimum ${discount.minimumItems} items required`);
+        // TELL: Order updates itself
+        this.total = this.total * (1 - discount.percentage);
+        this.discountCode = discount.code;
     }
 
-    if (discount.requiredMembership && !this.customer.hasMembership(discount.requiredMembership)) {
-      throw new DiscountError(`${discount.requiredMembership} membership required`);
+    private validateDiscountEligibility(discount: Discount): void {
+        if (discount.minimumItems && this.items.length < discount.minimumItems) {
+            throw new DiscountError(`Minimum ${discount.minimumItems} items required`);
+        }
+
+        if (discount.requiredMembership && !this.customer.hasMembership(discount.requiredMembership)) {
+            throw new DiscountError(`${discount.requiredMembership} membership required`);
+        }
+
+        if (discount.minimumTotal && this.total < discount.minimumTotal) {
+            throw new DiscountError(`Minimum order $${discount.minimumTotal} required`);
+        }
     }
 
-    if (discount.minimumTotal && this.total < discount.minimumTotal) {
-      throw new DiscountError(`Minimum order $${discount.minimumTotal} required`);
+    // Queries for display purposes are fine
+    getTotal(): number {
+        return this.total;
     }
-  }
-
-  // Queries for display purposes are fine
-  getTotal(): number {
-    return this.total;
-  }
 }
 
 // Customer.ts — encapsulates membership logic
 class Customer {
-  hasMembership(level: MembershipLevel): boolean {
-    return this.membershipLevel === level || this.isHigherTier(level);
-  }
+    hasMembership(level: MembershipLevel): boolean {
+        return this.membershipLevel === level || this.isHigherTier(level);
+    }
 }
 
 // OrderService.ts — coordinates, doesn't decide
 class OrderService {
-  async applyDiscount(orderId: string, discountCode: string): Promise<void> {
-    const order = await this.orderRepository.getById(orderId);
-    const discount = await this.discountRepository.getByCode(discountCode);
+    async applyDiscount(orderId: string, discountCode: string): Promise<void> {
+        const order = await this.orderRepository.getById(orderId);
+        const discount = await this.discountRepository.getByCode(discountCode);
 
-    // TELL the order to apply discount — order decides if it can
-    order.applyDiscount(discount);
+        // TELL the order to apply discount — order decides if it can
+        order.applyDiscount(discount);
 
-    await this.orderRepository.save(order);
-  }
+        await this.orderRepository.save(order);
+    }
 }
 ```
 
@@ -127,55 +127,67 @@ Objects that are just data containers with getters/setters:
 ```typescript
 // ❌ Anemic: just a data bag
 class User {
-  private email: string;
-  private isVerified: boolean;
-  private verificationToken: string | null;
+    private email: string;
+    private isVerified: boolean;
+    private verificationToken: string | null;
 
-  getEmail(): string { return this.email; }
-  setEmail(email: string): void { this.email = email; }
-  getIsVerified(): boolean { return this.isVerified; }
-  setIsVerified(v: boolean): void { this.isVerified = v; }
-  getVerificationToken(): string | null { return this.verificationToken; }
-  setVerificationToken(t: string | null): void { this.verificationToken = t; }
+    getEmail(): string {
+        return this.email;
+    }
+    setEmail(email: string): void {
+        this.email = email;
+    }
+    getIsVerified(): boolean {
+        return this.isVerified;
+    }
+    setIsVerified(v: boolean): void {
+        this.isVerified = v;
+    }
+    getVerificationToken(): string | null {
+        return this.verificationToken;
+    }
+    setVerificationToken(t: string | null): void {
+        this.verificationToken = t;
+    }
 }
 
 // Logic lives in services
 class UserService {
-  verifyEmail(user: User, token: string): void {
-    if (user.getVerificationToken() !== token) {
-      throw new Error('Invalid token');
+    verifyEmail(user: User, token: string): void {
+        if (user.getVerificationToken() !== token) {
+            throw new Error('Invalid token');
+        }
+        user.setIsVerified(true);
+        user.setVerificationToken(null);
     }
-    user.setIsVerified(true);
-    user.setVerificationToken(null);
-  }
 }
 
 // ✅ Rich domain model: behavior with data
 class User {
-  private email: string;
-  private isVerified: boolean = false;
-  private verificationToken: string | null = null;
+    private email: string;
+    private isVerified: boolean = false;
+    private verificationToken: string | null = null;
 
-  verifyEmail(token: string): void {
-    if (this.verificationToken !== token) {
-      throw new InvalidTokenError();
+    verifyEmail(token: string): void {
+        if (this.verificationToken !== token) {
+            throw new InvalidTokenError();
+        }
+        this.isVerified = true;
+        this.verificationToken = null;
     }
-    this.isVerified = true;
-    this.verificationToken = null;
-  }
 
-  requestVerification(): string {
-    if (this.isVerified) {
-      throw new AlreadyVerifiedError();
+    requestVerification(): string {
+        if (this.isVerified) {
+            throw new AlreadyVerifiedError();
+        }
+        this.verificationToken = generateToken();
+        return this.verificationToken;
     }
-    this.verificationToken = generateToken();
-    return this.verificationToken;
-  }
 
-  // Query method for UI is fine
-  canAccessPremiumContent(): boolean {
-    return this.isVerified;
-  }
+    // Query method for UI is fine
+    canAccessPremiumContent(): boolean {
+        return this.isVerified;
+    }
 }
 ```
 

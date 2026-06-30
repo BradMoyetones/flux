@@ -144,13 +144,13 @@ expect(hook.internalCounter).toBe(5);
 expect(instance._validateEmail()).toBe(true);
 
 // Exact string matching on dynamic content
-expect(error.message).toBe("Error at line 42, column 12");
+expect(error.message).toBe('Error at line 42, column 12');
 
 // Asserting on specific mock call counts
 expect(mockFn).toHaveBeenCalledTimes(3); // Why exactly 3?
 
 // Testing CSS classes or styles
-expect(element).toHaveClass("btn-primary-active-v2");
+expect(element).toHaveClass('btn-primary-active-v2');
 
 // Snapshot overuse
 expect(complexObject).toMatchSnapshot(); // Breaks on any change
@@ -313,22 +313,22 @@ it("should expire session after timeout", async () => {
 ✅ After:
 
 ```typescript
-it("should expire session after timeout", async () => {
-  jest.useFakeTimers();
+it('should expire session after timeout', async () => {
+    jest.useFakeTimers();
 
-  const { result } = renderHook(() => useAuth());
-  await act(async () => {
-    await result.current.login();
-  });
+    const { result } = renderHook(() => useAuth());
+    await act(async () => {
+        await result.current.login();
+    });
 
-  // Controlled time advancement
-  act(() => {
-    jest.advanceTimersByTime(1000);
-  });
+    // Controlled time advancement
+    act(() => {
+        jest.advanceTimersByTime(1000);
+    });
 
-  expect(result.current.isExpired).toBe(true);
+    expect(result.current.isExpired).toBe(true);
 
-  jest.useRealTimers();
+    jest.useRealTimers();
 });
 ```
 
@@ -503,29 +503,29 @@ jest.useRealTimers();
 expect(hook.internalState.count).toBe(3);
 
 // ✅ After — tests behavior
-expect(result.current.displayCount).toBe("3 items");
+expect(result.current.displayCount).toBe('3 items');
 ```
 
 ### Pattern 3: Obscure → Clear Naming + AAA
 
 ```typescript
 // ❌ Before
-it("works", () => {
-  const x = setup();
-  x.do();
-  expect(x.y).toBe(1);
+it('works', () => {
+    const x = setup();
+    x.do();
+    expect(x.y).toBe(1);
 });
 
 // ✅ After
-it("should increment counter when increment is called", () => {
-  // Arrange
-  const counter = createCounter();
+it('should increment counter when increment is called', () => {
+    // Arrange
+    const counter = createCounter();
 
-  // Act
-  counter.increment();
+    // Act
+    counter.increment();
 
-  // Assert
-  expect(counter.value).toBe(1);
+    // Assert
+    expect(counter.value).toBe(1);
 });
 ```
 
@@ -535,31 +535,31 @@ it("should increment counter when increment is called", () => {
 // ❌ Before — shared state
 let store: Store;
 
-it("test 1", () => {
-  store.add(item);
+it('test 1', () => {
+    store.add(item);
 });
-it("test 2", () => {
-  expect(store.items).toHaveLength(1);
+it('test 2', () => {
+    expect(store.items).toHaveLength(1);
 }); // Depends on test 1!
 
 // ✅ After — fresh per test
 let store: Store;
 
 beforeEach(() => {
-  store = createStore(); // Fresh each time
+    store = createStore(); // Fresh each time
 });
 
 afterEach(() => {
-  store.reset();
+    store.reset();
 });
 
-it("test 1", () => {
-  store.add(item);
-  expect(store.items).toHaveLength(1);
+it('test 1', () => {
+    store.add(item);
+    expect(store.items).toHaveLength(1);
 });
 
-it("test 2", () => {
-  expect(store.items).toHaveLength(0); // Starts empty
+it('test 2', () => {
+    expect(store.items).toHaveLength(0); // Starts empty
 });
 ```
 
@@ -567,27 +567,27 @@ it("test 2", () => {
 
 ```typescript
 // ❌ Before — everything mocked
-jest.mock("../api");
-jest.mock("../storage");
-jest.mock("../logger");
-jest.mock("../analytics");
+jest.mock('../api');
+jest.mock('../storage');
+jest.mock('../logger');
+jest.mock('../analytics');
 
-it("should sync data", () => {
-  // Testing nothing real
+it('should sync data', () => {
+    // Testing nothing real
 });
 
 // ✅ After — integration with real dependencies
-it("should sync data", async () => {
-  // Arrange — only mock external boundary
-  const apiStub = new ApiStub().withSyncSuccess();
-  const storage = new InMemoryStorage();
-  const syncService = new SyncService(apiStub, storage);
+it('should sync data', async () => {
+    // Arrange — only mock external boundary
+    const apiStub = new ApiStub().withSyncSuccess();
+    const storage = new InMemoryStorage();
+    const syncService = new SyncService(apiStub, storage);
 
-  // Act
-  await syncService.sync();
+    // Act
+    await syncService.sync();
 
-  // Assert — real behavior
-  expect(storage.get("lastSync")).toBeDefined();
+    // Assert — real behavior
+    expect(storage.get('lastSync')).toBeDefined();
 });
 ```
 

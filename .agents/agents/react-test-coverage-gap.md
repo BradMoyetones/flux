@@ -32,12 +32,12 @@ view .claude/skills/testing-conventions/SKILL.md
 
 ## Inputs
 
-| Input         | Required | Description                                      |
-| ------------- | -------- | ------------------------------------------------ |
-| `modulePath`  | ✅       | Path to module/folder to analyze                 |
-| `--high-only` | ❌       | Show only HIGH priority gaps                     |
+| Input         | Required | Description                                            |
+| ------------- | -------- | ------------------------------------------------------ |
+| `modulePath`  | ✅       | Path to module/folder to analyze                       |
+| `--high-only` | ❌       | Show only HIGH priority gaps                           |
 | `--generate`  | ❌       | Auto-generate tests for gaps (calls react-test-writer) |
-| `--json`      | ❌       | Output as JSON for CI integration                |
+| `--json`      | ❌       | Output as JSON for CI integration                      |
 
 ## Workflow
 
@@ -65,16 +65,16 @@ Build file inventory:
 
 ```typescript
 {
-  files: [
-    {
-      path: "src/modules/events/core/usecases/CreateEvent.usecase.ts",
-      type: "UseCase",
-      layer: "Core",
-      hasTest: boolean,
-      testPath: string,
-    },
-    // ...
-  ];
+    files: [
+        {
+            path: 'src/modules/events/core/usecases/CreateEvent.usecase.ts',
+            type: 'UseCase',
+            layer: 'Core',
+            hasTest: boolean,
+            testPath: string,
+        },
+        // ...
+    ];
 }
 ```
 
@@ -325,39 +325,36 @@ Run all tests: npm test -- --testPathPattern="events"
 
 ```json
 {
-  "module": "src/modules/events",
-  "summary": {
-    "filesScanned": 12,
-    "filesWithTests": 8,
-    "coveragePercent": 67
-  },
-  "gaps": [
-    {
-      "priority": "HIGH",
-      "file": "DeleteEvent.usecase.ts",
-      "type": "NO_TESTS",
-      "reason": "Business logic completely untested"
-    }
-  ],
-  "pyramid": {
-    "unit": { "count": 15, "percent": 68 },
-    "integration": { "count": 2, "percent": 9 },
-    "e2e": { "count": 5, "percent": 23 }
-  },
-  "recommendations": [
-    "Add integration tests for adapters",
-    "Convert E2E tests to integration tests"
-  ]
+    "module": "src/modules/events",
+    "summary": {
+        "filesScanned": 12,
+        "filesWithTests": 8,
+        "coveragePercent": 67
+    },
+    "gaps": [
+        {
+            "priority": "HIGH",
+            "file": "DeleteEvent.usecase.ts",
+            "type": "NO_TESTS",
+            "reason": "Business logic completely untested"
+        }
+    ],
+    "pyramid": {
+        "unit": { "count": 15, "percent": 68 },
+        "integration": { "count": 2, "percent": 9 },
+        "e2e": { "count": 5, "percent": 23 }
+    },
+    "recommendations": ["Add integration tests for adapters", "Convert E2E tests to integration tests"]
 }
 ```
 
 ## Error Handling
 
-| Error             | Action                                                              |
-| ----------------- | ------------------------------------------------------------------- |
-| Path not found    | `❌ Module not found: <path>`                                       |
-| No source files   | `⚠️ No .ts/.tsx files found in <path>`                              |
-| Cannot parse file | `⚠️ Could not analyze <file> — syntax error?`                       |
+| Error                   | Action                                                                    |
+| ----------------------- | ------------------------------------------------------------------------- |
+| Path not found          | `❌ Module not found: <path>`                                             |
+| No source files         | `⚠️ No .ts/.tsx files found in <path>`                                    |
+| Cannot parse file       | `⚠️ Could not analyze <file> — syntax error?`                             |
 | react-test-writer fails | `⚠️ Could not generate tests for <file>. Run react-test-writer manually.` |
 
 ## Examples

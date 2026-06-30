@@ -32,37 +32,34 @@ A method `M` of object `O` may only call methods on:
 ```typescript
 // OrderService.ts — knows too much about object internals
 class OrderService {
-  constructor(private readonly orderRepository: OrderRepository) {}
+    constructor(private readonly orderRepository: OrderRepository) {}
 
-  calculateShipping(order: Order): number {
-    // Violation: reaching deep into object graph
-    const country = order.customer.address.country;
-    const weight = order.items.reduce(
-      (sum, item) => sum + item.product.shipping.weight * item.quantity,
-      0
-    );
-    const carrier = order.customer.preferences.shipping.preferredCarrier;
+    calculateShipping(order: Order): number {
+        // Violation: reaching deep into object graph
+        const country = order.customer.address.country;
+        const weight = order.items.reduce((sum, item) => sum + item.product.shipping.weight * item.quantity, 0);
+        const carrier = order.customer.preferences.shipping.preferredCarrier;
 
-    // This method now depends on:
-    // - Order structure
-    // - Customer structure  
-    // - Address structure
-    // - Item structure
-    // - Product structure
-    // - ShippingInfo structure
-    // - Preferences structure
-    
-    return this.calculateRate(country, weight, carrier);
-  }
+        // This method now depends on:
+        // - Order structure
+        // - Customer structure
+        // - Address structure
+        // - Item structure
+        // - Product structure
+        // - ShippingInfo structure
+        // - Preferences structure
 
-  async sendConfirmation(order: Order): Promise<void> {
-    // More violations
-    const email = order.customer.contact.email;
-    const name = order.customer.profile.firstName;
-    const trackingUrl = order.shipment.carrier.tracking.url;
-    
-    await this.emailService.send(email, `Hi ${name}, track: ${trackingUrl}`);
-  }
+        return this.calculateRate(country, weight, carrier);
+    }
+
+    async sendConfirmation(order: Order): Promise<void> {
+        // More violations
+        const email = order.customer.contact.email;
+        const name = order.customer.profile.firstName;
+        const trackingUrl = order.shipment.carrier.tracking.url;
+
+        await this.emailService.send(email, `Hi ${name}, track: ${trackingUrl}`);
+    }
 }
 
 // Any change to Customer, Address, Product structure breaks OrderService
@@ -73,75 +70,71 @@ class OrderService {
 ```typescript
 // Order.ts — encapsulates its knowledge
 class Order {
-  constructor(
-    private readonly customer: Customer,
-    private readonly items: OrderItem[],
-    private readonly shipment?: Shipment
-  ) {}
+    constructor(
+        private readonly customer: Customer,
+        private readonly items: OrderItem[],
+        private readonly shipment?: Shipment
+    ) {}
 
-  getShippingCountry(): string {
-    return this.customer.getShippingCountry();
-  }
+    getShippingCountry(): string {
+        return this.customer.getShippingCountry();
+    }
 
-  getTotalWeight(): number {
-    return this.items.reduce((sum, item) => sum + item.getShippingWeight(), 0);
-  }
+    getTotalWeight(): number {
+        return this.items.reduce((sum, item) => sum + item.getShippingWeight(), 0);
+    }
 
-  getPreferredCarrier(): string {
-    return this.customer.getPreferredCarrier();
-  }
+    getPreferredCarrier(): string {
+        return this.customer.getPreferredCarrier();
+    }
 
-  getCustomerEmail(): string {
-    return this.customer.getEmail();
-  }
+    getCustomerEmail(): string {
+        return this.customer.getEmail();
+    }
 
-  getCustomerFirstName(): string {
-    return this.customer.getFirstName();
-  }
+    getCustomerFirstName(): string {
+        return this.customer.getFirstName();
+    }
 
-  getTrackingUrl(): string | null {
-    return this.shipment?.getTrackingUrl() ?? null;
-  }
+    getTrackingUrl(): string | null {
+        return this.shipment?.getTrackingUrl() ?? null;
+    }
 }
 
 // Customer.ts — encapsulates its structure
 class Customer {
-  getShippingCountry(): string {
-    return this.address.country;
-  }
+    getShippingCountry(): string {
+        return this.address.country;
+    }
 
-  getPreferredCarrier(): string {
-    return this.preferences.shipping.preferredCarrier;
-  }
+    getPreferredCarrier(): string {
+        return this.preferences.shipping.preferredCarrier;
+    }
 
-  getEmail(): string {
-    return this.contact.email;
-  }
+    getEmail(): string {
+        return this.contact.email;
+    }
 
-  getFirstName(): string {
-    return this.profile.firstName;
-  }
+    getFirstName(): string {
+        return this.profile.firstName;
+    }
 }
 
 // OrderService.ts — talks only to Order
 class OrderService {
-  calculateShipping(order: Order): number {
-    return this.calculateRate(
-      order.getShippingCountry(),
-      order.getTotalWeight(),
-      order.getPreferredCarrier()
-    );
-  }
+    calculateShipping(order: Order): number {
+        return this.calculateRate(order.getShippingCountry(), order.getTotalWeight(), order.getPreferredCarrier());
+    }
 
-  async sendConfirmation(order: Order): Promise<void> {
-    const trackingUrl = order.getTrackingUrl();
-    if (!trackingUrl) return;
+    async sendConfirmation(order: Order): Promise<void> {
+        const trackingUrl = order.getTrackingUrl();
+        if (!trackingUrl) return;
 
-    await this.emailService.send(
-      order.getCustomerEmail(),
-      `Hi ${order.getCustomerFirstName()}, track: ${trackingUrl}`
-    );
-  }
+        await this.emailService.send(
+            order.getCustomerEmail(),
+            `Hi ${order.getCustomerFirstName()}, track: ${trackingUrl}`
+        );
+    }
 }
 ```
 
@@ -158,13 +151,13 @@ const city = user.getCityName();
 
 // Or pass the minimum needed data
 interface ShippingDestination {
-  city: string;
-  country: string;
-  postalCode: string;
+    city: string;
+    country: string;
+    postalCode: string;
 }
 
 function calculateShipping(destination: ShippingDestination): number {
-  // Receives exactly what it needs, doesn't know about User
+    // Receives exactly what it needs, doesn't know about User
 }
 ```
 

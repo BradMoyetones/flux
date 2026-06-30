@@ -44,14 +44,14 @@ Remove unused exports from bundles.
 ```js
 // metro.config.js
 module.exports = {
-  transformer: {
-    getTransformOptions: async () => ({
-      transform: {
-        experimentalImportSupport: true, // Enables tree shaking
-        inlineRequires: true,
-      },
-    }),
-  },
+    transformer: {
+        getTransformOptions: async () => ({
+            transform: {
+                experimentalImportSupport: true, // Enables tree shaking
+                inlineRequires: true,
+            },
+        }),
+    },
 };
 ```
 
@@ -60,9 +60,9 @@ module.exports = {
 ```tsx
 // ❌ Default exports prevent tree shaking
 export default {
-  formatDate,
-  parseDate,
-  validateDate,
+    formatDate,
+    parseDate,
+    validateDate,
 };
 
 // ✅ Named exports enable tree shaking
@@ -114,13 +114,13 @@ npx react-native-bundle-visualizer
 
 ## Lightweight Alternatives
 
-| Heavy Library | Lightweight Alternative |
-|---------------|------------------------|
-| `moment` (67KB) | `date-fns` (tree-shakeable) or `dayjs` (2KB) |
-| `lodash` (72KB) | `lodash-es` + direct imports |
-| `axios` (13KB) | `ky` (3KB) or native `fetch` |
-| `uuid` (9KB) | `nanoid` (1KB) |
-| `validator` (48KB) | Write own or `yup`/`zod` |
+| Heavy Library      | Lightweight Alternative                      |
+| ------------------ | -------------------------------------------- |
+| `moment` (67KB)    | `date-fns` (tree-shakeable) or `dayjs` (2KB) |
+| `lodash` (72KB)    | `lodash-es` + direct imports                 |
+| `axios` (13KB)     | `ky` (3KB) or native `fetch`                 |
+| `uuid` (9KB)       | `nanoid` (1KB)                               |
+| `validator` (48KB) | Write own or `yup`/`zod`                     |
 
 ### Example: Lodash
 
@@ -145,7 +145,7 @@ Exclude platform-specific code from wrong platform.
 // Button.ios.tsx
 export const Button = () => <IOSButton />;
 
-// Button.android.tsx  
+// Button.android.tsx
 export const Button = () => <AndroidButton />;
 
 // Usage (Metro automatically selects correct file)
@@ -159,6 +159,7 @@ Metro excludes `.ios.tsx` from Android bundle and vice versa.
 ### Android
 
 Analyze APK:
+
 ```bash
 # Build release APK
 ./gradlew assembleRelease
@@ -212,6 +213,7 @@ cwebp image.png -o image.webp
 ## Code Splitting (Advanced)
 
 > ⚠️ **You probably don't need this.** Metro with `React.lazy` + inline requires covers 90% of use cases. Re.Pack adds significant complexity (replaces Metro with Webpack). Consider only if:
+>
 > - Bundle > 10MB
 > - Features used by <5% of users (admin panels, debug tools)
 > - Building a super app with multiple mini-apps
@@ -227,12 +229,12 @@ npm install @callstack/repack
 ```js
 // webpack.config.js
 module.exports = {
-  // ... Re.Pack configuration
-  optimization: {
-    splitChunks: {
-      chunks: 'all',
+    // ... Re.Pack configuration
+    optimization: {
+        splitChunks: {
+            chunks: 'all',
+        },
     },
-  },
 };
 ```
 

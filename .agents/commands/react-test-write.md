@@ -2,12 +2,12 @@
 name: react-test-write
 description: Generate tests for a source file
 arguments:
-  - name: path
-    description: Path to source file (optional, detects current file if omitted)
-    required: false
-  - name: options
-    description: Options like --dry-run, --all
-    required: false
+    - name: path
+      description: Path to source file (optional, detects current file if omitted)
+      required: false
+    - name: options
+      description: Options like --dry-run, --all
+      required: false
 ---
 
 # /react-test-write
@@ -22,10 +22,10 @@ Generate tests for a source file using the `react-test-writer` agent.
 
 ## Arguments
 
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `path` | No | Path to source file. If omitted, uses current file or prompts. |
-| `options` | No | `--dry-run`, `--all`, `--interactive` (default) |
+| Argument  | Required | Description                                                    |
+| --------- | -------- | -------------------------------------------------------------- |
+| `path`    | No       | Path to source file. If omitted, uses current file or prompts. |
+| `options` | No       | `--dry-run`, `--all`, `--interactive` (default)                |
 
 ## Behavior
 
@@ -78,15 +78,16 @@ Pass: resolved path + options
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
-| `--dry-run` | Preview generated tests without creating file |
-| `--all` | Generate tests for all identified behaviors |
-| `--interactive` | Select which behaviors to test (default) |
+| Option          | Description                                   |
+| --------------- | --------------------------------------------- |
+| `--dry-run`     | Preview generated tests without creating file |
+| `--all`         | Generate tests for all identified behaviors   |
+| `--interactive` | Select which behaviors to test (default)      |
 
 ## Output
 
 On success:
+
 ```
 ✅ Created: <test-file-path>
    Tests: <count>
@@ -94,6 +95,7 @@ On success:
 ```
 
 On dry-run:
+
 ```
 📄 DRY RUN — Preview:
 <test file content>
@@ -101,9 +103,9 @@ On dry-run:
 
 ## Errors
 
-| Error | Message |
-|-------|---------|
-| No file provided/detected | `❌ No file specified. Usage: /react-test-write <path>` |
-| File not found | `❌ File not found: <path>` |
-| Already a test file | `⚠️ This is already a test file. Did you mean /react-test-fix?` |
-| Test file exists | `⚠️ Test file already exists: <path>. Overwrite? [y/N]` |
+| Error                     | Message                                                         |
+| ------------------------- | --------------------------------------------------------------- |
+| No file provided/detected | `❌ No file specified. Usage: /react-test-write <path>`         |
+| File not found            | `❌ File not found: <path>`                                     |
+| Already a test file       | `⚠️ This is already a test file. Did you mean /react-test-fix?` |
+| Test file exists          | `⚠️ Test file already exists: <path>. Overwrite? [y/N]`         |

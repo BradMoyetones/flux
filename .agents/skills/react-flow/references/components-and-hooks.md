@@ -17,6 +17,7 @@ Use this file when working with React Flow's built-in UI components (Background,
 ## ReactFlowProvider
 
 Required when:
+
 - Using hooks like `useReactFlow` outside the `<ReactFlow>` component
 - Multiple flows on the same page
 - Client-side routing with flow state
@@ -25,12 +26,12 @@ Required when:
 import { ReactFlowProvider } from '@xyflow/react';
 
 function App() {
-  return (
-    <ReactFlowProvider>
-      <Flow />
-      <Sidebar /> {/* Can use useReactFlow here */}
-    </ReactFlowProvider>
-  );
+    return (
+        <ReactFlowProvider>
+            <Flow />
+            <Sidebar /> {/* Can use useReactFlow here */}
+        </ReactFlowProvider>
+    );
 }
 ```
 
@@ -50,14 +51,14 @@ import { Background, BackgroundVariant } from '@xyflow/react';
 </ReactFlow>
 ```
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `variant` | `BackgroundVariant` | `Dots` | `Dots`, `Lines`, or `Cross` |
-| `gap` | `number \| [number, number]` | `20` | Grid gap size |
-| `size` | `number` | `1` | Dot size or line stroke width |
-| `color` | `string` | — | Pattern color |
-| `lineWidth` | `number` | `1` | Line width (Lines/Cross) |
-| `offset` | `number` | `0` | Pattern offset |
+| Prop        | Type                         | Default | Description                   |
+| ----------- | ---------------------------- | ------- | ----------------------------- |
+| `variant`   | `BackgroundVariant`          | `Dots`  | `Dots`, `Lines`, or `Cross`   |
+| `gap`       | `number \| [number, number]` | `20`    | Grid gap size                 |
+| `size`      | `number`                     | `1`     | Dot size or line stroke width |
+| `color`     | `string`                     | —       | Pattern color                 |
+| `lineWidth` | `number`                     | `1`     | Line width (Lines/Cross)      |
+| `offset`    | `number`                     | `0`     | Pattern offset                |
 
 ### Controls
 
@@ -71,18 +72,18 @@ import { Controls } from '@xyflow/react';
 </ReactFlow>
 ```
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `showZoom` | `boolean` | `true` | Show zoom in/out buttons |
-| `showFitView` | `boolean` | `true` | Show fit-view button |
-| `showInteractive` | `boolean` | `true` | Show interactive toggle |
-| `position` | `PanelPosition` | `'bottom-left'` | Position on canvas |
-| `onZoomIn` | `() => void` | — | Custom zoom in handler |
-| `onZoomOut` | `() => void` | — | Custom zoom out handler |
-| `onFitView` | `() => void` | — | Custom fit view handler |
-| `onInteractiveChange` | `(interactive: boolean) => void` | — | Toggle handler |
-| `fitViewOptions` | `FitViewOptions` | — | Options for fit view |
-| `orientation` | `'horizontal' \| 'vertical'` | `'vertical'` | Button layout |
+| Prop                  | Type                             | Default         | Description              |
+| --------------------- | -------------------------------- | --------------- | ------------------------ |
+| `showZoom`            | `boolean`                        | `true`          | Show zoom in/out buttons |
+| `showFitView`         | `boolean`                        | `true`          | Show fit-view button     |
+| `showInteractive`     | `boolean`                        | `true`          | Show interactive toggle  |
+| `position`            | `PanelPosition`                  | `'bottom-left'` | Position on canvas       |
+| `onZoomIn`            | `() => void`                     | —               | Custom zoom in handler   |
+| `onZoomOut`           | `() => void`                     | —               | Custom zoom out handler  |
+| `onFitView`           | `() => void`                     | —               | Custom fit view handler  |
+| `onInteractiveChange` | `(interactive: boolean) => void` | —               | Toggle handler           |
+| `fitViewOptions`      | `FitViewOptions`                 | —               | Options for fit view     |
+| `orientation`         | `'horizontal' \| 'vertical'`     | `'vertical'`    | Button layout            |
 
 ### ControlButton
 
@@ -92,10 +93,10 @@ Add custom buttons to the Controls panel:
 import { Controls, ControlButton } from '@xyflow/react';
 
 <Controls>
-  <ControlButton onClick={handleSave} title="Save">
-    <SaveIcon />
-  </ControlButton>
-</Controls>
+    <ControlButton onClick={handleSave} title="Save">
+        <SaveIcon />
+    </ControlButton>
+</Controls>;
 ```
 
 ### MiniMap
@@ -116,20 +117,20 @@ import { MiniMap } from '@xyflow/react';
 </ReactFlow>
 ```
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `nodeColor` | `string \| (node) => string` | `'#e2e2e2'` | Node fill color |
-| `nodeStrokeColor` | `string \| (node) => string` | `'transparent'` | Node stroke color |
-| `nodeStrokeWidth` | `number` | `2` | Node stroke width |
-| `nodeBorderRadius` | `number` | `5` | Node border radius |
-| `maskColor` | `string` | `'rgb(240, 240, 240, 0.6)'` | Viewport mask color |
-| `maskStrokeColor` | `string` | `'none'` | Viewport mask stroke |
-| `maskStrokeWidth` | `number` | `1` | Viewport mask stroke width |
-| `pannable` | `boolean` | `false` | Pan viewport via minimap |
-| `zoomable` | `boolean` | `false` | Zoom viewport via minimap |
-| `position` | `PanelPosition` | `'bottom-right'` | Position on canvas |
-| `inversePan` | `boolean` | `false` | Invert pan direction |
-| `zoomStep` | `number` | `10` | Zoom step on scroll |
+| Prop               | Type                         | Default                     | Description                |
+| ------------------ | ---------------------------- | --------------------------- | -------------------------- |
+| `nodeColor`        | `string \| (node) => string` | `'#e2e2e2'`                 | Node fill color            |
+| `nodeStrokeColor`  | `string \| (node) => string` | `'transparent'`             | Node stroke color          |
+| `nodeStrokeWidth`  | `number`                     | `2`                         | Node stroke width          |
+| `nodeBorderRadius` | `number`                     | `5`                         | Node border radius         |
+| `maskColor`        | `string`                     | `'rgb(240, 240, 240, 0.6)'` | Viewport mask color        |
+| `maskStrokeColor`  | `string`                     | `'none'`                    | Viewport mask stroke       |
+| `maskStrokeWidth`  | `number`                     | `1`                         | Viewport mask stroke width |
+| `pannable`         | `boolean`                    | `false`                     | Pan viewport via minimap   |
+| `zoomable`         | `boolean`                    | `false`                     | Zoom viewport via minimap  |
+| `position`         | `PanelPosition`              | `'bottom-right'`            | Position on canvas         |
+| `inversePan`       | `boolean`                    | `false`                     | Invert pan direction       |
+| `zoomStep`         | `number`                     | `10`                        | Zoom step on scroll        |
 
 ### Panel
 
@@ -146,14 +147,14 @@ import { Panel } from '@xyflow/react';
 </ReactFlow>
 ```
 
-| Position | Description |
-|----------|-------------|
-| `'top-left'` | Top left corner |
-| `'top-center'` | Top center |
-| `'top-right'` | Top right corner |
-| `'bottom-left'` | Bottom left corner |
-| `'bottom-center'` | Bottom center |
-| `'bottom-right'` | Bottom right corner |
+| Position          | Description         |
+| ----------------- | ------------------- |
+| `'top-left'`      | Top left corner     |
+| `'top-center'`    | Top center          |
+| `'top-right'`     | Top right corner    |
+| `'bottom-left'`   | Bottom left corner  |
+| `'bottom-center'` | Bottom center       |
+| `'bottom-right'`  | Bottom right corner |
 
 ### NodeToolbar
 
@@ -163,24 +164,24 @@ Renders a toolbar attached to a node (visible when selected):
 import { NodeToolbar, Position } from '@xyflow/react';
 
 function CustomNode({ data }) {
-  return (
-    <>
-      <NodeToolbar position={Position.Top} isVisible>
-        <button>Copy</button>
-        <button>Delete</button>
-      </NodeToolbar>
-      <div>{data.label}</div>
-    </>
-  );
+    return (
+        <>
+            <NodeToolbar position={Position.Top} isVisible>
+                <button>Copy</button>
+                <button>Delete</button>
+            </NodeToolbar>
+            <div>{data.label}</div>
+        </>
+    );
 }
 ```
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `position` | `Position` | `Position.Top` | Side of node |
-| `isVisible` | `boolean` | — | Force visibility (overrides selection) |
-| `offset` | `number` | `10` | Distance from node |
-| `align` | `'start' \| 'center' \| 'end'` | `'center'` | Alignment along edge |
+| Prop        | Type                           | Default        | Description                            |
+| ----------- | ------------------------------ | -------------- | -------------------------------------- |
+| `position`  | `Position`                     | `Position.Top` | Side of node                           |
+| `isVisible` | `boolean`                      | —              | Force visibility (overrides selection) |
+| `offset`    | `number`                       | `10`           | Distance from node                     |
+| `align`     | `'start' \| 'center' \| 'end'` | `'center'`     | Alignment along edge                   |
 
 ### NodeResizer / NodeResizeControl
 
@@ -190,31 +191,26 @@ Make nodes resizable:
 import { NodeResizer } from '@xyflow/react';
 
 function ResizableNode({ data, selected }) {
-  return (
-    <>
-      <NodeResizer
-        minWidth={100}
-        minHeight={30}
-        isVisible={selected}
-        color="#ff0071"
-      />
-      <div>{data.label}</div>
-    </>
-  );
+    return (
+        <>
+            <NodeResizer minWidth={100} minHeight={30} isVisible={selected} color="#ff0071" />
+            <div>{data.label}</div>
+        </>
+    );
 }
 ```
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `minWidth` | `number` | `10` | Minimum width |
-| `minHeight` | `number` | `10` | Minimum height |
-| `maxWidth` | `number` | `Infinity` | Maximum width |
-| `maxHeight` | `number` | `Infinity` | Maximum height |
-| `isVisible` | `boolean` | `true` | Show resize handles |
-| `color` | `string` | — | Handle color |
-| `handleStyle` | `CSSProperties` | — | Handle styles |
-| `lineStyle` | `CSSProperties` | — | Border line styles |
-| `keepAspectRatio` | `boolean` | `false` | Maintain aspect ratio |
+| Prop              | Type            | Default    | Description           |
+| ----------------- | --------------- | ---------- | --------------------- |
+| `minWidth`        | `number`        | `10`       | Minimum width         |
+| `minHeight`       | `number`        | `10`       | Minimum height        |
+| `maxWidth`        | `number`        | `Infinity` | Maximum width         |
+| `maxHeight`       | `number`        | `Infinity` | Maximum height        |
+| `isVisible`       | `boolean`       | `true`     | Show resize handles   |
+| `color`           | `string`        | —          | Handle color          |
+| `handleStyle`     | `CSSProperties` | —          | Handle styles         |
+| `lineStyle`       | `CSSProperties` | —          | Border line styles    |
+| `keepAspectRatio` | `boolean`       | `false`    | Maintain aspect ratio |
 
 `NodeResizeControl` provides a single resize control (e.g., bottom-right only).
 
@@ -234,53 +230,53 @@ import { ViewportPortal } from '@xyflow/react';
 </ReactFlow>
 ```
 
-**Note**: For fixed overlays that are *not* affected by zoom/pan, use `<Panel>` instead.
+**Note**: For fixed overlays that are _not_ affected by zoom/pan, use `<Panel>` instead.
 
 ## Hooks reference
 
 ### State access hooks
 
-| Hook | Returns | Re-renders on change? |
-|------|---------|-----------------------|
-| `useReactFlow()` | `ReactFlowInstance` | No — reads on demand |
-| `useNodes()` | `Node[]` | Yes — every node change |
-| `useEdges()` | `Edge[]` | Yes — every edge change |
-| `useNodesState(initial)` | `[nodes, setNodes, onNodesChange]` | Yes |
-| `useEdgesState(initial)` | `[edges, setEdges, onEdgesChange]` | Yes |
-| `useViewport()` | `{ x, y, zoom }` | Yes — every viewport change |
+| Hook                     | Returns                            | Re-renders on change?       |
+| ------------------------ | ---------------------------------- | --------------------------- |
+| `useReactFlow()`         | `ReactFlowInstance`                | No — reads on demand        |
+| `useNodes()`             | `Node[]`                           | Yes — every node change     |
+| `useEdges()`             | `Edge[]`                           | Yes — every edge change     |
+| `useNodesState(initial)` | `[nodes, setNodes, onNodesChange]` | Yes                         |
+| `useEdgesState(initial)` | `[edges, setEdges, onEdgesChange]` | Yes                         |
+| `useViewport()`          | `{ x, y, zoom }`                   | Yes — every viewport change |
 
 ### Node-specific hooks
 
-| Hook | Returns | Description |
-|------|---------|-------------|
-| `useNodeId()` | `string` | Current node's ID (use inside custom nodes) |
-| `useNodesData(ids)` | `NodeData[]` | Data for specific node IDs |
-| `useNodesInitialized()` | `boolean` | True after all nodes are measured |
-| `useInternalNode(id)` | `InternalNode` | Internal node with computed bounds |
-| `useUpdateNodeInternals()` | `(id) => void` | Refresh node after handle changes |
+| Hook                       | Returns        | Description                                 |
+| -------------------------- | -------------- | ------------------------------------------- |
+| `useNodeId()`              | `string`       | Current node's ID (use inside custom nodes) |
+| `useNodesData(ids)`        | `NodeData[]`   | Data for specific node IDs                  |
+| `useNodesInitialized()`    | `boolean`      | True after all nodes are measured           |
+| `useInternalNode(id)`      | `InternalNode` | Internal node with computed bounds          |
+| `useUpdateNodeInternals()` | `(id) => void` | Refresh node after handle changes           |
 
 ### Connection hooks
 
-| Hook | Returns | Description |
-|------|---------|-------------|
-| `useConnection()` | `ConnectionState` | Active connection state during drag |
-| `useHandleConnections({ type, id? })` | `HandleConnection[]` | Connections for a specific handle (**deprecated** — use `useNodeConnections`) |
-| `useNodeConnections({ handleType?, handleId? })` | `NodeConnection[]` | All connections for the current node |
+| Hook                                             | Returns              | Description                                                                   |
+| ------------------------------------------------ | -------------------- | ----------------------------------------------------------------------------- |
+| `useConnection()`                                | `ConnectionState`    | Active connection state during drag                                           |
+| `useHandleConnections({ type, id? })`            | `HandleConnection[]` | Connections for a specific handle (**deprecated** — use `useNodeConnections`) |
+| `useNodeConnections({ handleType?, handleId? })` | `NodeConnection[]`   | All connections for the current node                                          |
 
 ### Event hooks
 
-| Hook | Parameters | Description |
-|------|-----------|-------------|
-| `useOnSelectionChange({ onChange })` | `{ nodes, edges }` | Called when selection changes |
-| `useOnViewportChange({ onStart?, onChange?, onEnd? })` | `Viewport` | Called during viewport changes |
-| `useKeyPress(keyCode)` | Returns `boolean` | Track key press state |
+| Hook                                                   | Parameters         | Description                    |
+| ------------------------------------------------------ | ------------------ | ------------------------------ |
+| `useOnSelectionChange({ onChange })`                   | `{ nodes, edges }` | Called when selection changes  |
+| `useOnViewportChange({ onStart?, onChange?, onEnd? })` | `Viewport`         | Called during viewport changes |
+| `useKeyPress(keyCode)`                                 | Returns `boolean`  | Track key press state          |
 
 ### Store hooks
 
-| Hook | Returns | Description |
-|------|---------|-------------|
-| `useStore(selector)` | Selected state | Subscribe to specific store slices |
-| `useStoreApi()` | `StoreApi` | Direct store access (no subscription) |
+| Hook                 | Returns        | Description                           |
+| -------------------- | -------------- | ------------------------------------- |
+| `useStore(selector)` | Selected state | Subscribe to specific store slices    |
+| `useStoreApi()`      | `StoreApi`     | Direct store access (no subscription) |
 
 ### useStore selector pattern
 
@@ -295,9 +291,9 @@ const nodeCount = useStore((s) => s.nodes.length);
 
 // GOOD: custom equality check
 const selectedIds = useStore(
-  (s) => s.nodes.filter((n) => n.selected).map((n) => n.id),
-  // Zustand shallow comparison
-  shallow,
+    (s) => s.nodes.filter((n) => n.selected).map((n) => n.id),
+    // Zustand shallow comparison
+    shallow
 );
 ```
 
@@ -307,63 +303,63 @@ Accessed via `useReactFlow()`. See `references/state-management.md` for full pat
 
 ### Node methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `getNodes()` | `() => Node[]` | Get all nodes |
-| `getNode(id)` | `(id: string) => Node \| undefined` | Get node by ID |
-| `setNodes(nodes)` | `(Node[] \| (Node[]) => Node[]) => void` | Set all nodes |
-| `addNodes(nodes)` | `(Node \| Node[]) => void` | Add nodes |
-| `updateNode(id, update)` | `(id, Partial<Node> \| (Node) => Partial<Node>) => void` | Update node |
-| `updateNodeData(id, data)` | `(id, data \| (Node) => data) => void` | Update node data |
-| `deleteElements(opts)` | `(DeleteElementsOptions) => Promise<DeletedElements>` | Delete elements |
+| Method                     | Signature                                                | Description      |
+| -------------------------- | -------------------------------------------------------- | ---------------- |
+| `getNodes()`               | `() => Node[]`                                           | Get all nodes    |
+| `getNode(id)`              | `(id: string) => Node \| undefined`                      | Get node by ID   |
+| `setNodes(nodes)`          | `(Node[] \| (Node[]) => Node[]) => void`                 | Set all nodes    |
+| `addNodes(nodes)`          | `(Node \| Node[]) => void`                               | Add nodes        |
+| `updateNode(id, update)`   | `(id, Partial<Node> \| (Node) => Partial<Node>) => void` | Update node      |
+| `updateNodeData(id, data)` | `(id, data \| (Node) => data) => void`                   | Update node data |
+| `deleteElements(opts)`     | `(DeleteElementsOptions) => Promise<DeletedElements>`    | Delete elements  |
 
 ### Edge methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `getEdges()` | `() => Edge[]` | Get all edges |
-| `getEdge(id)` | `(id: string) => Edge \| undefined` | Get edge by ID |
-| `setEdges(edges)` | `(Edge[] \| (Edge[]) => Edge[]) => void` | Set all edges |
-| `addEdges(edges)` | `(Edge \| Edge[]) => void` | Add edges |
-| `updateEdge(id, update)` | `(id, Partial<Edge>) => void` | Update edge |
-| `updateEdgeData(id, data)` | `(id, data) => void` | Update edge data |
+| Method                     | Signature                                | Description      |
+| -------------------------- | ---------------------------------------- | ---------------- |
+| `getEdges()`               | `() => Edge[]`                           | Get all edges    |
+| `getEdge(id)`              | `(id: string) => Edge \| undefined`      | Get edge by ID   |
+| `setEdges(edges)`          | `(Edge[] \| (Edge[]) => Edge[]) => void` | Set all edges    |
+| `addEdges(edges)`          | `(Edge \| Edge[]) => void`               | Add edges        |
+| `updateEdge(id, update)`   | `(id, Partial<Edge>) => void`            | Update edge      |
+| `updateEdgeData(id, data)` | `(id, data) => void`                     | Update edge data |
 
 ### Viewport methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `fitView(options?)` | `(FitViewOptions?) => Promise<boolean>` | Fit viewport to nodes |
-| `zoomIn(options?)` | `(TransitionOptions?) => Promise<boolean>` | Zoom in |
-| `zoomOut(options?)` | `(TransitionOptions?) => Promise<boolean>` | Zoom out |
-| `zoomTo(level, options?)` | `(number, TransitionOptions?) => Promise<boolean>` | Zoom to level |
-| `setViewport(viewport, options?)` | `(Viewport, TransitionOptions?) => Promise<boolean>` | Set viewport |
-| `getViewport()` | `() => Viewport` | Get viewport |
-| `getZoom()` | `() => number` | Get zoom level |
-| `setCenter(x, y, options?)` | `(x, y, {zoom?, duration?}) => Promise<boolean>` | Center on point |
-| `fitBounds(rect, options?)` | `(Rect, {padding?, duration?}) => Promise<boolean>` | Fit to rectangle |
+| Method                            | Signature                                            | Description           |
+| --------------------------------- | ---------------------------------------------------- | --------------------- |
+| `fitView(options?)`               | `(FitViewOptions?) => Promise<boolean>`              | Fit viewport to nodes |
+| `zoomIn(options?)`                | `(TransitionOptions?) => Promise<boolean>`           | Zoom in               |
+| `zoomOut(options?)`               | `(TransitionOptions?) => Promise<boolean>`           | Zoom out              |
+| `zoomTo(level, options?)`         | `(number, TransitionOptions?) => Promise<boolean>`   | Zoom to level         |
+| `setViewport(viewport, options?)` | `(Viewport, TransitionOptions?) => Promise<boolean>` | Set viewport          |
+| `getViewport()`                   | `() => Viewport`                                     | Get viewport          |
+| `getZoom()`                       | `() => number`                                       | Get zoom level        |
+| `setCenter(x, y, options?)`       | `(x, y, {zoom?, duration?}) => Promise<boolean>`     | Center on point       |
+| `fitBounds(rect, options?)`       | `(Rect, {padding?, duration?}) => Promise<boolean>`  | Fit to rectangle      |
 
 ### Coordinate conversion
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
+| Method                      | Signature                    | Description                       |
+| --------------------------- | ---------------------------- | --------------------------------- |
 | `screenToFlowPosition(pos)` | `(XYPosition) => XYPosition` | Screen pixels to flow coordinates |
 | `flowToScreenPosition(pos)` | `(XYPosition) => XYPosition` | Flow coordinates to screen pixels |
 
 ### Intersection methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `getIntersectingNodes(node, partially?)` | `(Node \| Rect, boolean?) => Node[]` | Find intersecting nodes |
-| `isNodeIntersecting(node, area, partially?)` | `(Node \| Rect, Rect, boolean?) => boolean` | Check intersection |
+| Method                                       | Signature                                   | Description             |
+| -------------------------------------------- | ------------------------------------------- | ----------------------- |
+| `getIntersectingNodes(node, partially?)`     | `(Node \| Rect, boolean?) => Node[]`        | Find intersecting nodes |
+| `isNodeIntersecting(node, area, partially?)` | `(Node \| Rect, Rect, boolean?) => boolean` | Check intersection      |
 
 ### Utility methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `toObject()` | `() => { nodes, edges, viewport }` | Serialize flow state |
-| `getNodesBounds(nodes)` | `(Node[] \| string[]) => Rect` | Get bounding box |
-| `getHandleConnections({ type, nodeId, id? })` | Returns `HandleConnection[]` | Get handle connections |
-| `getNodeConnections({ handleType?, nodeId, handleId? })` | Returns `NodeConnection[]` | Get node connections |
+| Method                                                   | Signature                          | Description            |
+| -------------------------------------------------------- | ---------------------------------- | ---------------------- |
+| `toObject()`                                             | `() => { nodes, edges, viewport }` | Serialize flow state   |
+| `getNodesBounds(nodes)`                                  | `(Node[] \| string[]) => Rect`     | Get bounding box       |
+| `getHandleConnections({ type, nodeId, id? })`            | Returns `HandleConnection[]`       | Get handle connections |
+| `getNodeConnections({ handleType?, nodeId, handleId? })` | Returns `NodeConnection[]`         | Get node connections   |
 
 ## Controlled viewport
 
@@ -383,18 +379,18 @@ const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
 
 ```tsx
 function PanToNode() {
-  const { getNode, setCenter } = useReactFlow();
+    const { getNode, setCenter } = useReactFlow();
 
-  const panTo = (nodeId: string) => {
-    const node = getNode(nodeId);
-    if (node) {
-      const x = node.position.x + (node.measured?.width ?? 0) / 2;
-      const y = node.position.y + (node.measured?.height ?? 0) / 2;
-      setCenter(x, y, { zoom: 1.5, duration: 500 });
-    }
-  };
+    const panTo = (nodeId: string) => {
+        const node = getNode(nodeId);
+        if (node) {
+            const x = node.position.x + (node.measured?.width ?? 0) / 2;
+            const y = node.position.y + (node.measured?.height ?? 0) / 2;
+            setCenter(x, y, { zoom: 1.5, duration: 500 });
+        }
+    };
 
-  return <button onClick={() => panTo('node-1')}>Focus Node 1</button>;
+    return <button onClick={() => panTo('node-1')}>Focus Node 1</button>;
 }
 ```
 
@@ -406,7 +402,7 @@ Guard viewport methods until the viewport is ready:
 const { viewportInitialized, fitView } = useReactFlow();
 
 const safeFitView = () => {
-  if (viewportInitialized) fitView({ padding: 0.2, duration: 300 });
+    if (viewportInitialized) fitView({ padding: 0.2, duration: 300 });
 };
 ```
 

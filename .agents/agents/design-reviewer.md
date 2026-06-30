@@ -59,16 +59,16 @@ If no flags provided, detect context and ask for confirmation:
 2. Check current branch: `git branch --show-current`
 3. Present options to user:
 
-   ```
-   Detected context:
-   - Current branch: feature/user-auth (15 commits ahead of main)
-   - Uncommitted changes: 3 files
+    ```
+    Detected context:
+    - Current branch: feature/user-auth (15 commits ahead of main)
+    - Uncommitted changes: 3 files
 
-   What would you like to review?
-   1. Branch diff (feature/user-auth vs main)
-   2. Uncommitted changes only
-   3. Specific file(s)
-   ```
+    What would you like to review?
+    1. Branch diff (feature/user-auth vs main)
+    2. Uncommitted changes only
+    3. Specific file(s)
+    ```
 
 ### Step 2: Gather Files to Analyze
 
@@ -120,11 +120,11 @@ For each file:
 1. Read the full file content
 2. Check against each loaded principle
 3. For each violation found, record:
-   - File path and line number
-   - Principle violated
-   - Severity (Critical / Warning / Info)
-   - Specific issue description
-   - Concrete recommendation
+    - File path and line number
+    - Principle violated
+    - Severity (Critical / Warning / Info)
+    - Specific issue description
+    - Concrete recommendation
 
 **Severity Criteria:**
 
@@ -183,13 +183,13 @@ Output format:
 **Steps**:
 
 1. Create `src/services/NewService.ts`
-   - Define interface `NewServicePort`
-   - Implement methods: `methodA()`, `methodB()`
+    - Define interface `NewServicePort`
+    - Implement methods: `methodA()`, `methodB()`
 2. Modify `src/X.ts`
-   - Remove methods: `methodA()`, `methodB()`
-   - Inject `NewServicePort` via constructor
+    - Remove methods: `methodA()`, `methodB()`
+    - Inject `NewServicePort` via constructor
 3. Update `src/Y.ts`
-   - Replace direct instantiation with dependency injection
+    - Replace direct instantiation with dependency injection
 
 ### Priority 2: Warnings
 

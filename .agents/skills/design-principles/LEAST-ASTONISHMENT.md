@@ -27,35 +27,35 @@ Code should behave as users and developers expect. Minimize surprise. When in do
 ```typescript
 // UserService.ts — full of surprises
 class UserService {
-  // Surprise: "get" also updates last access time
-  async getUser(id: string): Promise<User> {
-    const user = await this.db.findById(id);
-    user.lastAccessedAt = new Date();      // Side effect!
-    await this.db.save(user);              // Write in a "get"!
-    return user;
-  }
+    // Surprise: "get" also updates last access time
+    async getUser(id: string): Promise<User> {
+        const user = await this.db.findById(id);
+        user.lastAccessedAt = new Date(); // Side effect!
+        await this.db.save(user); // Write in a "get"!
+        return user;
+    }
 
-  // Surprise: returns different types
-  async findUsers(query: string): Promise<User[] | User | null> {
-    const users = await this.db.search(query);
-    if (users.length === 0) return null;     // null for empty
-    if (users.length === 1) return users[0]; // single User
-    return users;                             // array of Users
-  }
+    // Surprise: returns different types
+    async findUsers(query: string): Promise<User[] | User | null> {
+        const users = await this.db.search(query);
+        if (users.length === 0) return null; // null for empty
+        if (users.length === 1) return users[0]; // single User
+        return users; // array of Users
+    }
 
-  // Surprise: mutates the input
-  formatUser(user: User): string {
-    user.name = user.name.trim();           // Mutates input!
-    user.email = user.email.toLowerCase();  // Mutates input!
-    return `${user.name} <${user.email}>`;
-  }
+    // Surprise: mutates the input
+    formatUser(user: User): string {
+        user.name = user.name.trim(); // Mutates input!
+        user.email = user.email.toLowerCase(); // Mutates input!
+        return `${user.name} <${user.email}>`;
+    }
 
-  // Surprise: "delete" doesn't delete
-  async deleteUser(id: string): Promise<void> {
-    const user = await this.db.findById(id);
-    user.status = 'deleted';                 // Soft delete
-    await this.db.save(user);                // Still exists!
-  }
+    // Surprise: "delete" doesn't delete
+    async deleteUser(id: string): Promise<void> {
+        const user = await this.db.findById(id);
+        user.status = 'deleted'; // Soft delete
+        await this.db.save(user); // Still exists!
+    }
 }
 ```
 
@@ -64,41 +64,41 @@ class UserService {
 ```typescript
 // UserService.ts — does what it says
 class UserService {
-  // Query is pure — no side effects
-  async getUser(id: string): Promise<User> {
-    return this.db.findById(id);
-  }
+    // Query is pure — no side effects
+    async getUser(id: string): Promise<User> {
+        return this.db.findById(id);
+    }
 
-  // Separate method for tracking access
-  async recordUserAccess(id: string): Promise<void> {
-    await this.db.updateLastAccess(id, new Date());
-  }
+    // Separate method for tracking access
+    async recordUserAccess(id: string): Promise<void> {
+        await this.db.updateLastAccess(id, new Date());
+    }
 
-  // Consistent return type
-  async findUsers(query: string): Promise<User[]> {
-    return this.db.search(query);
-    // Empty array for no results — not null
-    // Always array — not sometimes single
-  }
+    // Consistent return type
+    async findUsers(query: string): Promise<User[]> {
+        return this.db.search(query);
+        // Empty array for no results — not null
+        // Always array — not sometimes single
+    }
 
-  // Pure function, no mutation
-  formatUser(user: User): string {
-    const name = user.name.trim();
-    const email = user.email.toLowerCase();
-    return `${name} <${email}>`;
-  }
+    // Pure function, no mutation
+    formatUser(user: User): string {
+        const name = user.name.trim();
+        const email = user.email.toLowerCase();
+        return `${name} <${email}>`;
+    }
 
-  // Name reflects actual behavior
-  async softDeleteUser(id: string): Promise<void> {
-    const user = await this.db.findById(id);
-    user.status = 'deleted';
-    await this.db.save(user);
-  }
+    // Name reflects actual behavior
+    async softDeleteUser(id: string): Promise<void> {
+        const user = await this.db.findById(id);
+        user.status = 'deleted';
+        await this.db.save(user);
+    }
 
-  // Or provide actual delete
-  async permanentlyDeleteUser(id: string): Promise<void> {
-    await this.db.delete(id);
-  }
+    // Or provide actual delete
+    async permanentlyDeleteUser(id: string): Promise<void> {
+        await this.db.delete(id);
+    }
 }
 ```
 
@@ -164,14 +164,14 @@ createUser(data, true, false, true);
 processOrder(order, { immediate: true });
 
 formatDate(date, {
-  includeTime: false,
-  useRelative: true,
+    includeTime: false,
+    useRelative: true,
 });
 
 createUser(data, {
-  sendWelcomeEmail: true,
-  requireVerification: false,
-  isAdmin: true,
+    sendWelcomeEmail: true,
+    requireVerification: false,
+    isAdmin: true,
 });
 
 // Or use distinct functions
@@ -214,9 +214,9 @@ interface ButtonProps {
 function Button({ onPress, children, disabled, trackingId }: ButtonProps) {
   const handlePress = () => {
     if (disabled) return; // Expected: disabled means no action
-    
+
     onPress();
-    
+
     if (trackingId) {
       analytics.track('button_press', { id: trackingId });
     }
@@ -239,27 +239,27 @@ function Button({ onPress, children, disabled, trackingId }: ButtonProps) {
 ```typescript
 // ❌ Inconsistent error patterns
 class Api {
-  getUser(id: string): Promise<User>        // throws on error
-  findUsers(q: string): Promise<User[]>     // returns [] on error
-  deleteUser(id: string): Promise<boolean>  // returns false on error
-  updateUser(u: User): Promise<User | null> // returns null on error
+    getUser(id: string): Promise<User>; // throws on error
+    findUsers(q: string): Promise<User[]>; // returns [] on error
+    deleteUser(id: string): Promise<boolean>; // returns false on error
+    updateUser(u: User): Promise<User | null>; // returns null on error
 }
 
 // ✅ Consistent pattern across all methods
 class Api {
-  // All methods throw on error
-  getUser(id: string): Promise<User>
-  findUsers(query: string): Promise<User[]>
-  deleteUser(id: string): Promise<void>
-  updateUser(user: User): Promise<User>
+    // All methods throw on error
+    getUser(id: string): Promise<User>;
+    findUsers(query: string): Promise<User[]>;
+    deleteUser(id: string): Promise<void>;
+    updateUser(user: User): Promise<User>;
 }
 
 // Or all return Result types
 class Api {
-  getUser(id: string): Promise<Result<User, ApiError>>
-  findUsers(query: string): Promise<Result<User[], ApiError>>
-  deleteUser(id: string): Promise<Result<void, ApiError>>
-  updateUser(user: User): Promise<Result<User, ApiError>>
+    getUser(id: string): Promise<Result<User, ApiError>>;
+    findUsers(query: string): Promise<Result<User[], ApiError>>;
+    deleteUser(id: string): Promise<Result<void, ApiError>>;
+    updateUser(user: User): Promise<Result<User, ApiError>>;
 }
 ```
 

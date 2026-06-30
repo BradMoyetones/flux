@@ -23,21 +23,16 @@ Custom nodes receive props automatically injected by React Flow:
 import { Handle, Position } from '@xyflow/react';
 
 function ColorPickerNode({ id, data, isConnectable }) {
-  return (
-    <div className="color-picker-node">
-      <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
-      <div>
-        <label htmlFor={`color-${id}`}>Color:</label>
-        <input
-          id={`color-${id}`}
-          type="color"
-          defaultValue={data.color}
-          className="nodrag"
-        />
-      </div>
-      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} />
-    </div>
-  );
+    return (
+        <div className="color-picker-node">
+            <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
+            <div>
+                <label htmlFor={`color-${id}`}>Color:</label>
+                <input id={`color-${id}`} type="color" defaultValue={data.color} className="nodrag" />
+            </div>
+            <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} />
+        </div>
+    );
 }
 
 export default ColorPickerNode;
@@ -72,34 +67,34 @@ const nodeTypes = useMemo(() => ({ colorPicker: ColorPickerNode }), []);
 
 ```tsx
 const nodes = [
-  {
-    id: '1',
-    type: 'colorPicker',
-    position: { x: 0, y: 0 },
-    data: { color: '#ff0000' },
-  },
+    {
+        id: '1',
+        type: 'colorPicker',
+        position: { x: 0, y: 0 },
+        data: { color: '#ff0000' },
+    },
 ];
 ```
 
 ## Props injected into custom nodes
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `id` | `string` | Node ID |
-| `data` | `T` | The node's `data` object |
-| `type` | `string` | Node type string |
-| `selected` | `boolean` | Whether the node is selected |
-| `isConnectable` | `boolean` | Whether the node allows connections |
-| `zIndex` | `number` | Current z-index |
-| `positionAbsoluteX` | `number` | Absolute X position |
-| `positionAbsoluteY` | `number` | Absolute Y position |
-| `dragging` | `boolean` | Whether node is being dragged |
-| `dragHandle` | `string` | Drag handle selector |
-| `sourcePosition` | `Position` | Default source handle position |
-| `targetPosition` | `Position` | Default target handle position |
-| `parentId` | `string` | Parent node ID (sub-flows) |
-| `width` | `number` | Measured width |
-| `height` | `number` | Measured height |
+| Prop                | Type       | Description                         |
+| ------------------- | ---------- | ----------------------------------- |
+| `id`                | `string`   | Node ID                             |
+| `data`              | `T`        | The node's `data` object            |
+| `type`              | `string`   | Node type string                    |
+| `selected`          | `boolean`  | Whether the node is selected        |
+| `isConnectable`     | `boolean`  | Whether the node allows connections |
+| `zIndex`            | `number`   | Current z-index                     |
+| `positionAbsoluteX` | `number`   | Absolute X position                 |
+| `positionAbsoluteY` | `number`   | Absolute Y position                 |
+| `dragging`          | `boolean`  | Whether node is being dragged       |
+| `dragHandle`        | `string`   | Drag handle selector                |
+| `sourcePosition`    | `Position` | Default source handle position      |
+| `targetPosition`    | `Position` | Default target handle position      |
+| `parentId`          | `string`   | Parent node ID (sub-flows)          |
+| `width`             | `number`   | Measured width                      |
+| `height`            | `number`   | Measured height                     |
 
 ## Handle component
 
@@ -116,17 +111,17 @@ import { Handle, Position } from '@xyflow/react';
 
 ### Handle props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `type` | `'source' \| 'target'` | — | Handle direction |
-| `position` | `Position` | — | Side of node (`Top`, `Right`, `Bottom`, `Left`) |
-| `id` | `string` | — | Required when multiple handles of same type |
-| `isConnectable` | `boolean` | `true` | Allow connections |
-| `isConnectableStart` | `boolean` | `true` | Allow starting connections from this handle |
-| `isConnectableEnd` | `boolean` | `true` | Allow ending connections at this handle |
-| `onConnect` | `(connection) => void` | — | Called when connection is made to this handle |
-| `style` | `CSSProperties` | — | Inline styles |
-| `className` | `string` | — | CSS class |
+| Prop                 | Type                   | Default | Description                                     |
+| -------------------- | ---------------------- | ------- | ----------------------------------------------- |
+| `type`               | `'source' \| 'target'` | —       | Handle direction                                |
+| `position`           | `Position`             | —       | Side of node (`Top`, `Right`, `Bottom`, `Left`) |
+| `id`                 | `string`               | —       | Required when multiple handles of same type     |
+| `isConnectable`      | `boolean`              | `true`  | Allow connections                               |
+| `isConnectableStart` | `boolean`              | `true`  | Allow starting connections from this handle     |
+| `isConnectableEnd`   | `boolean`              | `true`  | Allow ending connections at this handle         |
+| `onConnect`          | `(connection) => void` | —       | Called when connection is made to this handle   |
+| `style`              | `CSSProperties`        | —       | Inline styles                                   |
+| `className`          | `string`               | —       | CSS class                                       |
 
 ### Multiple handles
 
@@ -134,13 +129,13 @@ When a node has multiple handles of the same type, each must have a unique `id`:
 
 ```tsx
 function MultiHandleNode() {
-  return (
-    <div>
-      <Handle type="source" position={Position.Right} id="output-a" />
-      <Handle type="source" position={Position.Right} id="output-b" style={{ top: '75%' }} />
-      <Handle type="target" position={Position.Left} id="input" />
-    </div>
-  );
+    return (
+        <div>
+            <Handle type="source" position={Position.Right} id="output-a" />
+            <Handle type="source" position={Position.Right} id="output-b" style={{ top: '75%' }} />
+            <Handle type="target" position={Position.Left} id="input" />
+        </div>
+    );
 }
 ```
 
@@ -148,8 +143,8 @@ Reference handles in edges using `sourceHandle` and `targetHandle`:
 
 ```tsx
 const edges = [
-  { id: 'e1', source: 'node1', sourceHandle: 'output-a', target: 'node2' },
-  { id: 'e2', source: 'node1', sourceHandle: 'output-b', target: 'node3' },
+    { id: 'e1', source: 'node1', sourceHandle: 'output-a', target: 'node2' },
+    { id: 'e2', source: 'node1', sourceHandle: 'output-b', target: 'node3' },
 ];
 ```
 
@@ -159,11 +154,11 @@ Wrap any element with `<Handle>` and hide the default appearance:
 
 ```tsx
 <Handle
-  type="source"
-  position={Position.Right}
-  style={{ background: 'none', border: 'none', width: '1.5em', height: '1.5em' }}
+    type="source"
+    position={Position.Right}
+    style={{ background: 'none', border: 'none', width: '1.5em', height: '1.5em' }}
 >
-  <PlusIcon style={{ pointerEvents: 'none', fontSize: '1.5em' }} />
+    <PlusIcon style={{ pointerEvents: 'none', fontSize: '1.5em' }} />
 </Handle>
 ```
 
@@ -175,10 +170,14 @@ Use `visibility: hidden` or `opacity: 0` — **never** `display: none`:
 
 ```css
 /* CORRECT */
-.react-flow__handle { opacity: 0; }
+.react-flow__handle {
+    opacity: 0;
+}
 
 /* WRONG — breaks dimension calculation */
-.react-flow__handle { display: none; }
+.react-flow__handle {
+    display: none;
+}
 ```
 
 ### Dynamic handles
@@ -189,12 +188,12 @@ When programmatically adding or removing handles, refresh node internals:
 import { useUpdateNodeInternals } from '@xyflow/react';
 
 function DynamicNode({ id }) {
-  const updateNodeInternals = useUpdateNodeInternals();
+    const updateNodeInternals = useUpdateNodeInternals();
 
-  const addHandle = () => {
-    // ... add handle to state
-    updateNodeInternals(id);
-  };
+    const addHandle = () => {
+        // ... add handle to state
+        updateNodeInternals(id);
+    };
 }
 ```
 
@@ -202,25 +201,29 @@ function DynamicNode({ id }) {
 
 Handles receive CSS classes during connection:
 
-| Class | When |
-|-------|------|
+| Class        | When                               |
+| ------------ | ---------------------------------- |
 | `connecting` | Connection line is over the handle |
-| `valid` | Connection would be valid |
+| `valid`      | Connection would be valid          |
 
 ```css
-.react-flow__handle.connecting { background: orange; }
-.react-flow__handle.valid { background: green; }
+.react-flow__handle.connecting {
+    background: orange;
+}
+.react-flow__handle.valid {
+    background: green;
+}
 ```
 
 ## Interactive elements inside nodes
 
 Interactive elements (inputs, buttons, selects, textareas) need special class names to prevent conflicts with node dragging and viewport zoom:
 
-| Class | Effect |
-|-------|--------|
-| `nodrag` | Prevents node dragging when interacting with element |
+| Class     | Effect                                                     |
+| --------- | ---------------------------------------------------------- |
+| `nodrag`  | Prevents node dragging when interacting with element       |
 | `nowheel` | Prevents viewport zoom on scroll (for scrollable elements) |
-| `nopan` | Prevents viewport panning |
+| `nopan`   | Prevents viewport panning                                  |
 
 ```tsx
 <input type="text" className="nodrag" />
@@ -236,22 +239,22 @@ Restrict dragging to a specific element using the `dragHandle` property:
 
 ```tsx
 const nodes = [
-  {
-    id: '1',
-    type: 'custom',
-    data: { label: 'Drag me by the header' },
-    dragHandle: '.drag-handle',
-    position: { x: 0, y: 0 },
-  },
+    {
+        id: '1',
+        type: 'custom',
+        data: { label: 'Drag me by the header' },
+        dragHandle: '.drag-handle',
+        position: { x: 0, y: 0 },
+    },
 ];
 
 function CustomNode({ data }) {
-  return (
-    <div>
-      <div className="drag-handle">Drag here</div>
-      <div>Content (not draggable)</div>
-    </div>
-  );
+    return (
+        <div>
+            <div className="drag-handle">Drag here</div>
+            <div>Content (not draggable)</div>
+        </div>
+    );
 }
 ```
 

@@ -2,12 +2,12 @@
 name: react-test-fix
 description: Diagnose and fix failing or flaky tests
 arguments:
-  - name: path
-    description: Path to test file (optional, detects current file if omitted)
-    required: false
-  - name: options
-    description: Options like --from-ci, --explain-only, --flaky
-    required: false
+    - name: path
+      description: Path to test file (optional, detects current file if omitted)
+      required: false
+    - name: options
+      description: Options like --from-ci, --explain-only, --flaky
+      required: false
 ---
 
 # /react-test-fix
@@ -22,10 +22,10 @@ Diagnose and fix failing or flaky tests using the `react-test-fixer` agent.
 
 ## Arguments
 
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `path` | No* | Path to test file. Required unless `--from-ci` is used. |
-| `options` | No | `--from-ci`, `--explain-only`, `--flaky` |
+| Argument  | Required | Description                                             |
+| --------- | -------- | ------------------------------------------------------- |
+| `path`    | No*      | Path to test file. Required unless `--from-ci` is used. |
+| `options` | No       | `--from-ci`, `--explain-only`, `--flaky`                |
 
 ## Behavior
 
@@ -82,15 +82,16 @@ Pass: resolved path + options
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
-| `--from-ci` | Parse CI output to find failing tests |
-| `--explain-only` | Diagnose without applying fix |
-| `--flaky` | Run test multiple times to detect flakiness |
+| Option           | Description                                 |
+| ---------------- | ------------------------------------------- |
+| `--from-ci`      | Parse CI output to find failing tests       |
+| `--explain-only` | Diagnose without applying fix               |
+| `--flaky`        | Run test multiple times to detect flakiness |
 
 ## Output
 
 On successful fix:
+
 ```
 ✅ Test fixed: <path>
 
@@ -100,6 +101,7 @@ Verification: ✅ Passed
 ```
 
 On explain-only:
+
 ```
 🔍 Diagnosis: <path>
 
@@ -115,10 +117,10 @@ Run without --explain-only to apply.
 
 ## Errors
 
-| Error | Message |
-|-------|---------|
-| No file provided | `❌ No test file specified. Usage: /react-test-fix <path>` |
-| File not found | `❌ File not found: <path>` |
-| Not a test file | `⚠️ This is not a test file. Did you mean /react-test-write?` |
-| All tests pass | `✅ All tests pass! Nothing to fix.` |
-| Cannot parse CI | `⚠️ Could not parse CI output. Provide test path directly.` |
+| Error            | Message                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| No file provided | `❌ No test file specified. Usage: /react-test-fix <path>`    |
+| File not found   | `❌ File not found: <path>`                                   |
+| Not a test file  | `⚠️ This is not a test file. Did you mean /react-test-write?` |
+| All tests pass   | `✅ All tests pass! Nothing to fix.`                          |
+| Cannot parse CI  | `⚠️ Could not parse CI output. Provide test path directly.`   |

@@ -8,24 +8,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '@segment/analytics-react-native';
 
 class SyncUseCase {
-  async execute(data: SyncData): Promise<void> {
-    // Direct dependency on concrete implementation
-    const lastSync = await AsyncStorage.getItem('lastSync');
+    async execute(data: SyncData): Promise<void> {
+        // Direct dependency on concrete implementation
+        const lastSync = await AsyncStorage.getItem('lastSync');
 
-    if (this.needsSync(lastSync)) {
-      const response = await fetch('/api/sync', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
+        if (this.needsSync(lastSync)) {
+            const response = await fetch('/api/sync', {
+                method: 'POST',
+                body: JSON.stringify(data),
+            });
 
-      await AsyncStorage.setItem('lastSync', Date.now().toString());
+            await AsyncStorage.setItem('lastSync', Date.now().toString());
 
-      // Direct dependency on analytics SDK
-      analytics.track('sync_completed', { itemCount: data.items.length });
+            // Direct dependency on analytics SDK
+            analytics.track('sync_completed', { itemCount: data.items.length });
+        }
     }
-  }
 
-  private needsSync(lastSync: string | null): boolean { /* ... */ }
+    private needsSync(lastSync: string | null): boolean {
+        /* ... */
+    }
 }
 ```
 
@@ -34,54 +36,56 @@ class SyncUseCase {
 ```typescript
 // Ports defined in domain layer
 interface StoragePort {
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string): Promise<void>;
+    get(key: string): Promise<string | null>;
+    set(key: string, value: string): Promise<void>;
 }
 
 interface SyncApiPort {
-  sync(data: SyncData): Promise<SyncResult>;
+    sync(data: SyncData): Promise<SyncResult>;
 }
 
 interface AnalyticsPort {
-  track(event: string, properties?: Record<string, unknown>): void;
+    track(event: string, properties?: Record<string, unknown>): void;
 }
 
 // SyncUseCase.ts — depends only on abstractions
 class SyncUseCase {
-  constructor(
-    private readonly storage: StoragePort,
-    private readonly syncApi: SyncApiPort,
-    private readonly analytics: AnalyticsPort
-  ) {}
+    constructor(
+        private readonly storage: StoragePort,
+        private readonly syncApi: SyncApiPort,
+        private readonly analytics: AnalyticsPort
+    ) {}
 
-  async execute(data: SyncData): Promise<void> {
-    const lastSync = await this.storage.get('lastSync');
+    async execute(data: SyncData): Promise<void> {
+        const lastSync = await this.storage.get('lastSync');
 
-    if (this.needsSync(lastSync)) {
-      await this.syncApi.sync(data);
-      await this.storage.set('lastSync', Date.now().toString());
-      this.analytics.track('sync_completed', { itemCount: data.items.length });
+        if (this.needsSync(lastSync)) {
+            await this.syncApi.sync(data);
+            await this.storage.set('lastSync', Date.now().toString());
+            this.analytics.track('sync_completed', { itemCount: data.items.length });
+        }
     }
-  }
 
-  private needsSync(lastSync: string | null): boolean { /* ... */ }
+    private needsSync(lastSync: string | null): boolean {
+        /* ... */
+    }
 }
 
 // AsyncStorageAdapter.ts — in infrastructure layer
 class AsyncStorageAdapter implements StoragePort {
-  async get(key: string): Promise<string | null> {
-    return AsyncStorage.getItem(key);
-  }
+    async get(key: string): Promise<string | null> {
+        return AsyncStorage.getItem(key);
+    }
 
-  async set(key: string, value: string): Promise<void> {
-    await AsyncStorage.setItem(key, value);
-  }
+    async set(key: string, value: string): Promise<void> {
+        await AsyncStorage.setItem(key, value);
+    }
 }
 
 // Composition root wires everything together
 const syncUseCase = new SyncUseCase(
-  new AsyncStorageAdapter(),
-  new SyncApiAdapter(httpClient),
-  new SegmentAnalyticsAdapter()
+    new AsyncStorageAdapter(),
+    new SyncApiAdapter(httpClient),
+    new SegmentAnalyticsAdapter()
 );
 ```

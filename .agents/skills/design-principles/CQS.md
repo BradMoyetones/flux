@@ -26,27 +26,27 @@ A method should either be a **command** (changes state, returns nothing) or a **
 ```typescript
 // CartService.ts — mixed command/query
 class CartService {
-  private cart: Cart;
+    private cart: Cart;
 
-  // Violation: command + query combined
-  addItemAndGetTotal(item: CartItem): number {
-    this.cart.items.push(item);  // Command: modifies state
-    return this.calculateTotal(); // Query: returns value
-  }
-
-  // Violation: query with side effect
-  getNextOrderNumber(): string {
-    this.lastOrderNumber++;       // Side effect!
-    return `ORD-${this.lastOrderNumber}`;
-  }
-
-  // Violation: getter that modifies
-  getOrCreateCart(userId: string): Cart {
-    if (!this.carts.has(userId)) {
-      this.carts.set(userId, new Cart()); // Side effect!
+    // Violation: command + query combined
+    addItemAndGetTotal(item: CartItem): number {
+        this.cart.items.push(item); // Command: modifies state
+        return this.calculateTotal(); // Query: returns value
     }
-    return this.carts.get(userId)!;
-  }
+
+    // Violation: query with side effect
+    getNextOrderNumber(): string {
+        this.lastOrderNumber++; // Side effect!
+        return `ORD-${this.lastOrderNumber}`;
+    }
+
+    // Violation: getter that modifies
+    getOrCreateCart(userId: string): Cart {
+        if (!this.carts.has(userId)) {
+            this.carts.set(userId, new Cart()); // Side effect!
+        }
+        return this.carts.get(userId)!;
+    }
 }
 
 // Usage is unpredictable
@@ -63,53 +63,50 @@ const orderNum2 = cartService.getNextOrderNumber();
 ```typescript
 // CartService.ts — separated commands and queries
 class CartService {
-  private cart: Cart;
+    private cart: Cart;
 
-  // Command: modifies state, returns nothing
-  addItem(item: CartItem): void {
-    this.cart.items.push(item);
-  }
+    // Command: modifies state, returns nothing
+    addItem(item: CartItem): void {
+        this.cart.items.push(item);
+    }
 
-  // Command: modifies state, returns nothing
-  removeItem(itemId: string): void {
-    this.cart.items = this.cart.items.filter(i => i.id !== itemId);
-  }
+    // Command: modifies state, returns nothing
+    removeItem(itemId: string): void {
+        this.cart.items = this.cart.items.filter((i) => i.id !== itemId);
+    }
 
-  // Query: returns value, no side effects
-  getTotal(): number {
-    return this.cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-  }
+    // Query: returns value, no side effects
+    getTotal(): number {
+        return this.cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    }
 
-  // Query: pure, idempotent
-  getItemCount(): number {
-    return this.cart.items.length;
-  }
+    // Query: pure, idempotent
+    getItemCount(): number {
+        return this.cart.items.length;
+    }
 
-  // Query: returns data, doesn't modify
-  getCart(): Cart {
-    return this.cart;
-  }
+    // Query: returns data, doesn't modify
+    getCart(): Cart {
+        return this.cart;
+    }
 }
 
 // OrderNumberService.ts — if you need unique IDs
 class OrderNumberService {
-  // Command: allocates and persists
-  allocateOrderNumber(): void {
-    this.nextNumber++;
-    this.persistence.save(this.nextNumber);
-  }
+    // Command: allocates and persists
+    allocateOrderNumber(): void {
+        this.nextNumber++;
+        this.persistence.save(this.nextNumber);
+    }
 
-  // Query: returns current (already allocated)
-  getCurrentOrderNumber(): string {
-    return `ORD-${this.nextNumber}`;
-  }
+    // Query: returns current (already allocated)
+    getCurrentOrderNumber(): string {
+        return `ORD-${this.nextNumber}`;
+    }
 }
 
 // Clear, predictable usage
-cartService.addItem(item);           // I know this modifies
+cartService.addItem(item); // I know this modifies
 const total = cartService.getTotal(); // I know this is safe
 ```
 

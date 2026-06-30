@@ -17,9 +17,9 @@ Broad review of entire codebase for design principle violations. Uses Pareto app
 
 ## Arguments
 
-| Flag | Description |
-|------|-------------|
-| `[path]` | Optional directory to scope review |
+| Flag                  | Description                                 |
+| --------------------- | ------------------------------------------- |
+| `[path]`              | Optional directory to scope review          |
 | `--principles <list>` | Comma-separated list of principles to check |
 
 ## Available Principles
@@ -29,6 +29,7 @@ Broad review of entire codebase for design principle violations. Uses Pareto app
 ## Sampling Strategy
 
 Analyzes strategically, not exhaustively:
+
 - All files in `domain/`, `core/`, `entities/`
 - Largest 10 files (likely problem areas)
 - 10% random sample of remaining files
@@ -37,6 +38,7 @@ Analyzes strategically, not exhaustively:
 ## Output
 
 Generates executive report with:
+
 - Health Score (X/10)
 - Top 3 critical issues
 - Architecture assessment (strengths/concerns)

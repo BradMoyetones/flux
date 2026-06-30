@@ -12,14 +12,14 @@ El flujo de trabajo se divide en pasos discretos (Steps) que se ejecutan secuenc
 ```mermaid
 graph TD
     A[Inicio de Ejecución] --> B[PipelineContext Inicializado]
-    
+
     B --> C{Step 1: Petición HTTP}
     C -->|"Output: JSON Response"| D[Almacenado en PipelineContext]
-    
+
     D --> E{Step 2: Transformación}
     E -->|"Input: {{step_1.data.payload}}"| F[Extrae y Parsea Datos]
     F -->|"Output: Variables Filtradas"| G[Almacenado en PipelineContext]
-    
+
     G --> H{Step 3: Cliente Integrado}
     H -->|"Input: {{step_2.data}}"| I[Envía Mensaje / Dispara Acción]
     I --> J[Ejecución Completada]

@@ -12,7 +12,7 @@ import Foundation
 struct {EntityName}: Identifiable, Codable, Equatable {
     let id: String
     // Properties
-    
+
     init(id: String = UUID().uuidString) {
         self.id = id
     }
@@ -31,7 +31,7 @@ struct {EntityName}: Identifiable, Codable, Equatable {
     var status: {EntityName}Status
     let createdAt: Date
     var updatedAt: Date
-    
+
     init(
         id: String = UUID().uuidString,
         status: {EntityName}Status = .initial,
@@ -43,7 +43,7 @@ struct {EntityName}: Identifiable, Codable, Equatable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
-    
+
     mutating func updateStatus(_ newStatus: {EntityName}Status) {
         self.status = newStatus
         self.updatedAt = Date()
@@ -70,7 +70,7 @@ enum {Context}Error: Error, LocalizedError {
     case invalidState
     case operationFailed(reason: String)
     case storageFailed(underlying: Error)
-    
+
     var errorDescription: String? {
         switch self {
         case .notFound:
@@ -111,7 +111,7 @@ import Combine
 
 protocol {PortName}Protocol {
     var currentPublisher: AnyPublisher<{EntityName}?, Never> { get }
-    
+
     func get(id: String) async throws -> {EntityName}?
     func save(_ entity: {EntityName}) async throws
     func observeCurrent() -> AnyPublisher<{EntityName}?, Never>
@@ -130,11 +130,11 @@ import Foundation
 class {AdapterName}: {PortName}Protocol {
     private let monitor: MonitorProtocol
     private let key = "{storageKey}"
-    
+
     init(monitor: MonitorProtocol) {
         self.monitor = monitor
     }
-    
+
     func get(id: String) async throws -> {EntityName}? {
         guard let data = UserDefaults.standard.data(forKey: "\(key)_\(id)") else {
             return nil
@@ -146,7 +146,7 @@ class {AdapterName}: {PortName}Protocol {
             throw {Context}Error.storageFailed(underlying: error)
         }
     }
-    
+
     func save(_ entity: {EntityName}) async throws {
         do {
             let data = try JSONEncoder().encode(entity)
@@ -157,7 +157,7 @@ class {AdapterName}: {PortName}Protocol {
             throw {Context}Error.storageFailed(underlying: error)
         }
     }
-    
+
     func delete(id: String) async throws {
         UserDefaults.standard.removeObject(forKey: "\(key)_\(id)")
         monitor.log("Deleted {EntityName} \(id)", level: .debug)
@@ -175,17 +175,17 @@ import Foundation
 class {ServiceName}: {PortName}Protocol {
     private let monitor: MonitorProtocol
     private let tracker: TrackerProtocol
-    
+
     init(monitor: MonitorProtocol, tracker: TrackerProtocol) {
         self.monitor = monitor
         self.tracker = tracker
     }
-    
+
     func execute(input: {InputType}) async throws -> {OutputType} {
         monitor.log("Executing {ServiceName} with \(input)", level: .debug)
-        
+
         // Implementation
-        
+
         tracker.track("{ServiceName}.executed", properties: [:])
         return result
     }
@@ -203,23 +203,23 @@ import Foundation
 
 class {ActionName}UseCase {
     private let repository: {RepositoryName}Protocol
-    
+
     init(repository: {RepositoryName}Protocol) {
         self.repository = repository
     }
-    
+
     func execute(input: {InputType}) async throws -> {OutputType} {
         // Validation
         guard input.isValid else {
             throw {Context}Error.invalidState
         }
-        
+
         // Business logic
         let entity = {EntityName}(/* ... */)
-        
+
         // Persistence
         try await repository.save(entity)
-        
+
         return entity
     }
 }
@@ -236,7 +236,7 @@ class {ActionName}UseCase {
     private let repository: {RepositoryName}Protocol
     private let service: {ServiceName}Protocol
     private let monitor: MonitorProtocol
-    
+
     init(
         repository: {RepositoryName}Protocol,
         service: {ServiceName}Protocol,
@@ -246,16 +246,16 @@ class {ActionName}UseCase {
         self.service = service
         self.monitor = monitor
     }
-    
+
     func execute(id: String) async throws {
         monitor.log("Executing {ActionName} for \(id)", level: .debug)
-        
+
         guard let entity = try await repository.get(id: id) else {
             throw {Context}Error.notFound
         }
-        
+
         try await service.process(entity)
-        
+
         var updated = entity
         updated.updateStatus(.completed)
         try await repository.save(updated)
@@ -278,42 +278,42 @@ import Combine
 @MainActor
 class {Feature}ViewModel: ObservableObject {
     // MARK: - Published State
-    
+
     @Published var entity: {EntityName}?
     @Published var isLoading = false
     @Published var error: {Context}Error?
-    
+
     // MARK: - Ports (injected)
-    
+
     private let repository: {RepositoryName}Protocol
     private let monitor: MonitorProtocol
-    
+
     // MARK: - UseCases (created internally)
-    
+
     private let {action}UseCase: {Action}UseCase
-    
+
     // MARK: - Init
-    
+
     init(
         repository: {RepositoryName}Protocol,
         monitor: MonitorProtocol
     ) {
         self.repository = repository
         self.monitor = monitor
-        
+
         // Create UseCases with injected Ports
         self.{action}UseCase = {Action}UseCase(
             repository: repository,
             monitor: monitor
         )
     }
-    
+
     // MARK: - Actions (UseCase for business logic)
-    
+
     func {action}() {
         isLoading = true
         error = nil
-        
+
         Task {
             do {
                 entity = try await {action}UseCase.execute()
@@ -323,13 +323,13 @@ class {Feature}ViewModel: ObservableObject {
             isLoading = false
         }
     }
-    
+
     // MARK: - Actions (Port direct for simple reads)
-    
+
     func loadAll() async -> [{EntityName}] {
         return (try? await repository.getAll()) ?? []
     }
-    
+
     func reset() {
         entity = nil
         error = nil
@@ -348,45 +348,45 @@ import Combine
 @MainActor
 class {Feature}FormViewModel: ObservableObject {
     // MARK: - Form State
-    
+
     struct FormState {
         var field1: String = ""
         var field2: Int = 0
         var selectedItems: Set<String> = []
-        
+
         var isValid: Bool {
             !field1.isEmpty && field2 > 0
         }
     }
-    
+
     @Published var form = FormState()
     @Published var isSubmitting = false
     @Published var error: {Context}Error?
     @Published var didSubmit = false
-    
+
     // MARK: - Ports (injected)
-    
+
     private let repository: {RepositoryName}Protocol
-    
+
     // MARK: - UseCases (created internally)
-    
+
     private let createUseCase: Create{EntityName}UseCase
-    
+
     // MARK: - Init
-    
+
     init(repository: {RepositoryName}Protocol) {
         self.repository = repository
         self.createUseCase = Create{EntityName}UseCase(repository: repository)
     }
-    
+
     // MARK: - Actions
-    
+
     func submit() {
         guard form.isValid else { return }
-        
+
         isSubmitting = true
         error = nil
-        
+
         Task {
             do {
                 _ = try await createUseCase.execute(
@@ -400,7 +400,7 @@ class {Feature}FormViewModel: ObservableObject {
             isSubmitting = false
         }
     }
-    
+
     func reset() {
         form = FormState()
         error = nil
@@ -422,7 +422,7 @@ import SwiftUI
 
 struct {Feature}View: View {
     @EnvironmentObject private var viewModel: {Feature}ViewModel
-    
+
     var body: some View {
         Group {
             if viewModel.isLoading {
@@ -450,7 +450,7 @@ private extension {Feature}View {
             Text(entity.id)
         }
     }
-    
+
     @ViewBuilder
     func EmptyStateView() -> some View {
         ContentUnavailableView(
@@ -459,7 +459,7 @@ private extension {Feature}View {
             description: Text("Nothing to display")
         )
     }
-    
+
     @ViewBuilder
     func ErrorView(error: {Context}Error, retry: @escaping () -> Void) -> some View {
         ContentUnavailableView {
@@ -483,7 +483,7 @@ import SwiftUI
 struct {Feature}FormView: View {
     @EnvironmentObject private var viewModel: {Feature}FormViewModel
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -491,7 +491,7 @@ struct {Feature}FormView: View {
                     TextField("Field 1", text: $viewModel.form.field1)
                     Stepper("Field 2: \(viewModel.form.field2)", value: $viewModel.form.field2)
                 }
-                
+
                 if let error = viewModel.error {
                     Section {
                         Text(error.localizedDescription)
@@ -553,12 +553,12 @@ struct {App}App: App {
     // ViewModels
     @StateObject var sessionViewModel: SessionViewModel
     @StateObject var groupViewModel: GroupViewModel
-    
+
     init() {
         // Configure DI
         let container = DIContainer.shared
         container.configureServices()
-        
+
         // Resolve Ports
         do {
             let sessionRepository = try container.resolve(SessionRepositoryProtocol.self)
@@ -566,7 +566,7 @@ struct {App}App: App {
             let shieldManager = try container.resolve(ShieldManagerProtocol.self)
             let monitor = try container.resolve(MonitorProtocol.self)
             let tracker = try container.resolve(TrackerProtocol.self)
-            
+
             // Create ViewModels with Ports
             _sessionViewModel = StateObject(
                 wrappedValue: SessionViewModel(
@@ -576,7 +576,7 @@ struct {App}App: App {
                     tracker: tracker
                 )
             )
-            
+
             _groupViewModel = StateObject(
                 wrappedValue: GroupViewModel(
                     groupRepository: groupRepository,
@@ -588,7 +588,7 @@ struct {App}App: App {
             fatalError("Failed to configure dependencies: \(error)")
         }
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -616,11 +616,11 @@ class {Extension}Extension: DeviceActivityMonitor {
     private let shieldManager: ShieldManagerProtocol
     private let monitor: MonitorProtocol
     private let tracker: TrackerProtocol
-    
+
     // UseCases
     private let startSession: StartSessionUseCase
     private let stopSession: StopSessionUseCase
-    
+
     override init() {
         // Manual instantiation - no DIContainer in extensions
         // Use extension-safe implementations (AppleLog instead of Sentry, etc.)
@@ -634,7 +634,7 @@ class {Extension}Extension: DeviceActivityMonitor {
             monitor: self.monitor,
             tracker: self.tracker
         )
-        
+
         // Create UseCases
         self.startSession = StartSessionUseCase(
             sessionRepository: self.sessionRepository,
@@ -648,38 +648,38 @@ class {Extension}Extension: DeviceActivityMonitor {
             tracker: self.tracker,
             monitor: self.monitor
         )
-        
+
         super.init()
-        
+
         monitor.addBreadcrumb("{Extension} initialized", category: "extension_lifecycle")
     }
-    
+
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
-        
+
         let sessionId = extractSessionId(from: activity)
-        
+
         monitor.addBreadcrumb("Interval started", category: "extension_lifecycle")
         tracker.trackEvent("extension_interval_started", properties: ["sessionId": sessionId])
-        
+
         Task {
             _ = await startSession.execute(sessionId: sessionId)
         }
     }
-    
+
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
-        
+
         let sessionId = extractSessionId(from: activity)
-        
+
         monitor.addBreadcrumb("Interval ended", category: "extension_lifecycle")
         tracker.trackEvent("extension_interval_ended", properties: ["sessionId": sessionId])
-        
+
         Task {
             _ = await stopSession.execute(sessionId: sessionId)
         }
     }
-    
+
     private func extractSessionId(from activity: DeviceActivityName) -> String {
         // Implementation
         return activity.rawValue

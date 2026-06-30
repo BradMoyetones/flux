@@ -7,6 +7,7 @@ Optimizations at the native layer can significantly improve performance, especia
 React Native creates native views for each component. Fabric automatically flattens views that only affect layout.
 
 **Views eligible for flattening:**
+
 - Only have layout styles (flex, padding, margin)
 - No background color, border, shadow
 - No event handlers
@@ -26,6 +27,7 @@ Force view preservation or allow removal:
 ```
 
 Use `collapsable={false}` for:
+
 - Views with refs that need measurement
 - Animation targets
 - Native components requiring view identity
@@ -34,16 +36,17 @@ Use `collapsable={false}` for:
 
 Use dedicated React Native SDKs instead of web libraries when available.
 
-| Category | Web Approach ❌ | Native SDK ✅ |
-|----------|-----------------|---------------|
-| Maps | WebView + Google Maps JS | react-native-maps |
-| Video | HTML5 video | react-native-video |
-| Charts | D3.js + SVG | react-native-charts-wrapper |
-| Payments | Stripe.js | @stripe/stripe-react-native |
-| Auth | Firebase JS | @react-native-firebase/auth |
-| Analytics | Web SDK | Native SDK bindings |
+| Category  | Web Approach ❌          | Native SDK ✅               |
+| --------- | ------------------------ | --------------------------- |
+| Maps      | WebView + Google Maps JS | react-native-maps           |
+| Video     | HTML5 video              | react-native-video          |
+| Charts    | D3.js + SVG              | react-native-charts-wrapper |
+| Payments  | Stripe.js                | @stripe/stripe-react-native |
+| Auth      | Firebase JS              | @react-native-firebase/auth |
+| Analytics | Web SDK                  | Native SDK bindings         |
 
 **Why native SDKs:**
+
 - Run on UI thread (smoother)
 - Native gesture handling
 - Platform-specific optimizations
@@ -53,14 +56,11 @@ Use dedicated React Native SDKs instead of web libraries when available.
 
 ```tsx
 // ❌ WebView approach
-<WebView source={{ uri: 'https://maps.google.com/...' }} />
+<WebView source={{ uri: 'https://maps.google.com/...' }} />;
 
 // ✅ Native maps
 import MapView from 'react-native-maps';
-<MapView
-  region={region}
-  onRegionChange={setRegion}
-/>
+<MapView region={region} onRegionChange={setRegion} />;
 ```
 
 ## Turbo Modules Performance
@@ -87,8 +87,8 @@ const result = await TurboModule.asyncMethod();
 
 ```tsx
 // ❌ Many individual calls
-items.forEach(item => {
-  NativeModule.processItem(item);
+items.forEach((item) => {
+    NativeModule.processItem(item);
 });
 
 // ✅ Single batch call
@@ -100,17 +100,14 @@ NativeModule.processItems(items);
 ```tsx
 // ❌ Crossing bridge in scroll handler
 const onScroll = (event) => {
-  NativeModule.trackScroll(event.nativeEvent.contentOffset.y);
+    NativeModule.trackScroll(event.nativeEvent.contentOffset.y);
 };
 
 // ✅ Debounce or use native scroll tracking
-const debouncedTrack = useMemo(
-  () => debounce((y: number) => NativeModule.trackScroll(y), 100),
-  []
-);
+const debouncedTrack = useMemo(() => debounce((y: number) => NativeModule.trackScroll(y), 100), []);
 
 const onScroll = (event) => {
-  debouncedTrack(event.nativeEvent.contentOffset.y);
+    debouncedTrack(event.nativeEvent.contentOffset.y);
 };
 ```
 
@@ -136,10 +133,7 @@ For ProGuard/R8 configuration, see [bundle-optimization.md](bundle-optimization.
 ```tsx
 import FastImage from 'react-native-fast-image';
 
-<FastImage
-  source={{ uri: imageUrl, priority: FastImage.priority.high }}
-  resizeMode={FastImage.resizeMode.cover}
-/>
+<FastImage source={{ uri: imageUrl, priority: FastImage.priority.high }} resizeMode={FastImage.resizeMode.cover} />;
 ```
 
 ### iOS
@@ -147,12 +141,10 @@ import FastImage from 'react-native-fast-image';
 **Metal Rendering:** Modern iOS uses Metal by default. Ensure you're not forcing software rendering.
 
 **Optimize Images:**
+
 ```tsx
 // Use appropriate scale factors
-<Image 
-  source={require('./image@3x.png')} 
-  style={{ width: 100, height: 100 }}
-/>
+<Image source={require('./image@3x.png')} style={{ width: 100, height: 100 }} />
 ```
 
 ## Shadow and Border Optimization
@@ -170,7 +162,7 @@ Shadows are expensive, especially on Android.
 }}>
 
 // ✅ Better: pre-rendered shadow image
-<ImageBackground 
+<ImageBackground
   source={require('./shadow-bg.png')}
   style={styles.container}
 >
@@ -189,19 +181,17 @@ Shadows are expensive, especially on Android.
 ```tsx
 // ❌ Multiple measurements cause reflows
 const measureAll = () => {
-  const size1 = view1Ref.current?.measure();
-  const size2 = view2Ref.current?.measure();
-  const size3 = view3Ref.current?.measure();
+    const size1 = view1Ref.current?.measure();
+    const size2 = view2Ref.current?.measure();
+    const size3 = view3Ref.current?.measure();
 };
 
 // ✅ Batch measurements
 const measureAll = () => {
-  requestAnimationFrame(() => {
-    // All measurements in single frame
-    const sizes = [view1Ref, view2Ref, view3Ref].map(
-      ref => ref.current?.measure()
-    );
-  });
+    requestAnimationFrame(() => {
+        // All measurements in single frame
+        const sizes = [view1Ref, view2Ref, view3Ref].map((ref) => ref.current?.measure());
+    });
 };
 ```
 

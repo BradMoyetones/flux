@@ -38,9 +38,10 @@ Separate the read model (queries) from the write model (commands) at the archite
 ```typescript
 // ProductRepository.ts — one model for everything
 class ProductRepository {
-  async getById(id: string): Promise<Product> {
-    // Complex domain object with all relationships
-    const product = await this.db.query(`
+    async getById(id: string): Promise<Product> {
+        // Complex domain object with all relationships
+        const product = await this.db.query(
+            `
       SELECT p.*, 
              c.name as category_name,
              b.name as brand_name,
@@ -57,29 +58,31 @@ class ProductRepository {
       LEFT JOIN tags t ON t.id = pt.tag_id
       WHERE p.id = ?
       GROUP BY p.id
-    `, [id]);
+    `,
+            [id]
+        );
 
-    return this.toDomainModel(product);
-  }
+        return this.toDomainModel(product);
+    }
 
-  async updatePrice(id: string, price: number): Promise<void> {
-    // Write needs domain validation
-    const product = await this.getById(id); // Fetches everything!
-    product.updatePrice(price);             // Domain logic
-    await this.save(product);               // Complex save
-  }
+    async updatePrice(id: string, price: number): Promise<void> {
+        // Write needs domain validation
+        const product = await this.getById(id); // Fetches everything!
+        product.updatePrice(price); // Domain logic
+        await this.save(product); // Complex save
+    }
 
-  async getProductList(filters: Filters): Promise<ProductListItem[]> {
-    // List view doesn't need full domain model
-    // but we're forced to use the same structure
-    const products = await this.search(filters);
-    return products.map(p => ({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      thumbnail: p.images[0]?.thumbnail,
-    }));
-  }
+    async getProductList(filters: Filters): Promise<ProductListItem[]> {
+        // List view doesn't need full domain model
+        // but we're forced to use the same structure
+        const products = await this.search(filters);
+        return products.map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            thumbnail: p.images[0]?.thumbnail,
+        }));
+    }
 }
 ```
 
@@ -90,88 +93,82 @@ class ProductRepository {
 
 // commands/UpdateProductPriceCommand.ts
 interface UpdateProductPriceCommand {
-  productId: string;
-  newPrice: number;
-  updatedBy: string;
+    productId: string;
+    newPrice: number;
+    updatedBy: string;
 }
 
 // handlers/UpdateProductPriceHandler.ts
 class UpdateProductPriceHandler {
-  constructor(
-    private readonly productRepository: ProductWriteRepository,
-    private readonly eventBus: EventBus
-  ) {}
+    constructor(
+        private readonly productRepository: ProductWriteRepository,
+        private readonly eventBus: EventBus
+    ) {}
 
-  async handle(command: UpdateProductPriceCommand): Promise<void> {
-    const product = await this.productRepository.getById(command.productId);
+    async handle(command: UpdateProductPriceCommand): Promise<void> {
+        const product = await this.productRepository.getById(command.productId);
 
-    // Rich domain model for writes
-    product.updatePrice(command.newPrice, command.updatedBy);
+        // Rich domain model for writes
+        product.updatePrice(command.newPrice, command.updatedBy);
 
-    await this.productRepository.save(product);
+        await this.productRepository.save(product);
 
-    // Notify read side to update
-    await this.eventBus.publish(new ProductPriceUpdatedEvent({
-      productId: command.productId,
-      newPrice: command.newPrice,
-    }));
-  }
+        // Notify read side to update
+        await this.eventBus.publish(
+            new ProductPriceUpdatedEvent({
+                productId: command.productId,
+                newPrice: command.newPrice,
+            })
+        );
+    }
 }
 
 // ProductWriteRepository.ts — optimized for domain operations
 class ProductWriteRepository {
-  async getById(id: string): Promise<Product> {
-    // Only load what domain logic needs
-    const data = await this.db.query(
-      'SELECT id, price, status, version FROM products WHERE id = ?',
-      [id]
-    );
-    return new Product(data);
-  }
+    async getById(id: string): Promise<Product> {
+        // Only load what domain logic needs
+        const data = await this.db.query('SELECT id, price, status, version FROM products WHERE id = ?', [id]);
+        return new Product(data);
+    }
 }
 
 // === READ SIDE ===
 
 // queries/GetProductDetailsQuery.ts
 interface GetProductDetailsQuery {
-  productId: string;
+    productId: string;
 }
 
 // handlers/GetProductDetailsHandler.ts
 class GetProductDetailsHandler {
-  constructor(private readonly readDb: ProductReadDatabase) {}
+    constructor(private readonly readDb: ProductReadDatabase) {}
 
-  async handle(query: GetProductDetailsQuery): Promise<ProductDetailsView> {
-    // Simple, fast read from denormalized view
-    return this.readDb.getProductDetails(query.productId);
-  }
+    async handle(query: GetProductDetailsQuery): Promise<ProductDetailsView> {
+        // Simple, fast read from denormalized view
+        return this.readDb.getProductDetails(query.productId);
+    }
 }
 
 // ProductReadDatabase.ts — optimized for read patterns
 class ProductReadDatabase {
-  // Denormalized view, pre-computed aggregates
-  async getProductDetails(id: string): Promise<ProductDetailsView> {
-    return this.db.query(
-      'SELECT * FROM product_details_view WHERE id = ?',
-      [id]
-    );
-  }
+    // Denormalized view, pre-computed aggregates
+    async getProductDetails(id: string): Promise<ProductDetailsView> {
+        return this.db.query('SELECT * FROM product_details_view WHERE id = ?', [id]);
+    }
 
-  async getProductList(filters: Filters): Promise<ProductListItem[]> {
-    // Optimized for list display
-    return this.db.query(
-      'SELECT id, name, price, thumbnail, rating FROM product_list_view WHERE ...'
-    );
-  }
+    async getProductList(filters: Filters): Promise<ProductListItem[]> {
+        // Optimized for list display
+        return this.db.query('SELECT id, name, price, thumbnail, rating FROM product_list_view WHERE ...');
+    }
 }
 
 // Event handler updates read model
 class ProductPriceUpdatedHandler {
-  constructor(private readonly readDb: ProductReadDatabase) {}
+    constructor(private readonly readDb: ProductReadDatabase) {}
 
-  async handle(event: ProductPriceUpdatedEvent): Promise<void> {
-    await this.readDb.updateProductPrice(event.productId, event.newPrice);
-  }
+    async handle(event: ProductPriceUpdatedEvent): Promise<void> {
+        await this.readDb.updateProductPrice(event.productId, event.newPrice);
+    }
 }
 ```
 
@@ -181,16 +178,27 @@ CQRS adds complexity. Don't use it for simple CRUD:
 
 ```typescript
 // ❌ Over-engineering simple operations
-interface CreateUserCommand { email: string; name: string; }
-interface GetUserQuery { userId: string; }
-interface UserCreatedEvent { userId: string; }
+interface CreateUserCommand {
+    email: string;
+    name: string;
+}
+interface GetUserQuery {
+    userId: string;
+}
+interface UserCreatedEvent {
+    userId: string;
+}
 
 // Handlers, event bus, read model sync... for basic CRUD?
 
 // ✅ Simple repository is fine for simple domains
 class UserRepository {
-  async create(user: CreateUserDTO): Promise<User> { /* ... */ }
-  async getById(id: string): Promise<User> { /* ... */ }
+    async create(user: CreateUserDTO): Promise<User> {
+        /* ... */
+    }
+    async getById(id: string): Promise<User> {
+        /* ... */
+    }
 }
 ```
 

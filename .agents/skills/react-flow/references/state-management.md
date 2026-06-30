@@ -17,12 +17,12 @@ Use this file when choosing between controlled and uncontrolled flows, integrati
 
 ## State management approaches
 
-| Approach | Best for | Complexity |
-|----------|----------|------------|
-| `useState` + `applyChanges` | Simple flows, demos | Low |
-| `useNodesState` / `useEdgesState` | Quick prototypes | Low |
-| Zustand store | Production apps, shared state | Medium |
-| Redux / Jotai / Recoil | Existing app integration | Medium-High |
+| Approach                          | Best for                      | Complexity  |
+| --------------------------------- | ----------------------------- | ----------- |
+| `useState` + `applyChanges`       | Simple flows, demos           | Low         |
+| `useNodesState` / `useEdgesState` | Quick prototypes              | Low         |
+| Zustand store                     | Production apps, shared state | Medium      |
+| Redux / Jotai / Recoil            | Existing app integration      | Medium-High |
 
 ## Approach 1: useState with apply helpers
 
@@ -33,32 +33,23 @@ import { useState, useCallback } from 'react';
 import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
 
 function Flow() {
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
+    const [nodes, setNodes] = useState(initialNodes);
+    const [edges, setEdges] = useState(initialEdges);
 
-  const onNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    [],
-  );
-  const onEdgesChange = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [],
-  );
-  const onConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
-    [],
-  );
+    const onNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
+    const onEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
+    const onConnect = useCallback((connection) => setEdges((eds) => addEdge(connection, eds)), []);
 
-  return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      fitView
-    />
-  );
+    return (
+        <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            fitView
+        />
+    );
 }
 ```
 
@@ -72,24 +63,21 @@ Convenience hooks that bundle state + change handler:
 import { ReactFlow, useNodesState, useEdgesState, addEdge } from '@xyflow/react';
 
 function Flow() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  const onConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
-    [],
-  );
+    const onConnect = useCallback((connection) => setEdges((eds) => addEdge(connection, eds)), []);
 
-  return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      fitView
-    />
-  );
+    return (
+        <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            fitView
+        />
+    );
 }
 ```
 
@@ -107,43 +95,43 @@ import { applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
 import type { Node, Edge, OnNodesChange, OnEdgesChange, OnConnect } from '@xyflow/react';
 
 type FlowState = {
-  nodes: Node[];
-  edges: Edge[];
-  onNodesChange: OnNodesChange;
-  onEdgesChange: OnEdgesChange;
-  onConnect: OnConnect;
-  setNodes: (nodes: Node[]) => void;
-  setEdges: (edges: Edge[]) => void;
-  updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
+    nodes: Node[];
+    edges: Edge[];
+    onNodesChange: OnNodesChange;
+    onEdgesChange: OnEdgesChange;
+    onConnect: OnConnect;
+    setNodes: (nodes: Node[]) => void;
+    setEdges: (edges: Edge[]) => void;
+    updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
 };
 
 const useFlowStore = create<FlowState>((set, get) => ({
-  nodes: initialNodes,
-  edges: initialEdges,
+    nodes: initialNodes,
+    edges: initialEdges,
 
-  onNodesChange: (changes) => {
-    set({ nodes: applyNodeChanges(changes, get().nodes) });
-  },
-  onEdgesChange: (changes) => {
-    set({ edges: applyEdgeChanges(changes, get().edges) });
-  },
-  onConnect: (connection) => {
-    set({ edges: addEdge(connection, get().edges) });
-  },
-  setNodes: (nodes) => set({ nodes }),
-  setEdges: (edges) => set({ edges }),
+    onNodesChange: (changes) => {
+        set({ nodes: applyNodeChanges(changes, get().nodes) });
+    },
+    onEdgesChange: (changes) => {
+        set({ edges: applyEdgeChanges(changes, get().edges) });
+    },
+    onConnect: (connection) => {
+        set({ edges: addEdge(connection, get().edges) });
+    },
+    setNodes: (nodes) => set({ nodes }),
+    setEdges: (edges) => set({ edges }),
 
-  updateNodeData: (nodeId, data) => {
-    set({
-      nodes: get().nodes.map((node) => {
-        if (node.id === nodeId) {
-          // IMPORTANT: create new object — mutations are not detected
-          return { ...node, data: { ...node.data, ...data } };
-        }
-        return node;
-      }),
-    });
-  },
+    updateNodeData: (nodeId, data) => {
+        set({
+            nodes: get().nodes.map((node) => {
+                if (node.id === nodeId) {
+                    // IMPORTANT: create new object — mutations are not detected
+                    return { ...node, data: { ...node.data, ...data } };
+                }
+                return node;
+            }),
+        });
+    },
 }));
 
 export default useFlowStore;
@@ -158,19 +146,19 @@ import useFlowStore from './store';
 const nodeTypes = { custom: CustomNode };
 
 function Flow() {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useFlowStore();
+    const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useFlowStore();
 
-  return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      nodeTypes={nodeTypes}
-      fitView
-    />
-  );
+    return (
+        <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            fitView
+        />
+    );
 }
 ```
 
@@ -181,21 +169,21 @@ import { Handle, Position, useNodeId } from '@xyflow/react';
 import useFlowStore from './store';
 
 function CustomNode({ data }) {
-  const id = useNodeId();
-  const updateNodeData = useFlowStore((s) => s.updateNodeData);
+    const id = useNodeId();
+    const updateNodeData = useFlowStore((s) => s.updateNodeData);
 
-  return (
-    <div>
-      <Handle type="target" position={Position.Top} />
-      <input
-        type="color"
-        defaultValue={data.color}
-        onChange={(e) => updateNodeData(id, { color: e.target.value })}
-        className="nodrag"
-      />
-      <Handle type="source" position={Position.Bottom} />
-    </div>
-  );
+    return (
+        <div>
+            <Handle type="target" position={Position.Top} />
+            <input
+                type="color"
+                defaultValue={data.color}
+                onChange={(e) => updateNodeData(id, { color: e.target.value })}
+                className="nodrag"
+            />
+            <Handle type="source" position={Position.Bottom} />
+        </div>
+    );
 }
 ```
 
@@ -206,9 +194,7 @@ React Flow detects changes by reference comparison. Always create new objects:
 ```tsx
 // CORRECT — new object created
 set({
-  nodes: get().nodes.map((node) =>
-    node.id === id ? { ...node, data: { ...node.data, label: 'Updated' } } : node,
-  ),
+    nodes: get().nodes.map((node) => (node.id === id ? { ...node, data: { ...node.data, label: 'Updated' } } : node)),
 });
 
 // WRONG — mutation not detected
@@ -250,19 +236,19 @@ import { useEffect } from 'react';
 import { useNodeConnections, useNodesData, useReactFlow } from '@xyflow/react';
 
 function ProcessorNode({ id, data }) {
-  const { updateNodeData } = useReactFlow();
+    const { updateNodeData } = useReactFlow();
 
-  // Get connected source nodes
-  const connections = useNodeConnections({ handleType: 'target' });
-  const connectedData = useNodesData(connections.map((c) => c.source));
+    // Get connected source nodes
+    const connections = useNodeConnections({ handleType: 'target' });
+    const connectedData = useNodesData(connections.map((c) => c.source));
 
-  // Compute output when inputs change
-  useEffect(() => {
-    const sum = connectedData.reduce((acc, d) => acc + (d?.data?.value ?? 0), 0);
-    updateNodeData(id, { result: sum });
-  }, [connectedData, id, updateNodeData]);
+    // Compute output when inputs change
+    useEffect(() => {
+        const sum = connectedData.reduce((acc, d) => acc + (d?.data?.value ?? 0), 0);
+        updateNodeData(id, { result: sum });
+    }, [connectedData, id, updateNodeData]);
 
-  return <div>Result: {data.result}</div>;
+    return <div>Result: {data.result}</div>;
 }
 ```
 
@@ -272,17 +258,17 @@ For input fields, maintain local state separately from node data:
 
 ```tsx
 function InputNode({ id, data }) {
-  const [value, setValue] = useState(data.value ?? 0);
-  const { updateNodeData } = useReactFlow();
+    const [value, setValue] = useState(data.value ?? 0);
+    const { updateNodeData } = useReactFlow();
 
-  // Sync to node data on change, but use local state for the input
-  const onChange = (e) => {
-    const v = Number(e.target.value);
-    setValue(v);
-    updateNodeData(id, { value: v });
-  };
+    // Sync to node data on change, but use local state for the input
+    const onChange = (e) => {
+        const v = Number(e.target.value);
+        setValue(v);
+        updateNodeData(id, { value: v });
+    };
 
-  return <input type="number" value={value} onChange={onChange} className="nodrag" />;
+    return <input type="number" value={value} onChange={onChange} className="nodrag" />;
 }
 ```
 
@@ -294,8 +280,8 @@ function InputNode({ id, data }) {
 const { toObject } = useReactFlow();
 
 const saveFlow = () => {
-  const flowData = toObject(); // { nodes, edges, viewport }
-  localStorage.setItem('flow', JSON.stringify(flowData));
+    const flowData = toObject(); // { nodes, edges, viewport }
+    localStorage.setItem('flow', JSON.stringify(flowData));
 };
 ```
 
@@ -305,12 +291,12 @@ const saveFlow = () => {
 const { setNodes, setEdges, setViewport } = useReactFlow();
 
 const restoreFlow = () => {
-  const data = JSON.parse(localStorage.getItem('flow'));
-  if (data) {
-    setNodes(data.nodes);
-    setEdges(data.edges);
-    setViewport(data.viewport);
-  }
+    const data = JSON.parse(localStorage.getItem('flow'));
+    if (data) {
+        setNodes(data.nodes);
+        setEdges(data.edges);
+        setViewport(data.viewport);
+    }
 };
 ```
 

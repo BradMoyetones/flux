@@ -31,32 +31,23 @@ import { useCallback, useState } from 'react';
 import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
 
 function Flow() {
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
+    const [nodes, setNodes] = useState(initialNodes);
+    const [edges, setEdges] = useState(initialEdges);
 
-  const onNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    [],
-  );
-  const onEdgesChange = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [],
-  );
-  const onConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
-    [],
-  );
+    const onNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
+    const onEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
+    const onConnect = useCallback((connection) => setEdges((eds) => addEdge(connection, eds)), []);
 
-  return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      fitView
-    />
-  );
+    return (
+        <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            fitView
+        />
+    );
 }
 ```
 
@@ -75,43 +66,43 @@ With the three core handlers wired up, users get:
 
 ## Node event handlers
 
-| Prop | Signature | Description |
-|------|-----------|-------------|
-| `onNodeClick` | `(event, node) => void` | Node clicked |
-| `onNodeDoubleClick` | `(event, node) => void` | Node double-clicked |
-| `onNodeContextMenu` | `(event, node) => void` | Node right-clicked |
-| `onNodeDragStart` | `(event, node, nodes) => void` | Drag starts |
-| `onNodeDrag` | `(event, node, nodes) => void` | During drag |
-| `onNodeDragStop` | `(event, node, nodes) => void` | Drag ends |
-| `onNodeMouseEnter` | `(event, node) => void` | Mouse enters node |
-| `onNodeMouseMove` | `(event, node) => void` | Mouse moves over node |
-| `onNodeMouseLeave` | `(event, node) => void` | Mouse leaves node |
-| `onNodesDelete` | `(nodes) => void` | Nodes deleted |
-| `onNodesChange` | `(changes) => void` | Any node change (required for controlled flow) |
+| Prop                | Signature                      | Description                                    |
+| ------------------- | ------------------------------ | ---------------------------------------------- |
+| `onNodeClick`       | `(event, node) => void`        | Node clicked                                   |
+| `onNodeDoubleClick` | `(event, node) => void`        | Node double-clicked                            |
+| `onNodeContextMenu` | `(event, node) => void`        | Node right-clicked                             |
+| `onNodeDragStart`   | `(event, node, nodes) => void` | Drag starts                                    |
+| `onNodeDrag`        | `(event, node, nodes) => void` | During drag                                    |
+| `onNodeDragStop`    | `(event, node, nodes) => void` | Drag ends                                      |
+| `onNodeMouseEnter`  | `(event, node) => void`        | Mouse enters node                              |
+| `onNodeMouseMove`   | `(event, node) => void`        | Mouse moves over node                          |
+| `onNodeMouseLeave`  | `(event, node) => void`        | Mouse leaves node                              |
+| `onNodesDelete`     | `(nodes) => void`              | Nodes deleted                                  |
+| `onNodesChange`     | `(changes) => void`            | Any node change (required for controlled flow) |
 
 ## Edge event handlers
 
-| Prop | Signature | Description |
-|------|-----------|-------------|
-| `onEdgeClick` | `(event, edge) => void` | Edge clicked |
-| `onEdgeDoubleClick` | `(event, edge) => void` | Edge double-clicked |
-| `onEdgeContextMenu` | `(event, edge) => void` | Edge right-clicked |
-| `onEdgeMouseEnter` | `(event, edge) => void` | Mouse enters edge |
-| `onEdgeMouseMove` | `(event, edge) => void` | Mouse moves over edge |
-| `onEdgeMouseLeave` | `(event, edge) => void` | Mouse leaves edge |
-| `onEdgesDelete` | `(edges) => void` | Edges deleted |
-| `onEdgesChange` | `(changes) => void` | Any edge change (required for controlled flow) |
+| Prop                | Signature               | Description                                    |
+| ------------------- | ----------------------- | ---------------------------------------------- |
+| `onEdgeClick`       | `(event, edge) => void` | Edge clicked                                   |
+| `onEdgeDoubleClick` | `(event, edge) => void` | Edge double-clicked                            |
+| `onEdgeContextMenu` | `(event, edge) => void` | Edge right-clicked                             |
+| `onEdgeMouseEnter`  | `(event, edge) => void` | Mouse enters edge                              |
+| `onEdgeMouseMove`   | `(event, edge) => void` | Mouse moves over edge                          |
+| `onEdgeMouseLeave`  | `(event, edge) => void` | Mouse leaves edge                              |
+| `onEdgesDelete`     | `(edges) => void`       | Edges deleted                                  |
+| `onEdgesChange`     | `(changes) => void`     | Any edge change (required for controlled flow) |
 
 ## Connection event handlers
 
-| Prop | Signature | Description |
-|------|-----------|-------------|
-| `onConnect` | `(connection) => void` | Two nodes successfully connected |
-| `onConnectStart` | `(event, params) => void` | Connection drag begins |
-| `onConnectEnd` | `(event, connectionState) => void` | Connection drag ends (valid or not) |
-| `onClickConnectStart` | `(event, params) => void` | Click-based connection starts |
-| `onClickConnectEnd` | `(event) => void` | Click-based connection ends |
-| `isValidConnection` | `(connection) => boolean` | Validate before allowing connection |
+| Prop                  | Signature                          | Description                         |
+| --------------------- | ---------------------------------- | ----------------------------------- |
+| `onConnect`           | `(connection) => void`             | Two nodes successfully connected    |
+| `onConnectStart`      | `(event, params) => void`          | Connection drag begins              |
+| `onConnectEnd`        | `(event, connectionState) => void` | Connection drag ends (valid or not) |
+| `onClickConnectStart` | `(event, params) => void`          | Click-based connection starts       |
+| `onClickConnectEnd`   | `(event) => void`                  | Click-based connection ends         |
+| `isValidConnection`   | `(connection) => boolean`          | Validate before allowing connection |
 
 ### Connection validation
 
@@ -137,71 +128,71 @@ const isValidConnection = useCallback(
 
 ```tsx
 const onConnectEnd = useCallback(
-  (event, connectionState) => {
-    if (!connectionState.isValid) {
-      // Connection was dropped on empty canvas — create a new node here
-      const { clientX, clientY } = 'changedTouches' in event ? event.changedTouches[0] : event;
-      const position = screenToFlowPosition({ x: clientX, y: clientY });
-      const newNode = {
-        id: `node-${Date.now()}`,
-        position,
-        data: { label: 'New Node' },
-      };
-      setNodes((nds) => [...nds, newNode]);
-      setEdges((eds) => [
-        ...eds,
-        { id: `e-${Date.now()}`, source: connectionState.fromNode.id, target: newNode.id },
-      ]);
-    }
-  },
-  [screenToFlowPosition],
+    (event, connectionState) => {
+        if (!connectionState.isValid) {
+            // Connection was dropped on empty canvas — create a new node here
+            const { clientX, clientY } = 'changedTouches' in event ? event.changedTouches[0] : event;
+            const position = screenToFlowPosition({ x: clientX, y: clientY });
+            const newNode = {
+                id: `node-${Date.now()}`,
+                position,
+                data: { label: 'New Node' },
+            };
+            setNodes((nds) => [...nds, newNode]);
+            setEdges((eds) => [
+                ...eds,
+                { id: `e-${Date.now()}`, source: connectionState.fromNode.id, target: newNode.id },
+            ]);
+        }
+    },
+    [screenToFlowPosition]
 );
 ```
 
 ## Pane event handlers
 
-| Prop | Signature | Description |
-|------|-----------|-------------|
-| `onPaneClick` | `(event) => void` | Click on empty canvas |
+| Prop                | Signature         | Description                 |
+| ------------------- | ----------------- | --------------------------- |
+| `onPaneClick`       | `(event) => void` | Click on empty canvas       |
 | `onPaneContextMenu` | `(event) => void` | Right-click on empty canvas |
-| `onPaneScroll` | `(event) => void` | Scroll over canvas |
-| `onPaneMouseMove` | `(event) => void` | Mouse move over canvas |
-| `onPaneMouseEnter` | `(event) => void` | Mouse enters canvas |
-| `onPaneMouseLeave` | `(event) => void` | Mouse leaves canvas |
+| `onPaneScroll`      | `(event) => void` | Scroll over canvas          |
+| `onPaneMouseMove`   | `(event) => void` | Mouse move over canvas      |
+| `onPaneMouseEnter`  | `(event) => void` | Mouse enters canvas         |
+| `onPaneMouseLeave`  | `(event) => void` | Mouse leaves canvas         |
 
 ## Selection event handlers
 
-| Prop | Signature | Description |
-|------|-----------|-------------|
-| `onSelectionChange` | `({ nodes, edges }) => void` | Selection changes |
-| `onSelectionDragStart` | `(event, nodes) => void` | Selection box drag starts |
-| `onSelectionDrag` | `(event, nodes) => void` | During selection box drag |
-| `onSelectionDragStop` | `(event, nodes) => void` | Selection box drag ends |
-| `onSelectionContextMenu` | `(event, nodes) => void` | Right-click on selection |
+| Prop                     | Signature                    | Description               |
+| ------------------------ | ---------------------------- | ------------------------- |
+| `onSelectionChange`      | `({ nodes, edges }) => void` | Selection changes         |
+| `onSelectionDragStart`   | `(event, nodes) => void`     | Selection box drag starts |
+| `onSelectionDrag`        | `(event, nodes) => void`     | During selection box drag |
+| `onSelectionDragStop`    | `(event, nodes) => void`     | Selection box drag ends   |
+| `onSelectionContextMenu` | `(event, nodes) => void`     | Right-click on selection  |
 
 ## Viewport event handlers
 
-| Prop | Signature | Description |
-|------|-----------|-------------|
+| Prop          | Signature                   | Description     |
+| ------------- | --------------------------- | --------------- |
 | `onMoveStart` | `(event, viewport) => void` | Pan/zoom starts |
-| `onMove` | `(event, viewport) => void` | During pan/zoom |
-| `onMoveEnd` | `(event, viewport) => void` | Pan/zoom ends |
+| `onMove`      | `(event, viewport) => void` | During pan/zoom |
+| `onMoveEnd`   | `(event, viewport) => void` | Pan/zoom ends   |
 
 ## Deletion handlers
 
-| Prop | Signature | Description |
-|------|-----------|-------------|
-| `onDelete` | `({ nodes, edges }) => void` | After elements deleted |
+| Prop             | Signature                                                                    | Description                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `onDelete`       | `({ nodes, edges }) => void`                                                 | After elements deleted                                                                                     |
 | `onBeforeDelete` | `({ nodes, edges }) => Promise<boolean \| { nodes: Node[]; edges: Edge[] }>` | Before deletion — return `false` to cancel, or return a modified `{ nodes, edges }` for selective deletion |
 
 ### Preventing deletion of specific nodes
 
 ```tsx
 const onBeforeDelete = useCallback(async ({ nodes, edges }) => {
-  // Prevent deleting the root node
-  const hasRoot = nodes.some((n) => n.id === 'root');
-  if (hasRoot) return false;
-  return true;
+    // Prevent deleting the root node
+    const hasRoot = nodes.some((n) => n.id === 'root');
+    if (hasRoot) return false;
+    return true;
 }, []);
 ```
 
@@ -213,48 +204,48 @@ Or set `deletable: false` on individual nodes/edges:
 
 ## Interaction toggle props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `nodesDraggable` | `boolean` | `true` | All nodes draggable |
-| `nodesConnectable` | `boolean` | `true` | All nodes connectable |
-| `nodesFocusable` | `boolean` | `true` | Tab key cycles focus between nodes |
-| `edgesFocusable` | `boolean` | `true` | Tab key cycles focus between edges |
-| `elementsSelectable` | `boolean` | `true` | Click to select |
-| `autoPanOnConnect` | `boolean` | `true` | Viewport pans during connection |
-| `autoPanOnNodeDrag` | `boolean` | `true` | Viewport pans during drag |
-| `panOnDrag` | `boolean \| number[]` | `true` | Enable panning; `[1]` = middle mouse only |
-| `panOnScroll` | `boolean` | `false` | Scroll to pan instead of zoom |
-| `zoomOnScroll` | `boolean` | `true` | Scroll wheel zooms |
-| `zoomOnPinch` | `boolean` | `true` | Pinch gesture zooms |
-| `zoomOnDoubleClick` | `boolean` | `true` | Double-click zooms |
-| `selectNodesOnDrag` | `boolean` | `true` | Select nodes when dragging |
-| `selectionOnDrag` | `boolean` | `false` | Drag creates selection box without modifier key |
-| `selectionMode` | `'full' \| 'partial'` | `'full'` | `'partial'` selects nodes partially in box |
-| `connectOnClick` | `boolean` | `true` | Click handles to connect (not just drag) |
-| `connectionMode` | `'strict' \| 'loose'` | `'strict'` | `'loose'` allows source-to-source connections |
-| `elevateNodesOnSelect` | `boolean` | `true` | Raise z-index of selected nodes |
-| `elevateEdgesOnSelect` | `boolean` | `false` | Raise z-index of selected edges |
+| Prop                   | Type                  | Default    | Description                                     |
+| ---------------------- | --------------------- | ---------- | ----------------------------------------------- |
+| `nodesDraggable`       | `boolean`             | `true`     | All nodes draggable                             |
+| `nodesConnectable`     | `boolean`             | `true`     | All nodes connectable                           |
+| `nodesFocusable`       | `boolean`             | `true`     | Tab key cycles focus between nodes              |
+| `edgesFocusable`       | `boolean`             | `true`     | Tab key cycles focus between edges              |
+| `elementsSelectable`   | `boolean`             | `true`     | Click to select                                 |
+| `autoPanOnConnect`     | `boolean`             | `true`     | Viewport pans during connection                 |
+| `autoPanOnNodeDrag`    | `boolean`             | `true`     | Viewport pans during drag                       |
+| `panOnDrag`            | `boolean \| number[]` | `true`     | Enable panning; `[1]` = middle mouse only       |
+| `panOnScroll`          | `boolean`             | `false`    | Scroll to pan instead of zoom                   |
+| `zoomOnScroll`         | `boolean`             | `true`     | Scroll wheel zooms                              |
+| `zoomOnPinch`          | `boolean`             | `true`     | Pinch gesture zooms                             |
+| `zoomOnDoubleClick`    | `boolean`             | `true`     | Double-click zooms                              |
+| `selectNodesOnDrag`    | `boolean`             | `true`     | Select nodes when dragging                      |
+| `selectionOnDrag`      | `boolean`             | `false`    | Drag creates selection box without modifier key |
+| `selectionMode`        | `'full' \| 'partial'` | `'full'`   | `'partial'` selects nodes partially in box      |
+| `connectOnClick`       | `boolean`             | `true`     | Click handles to connect (not just drag)        |
+| `connectionMode`       | `'strict' \| 'loose'` | `'strict'` | `'loose'` allows source-to-source connections   |
+| `elevateNodesOnSelect` | `boolean`             | `true`     | Raise z-index of selected nodes                 |
+| `elevateEdgesOnSelect` | `boolean`             | `false`    | Raise z-index of selected edges                 |
 
 ## Keyboard configuration
 
-| Prop | Default | Description |
-|------|---------|-------------|
-| `deleteKeyCode` | `'Backspace'` | Delete selected elements |
-| `selectionKeyCode` | `'Shift'` | Hold to draw selection box |
-| `multiSelectionKeyCode` | `'Meta'` (Mac) / `'Control'` (Win) | Hold to multi-select |
-| `zoomActivationKeyCode` | `'Meta'` (Mac) / `'Control'` (Win) | Hold to enable zoom |
-| `panActivationKeyCode` | `'Space'` | Hold to enable panning |
+| Prop                    | Default                            | Description                |
+| ----------------------- | ---------------------------------- | -------------------------- |
+| `deleteKeyCode`         | `'Backspace'`                      | Delete selected elements   |
+| `selectionKeyCode`      | `'Shift'`                          | Hold to draw selection box |
+| `multiSelectionKeyCode` | `'Meta'` (Mac) / `'Control'` (Win) | Hold to multi-select       |
+| `zoomActivationKeyCode` | `'Meta'` (Mac) / `'Control'` (Win) | Hold to enable zoom        |
+| `panActivationKeyCode`  | `'Space'`                          | Hold to enable panning     |
 
 Set any key code to `null` to disable that keyboard shortcut.
 
 ## Connection line customization
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `connectionLineStyle` | `CSSProperties` | Style for the in-progress connection line |
-| `connectionLineType` | `ConnectionLineType` | Path type (`'default'`, `'straight'`, `'step'`, `'smoothstep'`, `'simplebezier'`) |
-| `connectionRadius` | `number` | Snap radius around target handles |
-| `connectionLineComponent` | `React.ComponentType` | Custom connection line component |
+| Prop                      | Type                  | Description                                                                       |
+| ------------------------- | --------------------- | --------------------------------------------------------------------------------- |
+| `connectionLineStyle`     | `CSSProperties`       | Style for the in-progress connection line                                         |
+| `connectionLineType`      | `ConnectionLineType`  | Path type (`'default'`, `'straight'`, `'step'`, `'smoothstep'`, `'simplebezier'`) |
+| `connectionRadius`        | `number`              | Snap radius around target handles                                                 |
+| `connectionLineComponent` | `React.ComponentType` | Custom connection line component                                                  |
 
 ## Custom connection line
 

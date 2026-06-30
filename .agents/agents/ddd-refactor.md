@@ -67,9 +67,9 @@ Target a specific violation type only.
 1. **Load skills** — Read relevant tactical pattern skills
 2. **Analyze files** — Identify all DDD violations
 3. **Plan fixes** — For each violation, determine:
-   - What changes are needed
-   - Impact on other files (imports, usages)
-   - Order of operations (dependencies)
+    - What changes are needed
+    - Impact on other files (imports, usages)
+    - Order of operations (dependencies)
 4. **Prioritize** — High severity first, respect dependencies
 
 ### Phase 2: Preview

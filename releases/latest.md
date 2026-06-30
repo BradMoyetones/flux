@@ -1,6 +1,7 @@
 # 🚀 Lo nuevo en esta versión
 
-* Notas de prueba
+- Notas de prueba
 
 ---
-*Gracias por usar Flux.*
+
+_Gracias por usar Flux._

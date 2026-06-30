@@ -122,14 +122,14 @@ Use the `Readonly` utility type:
 ```typescript
 // ✅ Good
 type CardProps = Readonly<{
-  title: string;
-  subtitle?: string;
+    title: string;
+    subtitle?: string;
 }>;
 
 // ❌ Bad — verbose
 interface CardProps {
-  readonly title: string;
-  readonly subtitle?: string;
+    readonly title: string;
+    readonly subtitle?: string;
 }
 ```
 
@@ -138,9 +138,9 @@ interface CardProps {
 ```typescript
 // ✅ Good — use PropsWithChildren
 type ContainerProps = PropsWithChildren<
-  Readonly<{
-    padding?: number;
-  }>
+    Readonly<{
+        padding?: number;
+    }>
 >;
 
 // Or with no additional props
@@ -148,8 +148,8 @@ type WrapperProps = PropsWithChildren;
 
 // ❌ Bad — manual children typing
 type ContainerProps = Readonly<{
-  children: ReactNode;
-  padding?: number;
+    children: ReactNode;
+    padding?: number;
 }>;
 ```
 
@@ -175,15 +175,15 @@ Be intentional:
 
 ```typescript
 type FormFieldProps = Readonly<{
-  // Required — component cannot function without these
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
+    // Required — component cannot function without these
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
 
-  // Optional — sensible defaults exist
-  placeholder?: string;
-  disabled?: boolean;
-  errorMessage?: string;
+    // Optional — sensible defaults exist
+    placeholder?: string;
+    disabled?: boolean;
+    errorMessage?: string;
 }>;
 ```
 
@@ -215,21 +215,21 @@ hooks/
 ```typescript
 // ✅ Good
 interface UseToggleReturn {
-  isOn: boolean;
-  toggle: VoidFunction;
-  setOn: VoidFunction;
-  setOff: VoidFunction;
+    isOn: boolean;
+    toggle: VoidFunction;
+    setOn: VoidFunction;
+    setOff: VoidFunction;
 }
 
 export const useToggle = (initial = false): UseToggleReturn => {
-  const [isOn, setIsOn] = useState(initial);
+    const [isOn, setIsOn] = useState(initial);
 
-  return {
-    isOn,
-    toggle: () => setIsOn((v) => !v),
-    setOn: () => setIsOn(true),
-    setOff: () => setIsOn(false),
-  };
+    return {
+        isOn,
+        toggle: () => setIsOn((v) => !v),
+        setOn: () => setIsOn(true),
+        setOff: () => setIsOn(false),
+    };
 };
 ```
 
@@ -238,22 +238,22 @@ export const useToggle = (initial = false): UseToggleReturn => {
 ```typescript
 // ✅ Good — hooks at top level, stable order
 export const Component: FC<Props> = ({ userId }) => {
-  const [state, setState] = useState(null);
-  const user = useUser(userId);
+    const [state, setState] = useState(null);
+    const user = useUser(userId);
 
-  // ...
+    // ...
 };
 
 // ❌ Bad — conditional hook
 export const Component: FC<Props> = ({ userId }) => {
-  if (userId) {
-    const user = useUser(userId); // ❌ Conditional
-  }
+    if (userId) {
+        const user = useUser(userId); // ❌ Conditional
+    }
 };
 
 // ❌ Bad — hook in loop
 items.map((item) => {
-  const data = useData(item.id); // ❌ In loop
+    const data = useData(item.id); // ❌ In loop
 });
 ```
 
@@ -286,17 +286,17 @@ Only optimize when you measure a performance problem:
 ```typescript
 // Manual memo — only if React Compiler is not enabled or insufficient
 export const ExpensiveComponent: FC<Props> = memo(({ data }) => {
-  // Heavy render
+    // Heavy render
 });
 
 // Manual useCallback — only for non-compiled code or specific perf issues
 const handlePress = useCallback(() => {
-  onPress(id);
+    onPress(id);
 }, [onPress, id]);
 
 // Manual useMemo — only for genuinely expensive computations
 const processedData = useMemo(() => {
-  return heavyComputation(rawData);
+    return heavyComputation(rawData);
 }, [rawData]);
 ```
 
@@ -392,32 +392,32 @@ Uniwind includes a CSS parser. Define reusable classes in `global.css`:
 
 ```css
 /* global.css */
-@import "tailwindcss";
-@import "uniwind";
+@import 'tailwindcss';
+@import 'uniwind';
 
 .btn {
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  border-radius: 8px;
-  font-weight: 500;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 8px;
+    font-weight: 500;
 }
 
 .btn-primary {
-  background-color: #3b82f6;
-  color: white;
+    background-color: #3b82f6;
+    color: white;
 }
 
 .btn-secondary {
-  background-color: #e5e7eb;
-  color: #111827;
+    background-color: #e5e7eb;
+    color: #111827;
 }
 
 .card {
-  padding: 16px;
-  background-color: white;
-  border-radius: 12px;
+    padding: 16px;
+    background-color: white;
+    border-radius: 12px;
 }
 ```
 
@@ -529,17 +529,17 @@ Never hardcode testIDs. Always use the centralized constants:
 ```typescript
 // constants/testIDs.ts
 export const TestIDs = {
-  Login: {
-    emailInput: "login-email-input",
-    passwordInput: "login-password-input",
-    submitButton: "login-submit-button",
-    errorMessage: "login-error-message",
-  },
-  Profile: {
-    avatar: "profile-avatar",
-    nameText: "profile-name-text",
-    editButton: "profile-edit-button",
-  },
+    Login: {
+        emailInput: 'login-email-input',
+        passwordInput: 'login-password-input',
+        submitButton: 'login-submit-button',
+        errorMessage: 'login-error-message',
+    },
+    Profile: {
+        avatar: 'profile-avatar',
+        nameText: 'profile-name-text',
+        editButton: 'profile-edit-button',
+    },
 } as const;
 ```
 

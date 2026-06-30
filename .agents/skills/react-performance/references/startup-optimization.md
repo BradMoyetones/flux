@@ -50,12 +50,14 @@ Guide users to measure Time to Interactive with these tools:
 ### Native Profilers
 
 **Android (Android Studio Profiler)**:
+
 1. Run app in profile mode
 2. Open Android Studio → View → Tool Windows → Profiler
 3. Select your app process
 4. Check CPU timeline for startup phases
 
 **iOS (Instruments)**:
+
 1. Xcode → Product → Profile
 2. Select "App Launch" template
 3. Record launch sequence
@@ -80,6 +82,7 @@ project.ext.react = [
 ```
 
 Verify Hermes is enabled:
+
 ```tsx
 const isHermes = () => !!global.HermesInternal;
 console.log('Hermes enabled:', isHermes());
@@ -102,13 +105,13 @@ const SettingsScreen = lazy(() => import('./screens/Settings'));
 
 // With Suspense fallback
 const App = () => (
-  <Suspense fallback={<LoadingScreen />}>
-    <Navigator>
-      <Screen name="Home" component={HomeScreen} />
-      <Screen name="Profile" component={ProfileScreen} />
-      <Screen name="Settings" component={SettingsScreen} />
-    </Navigator>
-  </Suspense>
+    <Suspense fallback={<LoadingScreen />}>
+        <Navigator>
+            <Screen name="Home" component={HomeScreen} />
+            <Screen name="Profile" component={ProfileScreen} />
+            <Screen name="Settings" component={SettingsScreen} />
+        </Navigator>
+    </Suspense>
 );
 ```
 
@@ -117,35 +120,35 @@ const App = () => (
 ```tsx
 // ❌ Everything at startup
 const App = () => {
-  useEffect(() => {
-    initializeAnalytics();
-    initializeCrashReporting();
-    preloadImages();
-    syncOfflineData();
-    checkForUpdates();
-  }, []);
+    useEffect(() => {
+        initializeAnalytics();
+        initializeCrashReporting();
+        preloadImages();
+        syncOfflineData();
+        checkForUpdates();
+    }, []);
 };
 
 // ✅ Prioritize critical path
 const App = () => {
-  useEffect(() => {
-    // Critical: needed immediately
-    initializeCrashReporting();
-  }, []);
-  
-  useEffect(() => {
-    // Defer with transition (modern)
-    startTransition(() => {
-      initializeAnalytics();
-      preloadImages();
-    });
-    
-    // Low priority: run later
-    setTimeout(() => {
-      syncOfflineData();
-      checkForUpdates();
-    }, 3000);
-  }, []);
+    useEffect(() => {
+        // Critical: needed immediately
+        initializeCrashReporting();
+    }, []);
+
+    useEffect(() => {
+        // Defer with transition (modern)
+        startTransition(() => {
+            initializeAnalytics();
+            preloadImages();
+        });
+
+        // Low priority: run later
+        setTimeout(() => {
+            syncOfflineData();
+            checkForUpdates();
+        }, 3000);
+    }, []);
 };
 ```
 
@@ -158,27 +161,28 @@ Load modules when needed, not at startup.
 import { processData } from './heavyModule';
 
 const Component = () => {
-  const handlePress = () => {
-    const result = processData(data);
-  };
+    const handlePress = () => {
+        const result = processData(data);
+    };
 };
 
 // ✅ Inline require: loaded on demand
 const Component = () => {
-  const handlePress = () => {
-    const { processData } = require('./heavyModule');
-    const result = processData(data);
-  };
+    const handlePress = () => {
+        const { processData } = require('./heavyModule');
+        const result = processData(data);
+    };
 };
 ```
 
 Enable in Metro config:
+
 ```js
 // metro.config.js
 module.exports = {
-  transformer: {
-    inlineRequires: true,
-  },
+    transformer: {
+        inlineRequires: true,
+    },
 };
 ```
 
@@ -202,32 +206,34 @@ See [bundle-optimization.md](bundle-optimization.md) for more.
 ```tsx
 // ❌ Blocks render until data loads
 const HomeScreen = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    fetchData().then(setData).finally(() => setLoading(false));
-  }, []);
-  
-  if (loading) return <FullScreenLoader />; // Blocks UI
-  
-  return <Content data={data} />;
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchData()
+            .then(setData)
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) return <FullScreenLoader />; // Blocks UI
+
+    return <Content data={data} />;
 };
 
 // ✅ Render immediately, load data progressively
 const HomeScreen = () => {
-  const [data, setData] = useState<Data | null>(null);
-  
-  useEffect(() => {
-    fetchData().then(setData);
-  }, []);
-  
-  return (
-    <View>
-      <Header /> {/* Shows immediately */}
-      {data ? <Content data={data} /> : <ContentSkeleton />}
-    </View>
-  );
+    const [data, setData] = useState<Data | null>(null);
+
+    useEffect(() => {
+        fetchData().then(setData);
+    }, []);
+
+    return (
+        <View>
+            <Header /> {/* Shows immediately */}
+            {data ? <Content data={data} /> : <ContentSkeleton />}
+        </View>
+    );
 };
 ```
 
@@ -243,27 +249,27 @@ import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync();
 
 const App = () => {
-  const [ready, setReady] = useState(false);
-  
-  useEffect(() => {
-    async function prepare() {
-      // Load critical resources
-      await loadFonts();
-      await loadCriticalData();
-      setReady(true);
-    }
-    prepare();
-  }, []);
-  
-  useEffect(() => {
-    if (ready) {
-      SplashScreen.hideAsync();
-    }
-  }, [ready]);
-  
-  if (!ready) return null;
-  
-  return <AppContent />;
+    const [ready, setReady] = useState(false);
+
+    useEffect(() => {
+        async function prepare() {
+            // Load critical resources
+            await loadFonts();
+            await loadCriticalData();
+            setReady(true);
+        }
+        prepare();
+    }, []);
+
+    useEffect(() => {
+        if (ready) {
+            SplashScreen.hideAsync();
+        }
+    }, [ready]);
+
+    if (!ready) return null;
+
+    return <AppContent />;
 };
 ```
 
@@ -272,6 +278,7 @@ const App = () => {
 ### Android
 
 **Enable ProGuard/R8** for smaller native code:
+
 ```groovy
 // android/app/build.gradle
 android {
@@ -288,6 +295,7 @@ android {
 ### iOS
 
 **Enable dead code stripping**:
+
 - Xcode → Build Settings → Dead Code Stripping → Yes
 
 ## Startup Checklist

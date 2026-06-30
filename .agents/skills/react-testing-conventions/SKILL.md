@@ -90,18 +90,18 @@ tests/
 Every test follows Arrange, Act, Assert:
 
 ```typescript
-it("should return user when credentials are valid", async () => {
-  // Arrange
-  const authRepository = new AuthRepositoryStub();
-  const useCase = new LoginUseCase(authRepository);
-  const credentials = { email: "test@example.com", password: "password123" };
+it('should return user when credentials are valid', async () => {
+    // Arrange
+    const authRepository = new AuthRepositoryStub();
+    const useCase = new LoginUseCase(authRepository);
+    const credentials = { email: 'test@example.com', password: 'password123' };
 
-  // Act
-  const result = await useCase.execute(credentials);
+    // Act
+    const result = await useCase.execute(credentials);
 
-  // Assert
-  expect(result.success).toBe(true);
-  expect(result.data.email).toBe("test@example.com");
+    // Assert
+    expect(result.success).toBe(true);
+    expect(result.data.email).toBe('test@example.com');
 });
 ```
 
@@ -125,29 +125,29 @@ it("handles error", ...)
 
 ```typescript
 // ✅ Good — one behavior tested
-it("should return failure when password is too short", async () => {
-  const result = await useCase.execute({ email: "a@b.com", password: "123" });
+it('should return failure when password is too short', async () => {
+    const result = await useCase.execute({ email: 'a@b.com', password: '123' });
 
-  expect(result.success).toBe(false);
-  expect(result.error.type).toBe("VALIDATION_ERROR");
+    expect(result.success).toBe(false);
+    expect(result.error.type).toBe('VALIDATION_ERROR');
 });
 
 // ❌ Bad — testing multiple unrelated behaviors
-it("should validate all fields", async () => {
-  // Testing email validation
-  const result1 = await useCase.execute({ email: "", password: "valid123" });
-  expect(result1.success).toBe(false);
+it('should validate all fields', async () => {
+    // Testing email validation
+    const result1 = await useCase.execute({ email: '', password: 'valid123' });
+    expect(result1.success).toBe(false);
 
-  // Testing password validation
-  const result2 = await useCase.execute({ email: "a@b.com", password: "" });
-  expect(result2.success).toBe(false);
+    // Testing password validation
+    const result2 = await useCase.execute({ email: 'a@b.com', password: '' });
+    expect(result2.success).toBe(false);
 
-  // Testing success case
-  const result3 = await useCase.execute({
-    email: "a@b.com",
-    password: "valid123",
-  });
-  expect(result3.success).toBe(true);
+    // Testing success case
+    const result3 = await useCase.execute({
+        email: 'a@b.com',
+        password: 'valid123',
+    });
+    expect(result3.success).toBe(true);
 });
 ```
 
@@ -172,7 +172,7 @@ const useCase = new LoginUseCase(authRepository);
 
 // ✅ Infrastructure tests — use spies/mocks
 // We test the implementation itself
-jest.spyOn(global, "fetch").mockResolvedValue(mockResponse);
+jest.spyOn(global, 'fetch').mockResolvedValue(mockResponse);
 ```
 
 ### Dummy
@@ -181,9 +181,9 @@ Never actually used, just satisfies the type:
 
 ```typescript
 class LoggerDummy implements Logger {
-  log(_message: string): void {
-    // Do nothing
-  }
+    log(_message: string): void {
+        // Do nothing
+    }
 }
 
 // Usage
@@ -196,41 +196,41 @@ Returns predefined data:
 
 ```typescript
 class AuthRepositoryStub implements AuthRepository {
-  async login(_params: LoginParams): Promise<Result<User, AuthError>> {
-    return ok({
-      id: "user-1",
-      email: "test@example.com",
-      displayName: "Test User",
-    });
-  }
+    async login(_params: LoginParams): Promise<Result<User, AuthError>> {
+        return ok({
+            id: 'user-1',
+            email: 'test@example.com',
+            displayName: 'Test User',
+        });
+    }
 
-  async logout(): Promise<Result<void, AuthError>> {
-    return ok(undefined);
-  }
+    async logout(): Promise<Result<void, AuthError>> {
+        return ok(undefined);
+    }
 }
 
 // Configurable stub
 class AuthRepositoryStub implements AuthRepository {
-  private loginResult: Result<User, AuthError> = ok(userBuilder().build());
+    private loginResult: Result<User, AuthError> = ok(userBuilder().build());
 
-  withLoginSuccess(user: User): this {
-    this.loginResult = ok(user);
-    return this;
-  }
+    withLoginSuccess(user: User): this {
+        this.loginResult = ok(user);
+        return this;
+    }
 
-  withLoginFailure(error: AuthError): this {
-    this.loginResult = fail(error);
-    return this;
-  }
+    withLoginFailure(error: AuthError): this {
+        this.loginResult = fail(error);
+        return this;
+    }
 
-  async login(_params: LoginParams): Promise<Result<User, AuthError>> {
-    return this.loginResult;
-  }
+    async login(_params: LoginParams): Promise<Result<User, AuthError>> {
+        return this.loginResult;
+    }
 }
 
 // Usage
 const stub = new AuthRepositoryStub().withLoginFailure({
-  type: "INVALID_CREDENTIALS",
+    type: 'INVALID_CREDENTIALS',
 });
 ```
 
@@ -238,27 +238,27 @@ const stub = new AuthRepositoryStub().withLoginFailure({
 
 ```typescript
 // Testing an adapter's implementation
-describe("AuthApiAdapter", () => {
-  it("should call fetch with correct parameters", async () => {
-    const fetchSpy = jest.spyOn(global, "fetch").mockResolvedValue({
-      ok: true,
-      json: async () => ({ id: "1", email: "test@example.com" }),
-    } as Response);
+describe('AuthApiAdapter', () => {
+    it('should call fetch with correct parameters', async () => {
+        const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+            ok: true,
+            json: async () => ({ id: '1', email: 'test@example.com' }),
+        } as Response);
 
-    const adapter = new AuthApiAdapter();
-    await adapter.login({ email: "test@example.com", password: "password" });
+        const adapter = new AuthApiAdapter();
+        await adapter.login({ email: 'test@example.com', password: 'password' });
 
-    expect(fetchSpy).toHaveBeenCalledWith(
-      "https://api.example.com/auth/login",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({
-          email: "test@example.com",
-          password: "password",
-        }),
-      })
-    );
-  });
+        expect(fetchSpy).toHaveBeenCalledWith(
+            'https://api.example.com/auth/login',
+            expect.objectContaining({
+                method: 'POST',
+                body: JSON.stringify({
+                    email: 'test@example.com',
+                    password: 'password',
+                }),
+            })
+        );
+    });
 });
 ```
 
@@ -270,81 +270,78 @@ Use builders to create test fixtures (entities, props, etc.):
 
 ```typescript
 // modules/authentication/core/entities/User.builder.ts
-import { User } from "./User.entity";
+import { User } from './User.entity';
 
 export const userBuilder = () => {
-  const user: User = {
-    id: "user-123",
-    email: "default@example.com",
-    displayName: "Default User",
-    createdAt: "2024-01-01T00:00:00Z",
-  };
+    const user: User = {
+        id: 'user-123',
+        email: 'default@example.com',
+        displayName: 'Default User',
+        createdAt: '2024-01-01T00:00:00Z',
+    };
 
-  const builder = {
-    id: (id: string) => {
-      user.id = id;
-      return builder;
-    },
-    email: (email: string) => {
-      user.email = email;
-      return builder;
-    },
-    displayName: (displayName: string) => {
-      user.displayName = displayName;
-      return builder;
-    },
-    createdAt: (createdAt: string) => {
-      user.createdAt = createdAt;
-      return builder;
-    },
-    build: () => user,
-  };
+    const builder = {
+        id: (id: string) => {
+            user.id = id;
+            return builder;
+        },
+        email: (email: string) => {
+            user.email = email;
+            return builder;
+        },
+        displayName: (displayName: string) => {
+            user.displayName = displayName;
+            return builder;
+        },
+        createdAt: (createdAt: string) => {
+            user.createdAt = createdAt;
+            return builder;
+        },
+        build: () => user,
+    };
 
-  return builder;
+    return builder;
 };
 
 // Usage
-const user = userBuilder()
-  .email("custom@test.com")
-  .displayName("Custom")
-  .build();
+const user = userBuilder().email('custom@test.com').displayName('Custom').build();
 ```
 
 ### Props Builder
 
 ```typescript
 // modules/events/ui/components/EventCard.props.builder.ts
-import { EventCardProps } from "./EventCard";
+import { EventCardProps } from './EventCard';
 
 export const eventCardPropsBuilder = () => {
-  const props: EventCardProps = {
-    title: "Default Event",
-    date: "2024-06-15T10:00:00Z",
-    attendees: 10,
-    onPress: jest.fn(),
-  };
+    const props: EventCardProps = {
+        title: 'Default Event',
+        date: '2024-06-15T10:00:00Z',
+        attendees: 10,
+        onPress: jest.fn(),
+    };
 
-  const builder = {
-    title: (title: string) => {
-      props.title = title;
-      return builder;
-    },
-    date: (date: string) => {
-      props.date = date;
-      return builder;
-    },
-    attendees: (attendees: number) => {
-      props.attendees = attendees;
-      return builder;
-    },
-    onPress: (onPress: VoidFunction) => {
-      props.onPress = onPress;
-      return builder;
-    },
-    build: () => props,
-  };
+    const builder = {
+        title: (title: string) => {
+            props.title = title;
+            return builder;
+        },
+        date: (date: string) => {
+            props.date = date;
+            return builder;
+        },
+        attendees: (attendees: number) => {
+            props.attendees = attendees;
+            return builder;
+        },
+        onPress: (onPress: VoidFunction) => {
+            props.onPress = onPress;
+            return builder;
+        },
+        build: () => props,
+    };
 
-  return builder;
+    return builder;
 };
 ```
 
@@ -365,38 +362,36 @@ Use the custom `renderHook` that provides dependencies. See [references/test-uti
 ```typescript
 // modules/app/react/renderHook.tsx
 export function renderHook<Result, Props>(
-  renderCallback: (props: Props) => Result,
-  options?: {
-    initialProps?: Props;
-    wrapper?: ComponentType<{ children: ReactNode }>;
-    dependencies?: Partial<Dependencies>;
-  }
+    renderCallback: (props: Props) => Result,
+    options?: {
+        initialProps?: Props;
+        wrapper?: ComponentType<{ children: ReactNode }>;
+        dependencies?: Partial<Dependencies>;
+    }
 ): RenderHookResult<Result, Props>;
 ```
 
 ### Usage
 
 ```typescript
-import { act } from "@testing-library/react-native";
-import { renderHook } from "@app/react/renderHook";
-import { useLoginViewModel } from "./useLogin.viewModel";
+import { act } from '@testing-library/react-native';
+import { renderHook } from '@app/react/renderHook';
+import { useLoginViewModel } from './useLogin.viewModel';
 
-describe("useLoginViewModel", () => {
-  it("should update state to success when login succeeds", async () => {
-    const authRepositoryStub = new AuthRepositoryStub().withLoginSuccess(
-      userBuilder().build()
-    );
+describe('useLoginViewModel', () => {
+    it('should update state to success when login succeeds', async () => {
+        const authRepositoryStub = new AuthRepositoryStub().withLoginSuccess(userBuilder().build());
 
-    const { result } = renderHook(() => useLoginViewModel(), {
-      dependencies: { authRepository: authRepositoryStub },
+        const { result } = renderHook(() => useLoginViewModel(), {
+            dependencies: { authRepository: authRepositoryStub },
+        });
+
+        await act(async () => {
+            await result.current.handlers.login('test@example.com', 'password123');
+        });
+
+        expect(result.current.state.status).toBe('success');
     });
-
-    await act(async () => {
-      await result.current.handlers.login("test@example.com", "password123");
-    });
-
-    expect(result.current.state.status).toBe("success");
-  });
 });
 ```
 
@@ -409,11 +404,11 @@ Use the custom `render` that provides dependencies. See [references/test-utils.m
 ```typescript
 // modules/app/react/render.tsx
 export function render(
-  component: ReactElement,
-  options?: {
-    wrapper?: ComponentType<{ children: ReactNode }>;
-    dependencies?: Partial<Dependencies>;
-  }
+    component: ReactElement,
+    options?: {
+        wrapper?: ComponentType<{ children: ReactNode }>;
+        dependencies?: Partial<Dependencies>;
+    }
 ): RenderResult;
 ```
 
@@ -465,11 +460,11 @@ Prefer queries in this order:
 
 ```typescript
 // ✅ Good
-screen.getByRole("button", { name: "Submit" });
+screen.getByRole('button', { name: 'Submit' });
 screen.getByTestId(TestIDs.Login.submitButton);
 
 // ❌ Avoid
-screen.getByText("Submit"); // Fragile, breaks on text changes
+screen.getByText('Submit'); // Fragile, breaks on text changes
 ```
 
 ## Test Isolation
@@ -479,22 +474,22 @@ screen.getByText("Submit"); // Fragile, breaks on text changes
 Use `beforeEach` and `afterEach` to ensure test isolation and idempotence:
 
 ```typescript
-describe("useUserProfile", () => {
-  let authRepositoryStub: AuthRepositoryStub;
+describe('useUserProfile', () => {
+    let authRepositoryStub: AuthRepositoryStub;
 
-  beforeEach(() => {
-    // Fresh stub for each test
-    authRepositoryStub = new AuthRepositoryStub();
-  });
+    beforeEach(() => {
+        // Fresh stub for each test
+        authRepositoryStub = new AuthRepositoryStub();
+    });
 
-  afterEach(() => {
-    // Cleanup if needed
-    jest.clearAllMocks();
-  });
+    afterEach(() => {
+        // Cleanup if needed
+        jest.clearAllMocks();
+    });
 
-  it("should load user", async () => {
-    // Test uses fresh authRepositoryStub
-  });
+    it('should load user', async () => {
+        // Test uses fresh authRepositoryStub
+    });
 });
 ```
 
@@ -564,16 +559,16 @@ describe("useProfileViewModel", () => {
 expect(component.state.isLoading).toBe(true);
 
 // ✅ Good — testing behavior
-expect(screen.getByTestId("loading-indicator")).toBeTruthy();
+expect(screen.getByTestId('loading-indicator')).toBeTruthy();
 ```
 
 ### ❌ Over-mocking
 
 ```typescript
 // ❌ Bad — mocking everything
-jest.mock("../hooks/useUser");
-jest.mock("../hooks/useAuth");
-jest.mock("../utils/format");
+jest.mock('../hooks/useUser');
+jest.mock('../hooks/useAuth');
+jest.mock('../utils/format');
 
 // ✅ Good — only mock boundaries (adapters)
 const authRepository = new AuthRepositoryStub();
@@ -603,7 +598,7 @@ expect(result).toBe(expected);
 
 // ✅ Good — use waitFor
 await waitFor(() => {
-  expect(result).toBe(expected);
+    expect(result).toBe(expected);
 });
 ```
 
@@ -613,26 +608,26 @@ await waitFor(() => {
 // ❌ Bad — tests depend on shared state
 let user: User;
 
-it("should create user", () => {
-  user = createUser();
-  expect(user).toBeDefined();
+it('should create user', () => {
+    user = createUser();
+    expect(user).toBeDefined();
 });
 
-it("should update user", () => {
-  user.name = "New Name"; // Depends on previous test!
-  expect(user.name).toBe("New Name");
+it('should update user', () => {
+    user.name = 'New Name'; // Depends on previous test!
+    expect(user.name).toBe('New Name');
 });
 
 // ✅ Good — independent tests
-it("should create user", () => {
-  const user = createUser();
-  expect(user).toBeDefined();
+it('should create user', () => {
+    const user = createUser();
+    expect(user).toBeDefined();
 });
 
-it("should update user", () => {
-  const user = createUser();
-  user.name = "New Name";
-  expect(user.name).toBe("New Name");
+it('should update user', () => {
+    const user = createUser();
+    user.name = 'New Name';
+    expect(user.name).toBe('New Name');
 });
 ```
 

@@ -7,26 +7,28 @@ This file helps Claude assist users with performance profiling. Claude cannot ru
 ### Step 1: Clarify the Symptom
 
 Ask the user to describe:
+
 - **What feels slow?** (startup, scrolling, navigation, animations, specific interaction)
 - **When does it happen?** (always, after X seconds, with large data)
 - **Which device/platform?** (iOS/Android, simulator/real device)
 
 ### Step 2: Map Symptom to Likely Cause
 
-| User Says | Likely Bottleneck | Suggest Profiling | Reference |
-|-----------|-------------------|-------------------|-----------|
-| "App takes forever to load" | Startup/TTI | Native profilers, React Profiler on mount | startup-optimization.md |
-| "List scrolling is janky" | Too many re-renders or heavy items | React Profiler during scroll | list-optimization.md |
-| "Animation stutters" | JS thread blocking UI | Perf Monitor (JS vs UI FPS) | animation-performance.md |
-| "Gets slower over time" | Memory leak | Heap snapshots | memory-management.md |
-| "Typing in input lags" | Re-renders on every keystroke | React Profiler | state-patterns.md |
-| "Tab switch is slow" | Heavy screen render | React Profiler | concurrent-react.md |
+| User Says                   | Likely Bottleneck                  | Suggest Profiling                         | Reference                |
+| --------------------------- | ---------------------------------- | ----------------------------------------- | ------------------------ |
+| "App takes forever to load" | Startup/TTI                        | Native profilers, React Profiler on mount | startup-optimization.md  |
+| "List scrolling is janky"   | Too many re-renders or heavy items | React Profiler during scroll              | list-optimization.md     |
+| "Animation stutters"        | JS thread blocking UI              | Perf Monitor (JS vs UI FPS)               | animation-performance.md |
+| "Gets slower over time"     | Memory leak                        | Heap snapshots                            | memory-management.md     |
+| "Typing in input lags"      | Re-renders on every keystroke      | React Profiler                            | state-patterns.md        |
+| "Tab switch is slow"        | Heavy screen render                | React Profiler                            | concurrent-react.md      |
 
 ### Step 3: Guide User to Profile
 
 Provide these instructions based on the symptom:
 
 **For re-render issues:**
+
 ```
 1. Open React Native DevTools (press 'j' in Metro terminal)
 2. Go to Profiler tab
@@ -37,6 +39,7 @@ Provide these instructions based on the symptom:
 ```
 
 **For FPS drops:**
+
 ```
 1. Open Dev Menu (shake device or Cmd+M / Cmd+D)
 2. Enable "Perf Monitor"
@@ -45,6 +48,7 @@ Provide these instructions based on the symptom:
 ```
 
 **For memory issues:**
+
 ```
 1. Open Chrome DevTools (chrome://inspect)
 2. Go to Memory tab
@@ -59,26 +63,29 @@ Provide these instructions based on the symptom:
 ### React Profiler Results
 
 If user shares "Why did this render?":
+
 - **"Props changed"** → Look for inline functions/objects in parent
 - **"State changed"** → Check if state is colocated properly
 - **"Context changed"** → Context may be too broad
 - **"Parent rendered"** → Missing memo() on child
 
 If user shares render times:
+
 - **> 16ms** → Component too expensive for 60 FPS
 - **Many yellow components** → Cascade of unnecessary re-renders
 
 ### Perf Monitor Results
 
-| User Reports | Interpretation | Action |
-|--------------|----------------|--------|
+| User Reports        | Interpretation       | Action                                                    |
+| ------------------- | -------------------- | --------------------------------------------------------- |
 | JS drops, UI stable | JS thread overloaded | Look for heavy computation in render, missing memoization |
-| UI drops, JS stable | Native layer issue | Check animations using native driver, complex shadows |
-| Both drop | Combined issue | Often heavy JS triggering expensive native updates |
+| UI drops, JS stable | Native layer issue   | Check animations using native driver, complex shadows     |
+| Both drop           | Combined issue       | Often heavy JS triggering expensive native updates        |
 
 ### Memory Snapshots
 
 If user reports heap growth:
+
 - Ask for retained objects list
 - Look for: event listeners, timers, closures capturing large data
 - Check cleanup in useEffect returns
@@ -110,20 +117,20 @@ const Item = ({ data }) => <View>...</View>;
 ```tsx
 // 🚩 Missing cleanup
 useEffect(() => {
-  const subscription = eventEmitter.addListener('event', handler);
-  // No return statement!
+    const subscription = eventEmitter.addListener('event', handler);
+    // No return statement!
 }, []);
 
 // 🚩 Timer without cleanup
 useEffect(() => {
-  setInterval(doSomething, 1000);
+    setInterval(doSomething, 1000);
 }, []);
 
 // 🚩 Closure capturing component reference
 useEffect(() => {
-  someService.onUpdate = (data) => {
-    setData(data); // This closure may outlive component
-  };
+    someService.onUpdate = (data) => {
+        setData(data); // This closure may outlive component
+    };
 }, []);
 ```
 
@@ -150,14 +157,14 @@ useEffect(() => {
 
 After identifying the issue, reference the appropriate file:
 
-| Issue Found | Direct To |
-|-------------|-----------|
-| Unnecessary re-renders | rerender-optimization.md, memoization.md |
-| Heavy computation in render | concurrent-react.md (useDeferredValue) |
-| Memory leak pattern | memory-management.md |
-| List performance | list-optimization.md |
-| Animation jank | animation-performance.md |
-| Slow startup | startup-optimization.md |
+| Issue Found                 | Direct To                                |
+| --------------------------- | ---------------------------------------- |
+| Unnecessary re-renders      | rerender-optimization.md, memoization.md |
+| Heavy computation in render | concurrent-react.md (useDeferredValue)   |
+| Memory leak pattern         | memory-management.md                     |
+| List performance            | list-optimization.md                     |
+| Animation jank              | animation-performance.md                 |
+| Slow startup                | startup-optimization.md                  |
 
 ## Key Reminders
 

@@ -69,32 +69,32 @@ For each file:
 
 2. **Scan for violations** — Use the "Detect" tables from each skill:
 
-   - Value Object: primitive obsession, mutation, external validation...
-   - Entity: equality by attributes, anemic entity, mutable ID...
-   - Aggregate: exposed internals, reference by object, multi-aggregate transaction...
-   - Domain Event: wrong tense, mutable, missing data...
-   - Repository: repository for non-root, leaking persistence...
-   - Domain Service: stateful, infrastructure dependencies...
-   - Factory: constructor doing too much, missing reconstitute...
-   - Specification: side effects, god specification...
+    - Value Object: primitive obsession, mutation, external validation...
+    - Entity: equality by attributes, anemic entity, mutable ID...
+    - Aggregate: exposed internals, reference by object, multi-aggregate transaction...
+    - Domain Event: wrong tense, mutable, missing data...
+    - Repository: repository for non-root, leaking persistence...
+    - Domain Service: stateful, infrastructure dependencies...
+    - Factory: constructor doing too much, missing reconstitute...
+    - Specification: side effects, god specification...
 
 3. **Classify severity**:
 
-   - **HIGH**: Structural violations compromising DDD integrity
-     - Aggregate internals exposed
-     - Transaction spanning multiple aggregates
-     - Mutable or missing aggregate ID
-     - Repository for non-root entity
-   - **MEDIUM**: Pattern violations reducing model quality
-     - Anemic entity/aggregate
-     - Primitive obsession (missing Value Object)
-     - Missing factory for complex creation
-     - Domain service with infrastructure
-   - **LOW**: Improvements for better DDD alignment
-     - Missing `equals()` on value concept
-     - Technical naming instead of ubiquitous language
-     - Candidate for Value Object extraction
-     - Missing domain event for state change
+    - **HIGH**: Structural violations compromising DDD integrity
+        - Aggregate internals exposed
+        - Transaction spanning multiple aggregates
+        - Mutable or missing aggregate ID
+        - Repository for non-root entity
+    - **MEDIUM**: Pattern violations reducing model quality
+        - Anemic entity/aggregate
+        - Primitive obsession (missing Value Object)
+        - Missing factory for complex creation
+        - Domain service with infrastructure
+    - **LOW**: Improvements for better DDD alignment
+        - Missing `equals()` on value concept
+        - Technical naming instead of ubiquitous language
+        - Candidate for Value Object extraction
+        - Missing domain event for state change
 
 4. **Formulate suggestions** — Brief guidance on how to fix (no code)
 

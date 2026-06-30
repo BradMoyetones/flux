@@ -105,6 +105,7 @@ const nodeTypes = { textUpdater: TextUpdaterNode }; // not 'TextUpdater' or 'tex
 ### Zustand context warning / "useStore must be used within a Provider"
 
 **Causes**:
+
 1. Two versions of `@xyflow/react` installed (check `package-lock.json`)
 2. Using React Flow hooks outside `<ReactFlowProvider>`
 
@@ -119,8 +120,8 @@ npm install
 
 ```tsx
 <ReactFlowProvider>
-  <Flow />
-  <Sidebar /> {/* hooks work here now */}
+    <Flow />
+    <Sidebar /> {/* hooks work here now */}
 </ReactFlowProvider>
 ```
 
@@ -147,8 +148,12 @@ npm install
 ```tsx
 // CORRECT
 const [edgePath] = getBezierPath({
-  sourceX, sourceY, targetX, targetY,
-  sourcePosition, targetPosition, // include these!
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition, // include these!
 });
 ```
 
@@ -210,7 +215,7 @@ updateNodeInternals(nodeId);
 
 ```tsx
 <div className="nodrag nowheel" style={{ overflow: 'auto', maxHeight: 200 }}>
-  {/* scrollable content */}
+    {/* scrollable content */}
 </div>
 ```
 
@@ -224,11 +229,11 @@ updateNodeInternals(nodeId);
 const { screenToFlowPosition } = useReactFlow();
 
 const onPaneClick = (event) => {
-  const flowPosition = screenToFlowPosition({
-    x: event.clientX,
-    y: event.clientY,
-  });
-  // flowPosition is in flow coordinates
+    const flowPosition = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+    });
+    // flowPosition is in flow coordinates
 };
 ```
 
@@ -247,11 +252,7 @@ node.data.label = 'Updated';
 setNodes(nodes);
 
 // CORRECT — new object
-setNodes((nodes) =>
-  nodes.map((n) =>
-    n.id === id ? { ...n, data: { ...n.data, label: 'Updated' } } : n,
-  ),
-);
+setNodes((nodes) => nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, label: 'Updated' } } : n)));
 ```
 
 ### Sub-flow children render behind parent
@@ -284,24 +285,24 @@ const nodes = [
 ```js
 // webpack.config.js
 module.exports = {
-  module: {
-    rules: [
-      {
-        test: /\.jsx?$/,
-        include: /node_modules\/@xyflow/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env'],
-            plugins: [
-              '@babel/plugin-proposal-optional-chaining',
-              '@babel/plugin-proposal-nullish-coalescing-operator',
-            ],
-          },
-        },
-      },
-    ],
-  },
+    module: {
+        rules: [
+            {
+                test: /\.jsx?$/,
+                include: /node_modules\/@xyflow/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ['@babel/preset-env'],
+                        plugins: [
+                            '@babel/plugin-proposal-optional-chaining',
+                            '@babel/plugin-proposal-nullish-coalescing-operator',
+                        ],
+                    },
+                },
+            },
+        ],
+    },
 };
 ```
 
@@ -352,9 +353,9 @@ Install the React Flow DevTools browser extension for visual debugging of nodes,
 const { getNodes, getEdges, getViewport } = useReactFlow();
 
 useEffect(() => {
-  console.log('Nodes:', getNodes());
-  console.log('Edges:', getEdges());
-  console.log('Viewport:', getViewport());
+    console.log('Nodes:', getNodes());
+    console.log('Edges:', getEdges());
+    console.log('Viewport:', getViewport());
 });
 ```
 

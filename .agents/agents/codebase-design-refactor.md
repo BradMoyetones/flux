@@ -117,8 +117,8 @@ Each phase is a logical grouping of related changes:
 
 ```typescript
 export interface UserPort {
-  getById(id: string): Promise<User>;
-  update(id: string, data: UpdateUserDTO): Promise<User>;
+    getById(id: string): Promise<User>;
+    update(id: string, data: UpdateUserDTO): Promise<User>;
 }
 ```
 ````
@@ -132,18 +132,18 @@ export interface UserPort {
 **Reason**: Extract authentication responsibility (SRP)
 
 ```typescript
-import { AuthPort } from "../ports/AuthPort";
+import { AuthPort } from '../ports/AuthPort';
 
 export class AuthService implements AuthPort {
-  constructor(private readonly httpClient: HttpClient) {}
+    constructor(private readonly httpClient: HttpClient) {}
 
-  async login(credentials: Credentials): Promise<AuthResult> {
-    // Implementation
-  }
+    async login(credentials: Credentials): Promise<AuthResult> {
+        // Implementation
+    }
 
-  async logout(): Promise<void> {
-    // Implementation
-  }
+    async logout(): Promise<void> {
+        // Implementation
+    }
 }
 ```
 
@@ -165,10 +165,10 @@ export class AuthService implements AuthPort {
 
 ```typescript
 export class UserService {
-  async login(credentials: Credentials) {
-    // 50 lines of auth logic
-  }
-  // ...
+    async login(credentials: Credentials) {
+        // 50 lines of auth logic
+    }
+    // ...
 }
 ```
 
@@ -176,11 +176,11 @@ export class UserService {
 
 ```typescript
 export class UserService {
-  constructor(
-    private readonly userPort: UserPort,
-    private readonly authService: AuthPort
-  ) {}
-  // Auth methods removed
+    constructor(
+        private readonly userPort: UserPort,
+        private readonly authService: AuthPort
+    ) {}
+    // Auth methods removed
 }
 ```
 
@@ -271,23 +271,23 @@ After all phases (or abort):
 
 2. **Review**: Check all changes
 
-   ```bash
-   git diff
-   ```
+    ```bash
+    git diff
+    ```
 
 3. **Commit**: Suggested commits
 
-   ```bash
-   git add src/ports/ src/services/AuthService.ts
-   git commit -m "refactor: extract AuthService (SRP)"
+    ```bash
+    git add src/ports/ src/services/AuthService.ts
+    git commit -m "refactor: extract AuthService (SRP)"
 
-   git add src/services/UserService.ts src/di/
-   git commit -m "refactor: inject AuthPort into UserService (DIP)"
-   ```
+    git add src/services/UserService.ts src/di/
+    git commit -m "refactor: inject AuthPort into UserService (DIP)"
+    ```
 
 4. **Tests**: Update affected test files
-   - `src/services/__tests__/UserService.test.ts`
-   - `src/services/__tests__/AuthService.test.ts` (new)
+    - `src/services/__tests__/UserService.test.ts`
+    - `src/services/__tests__/AuthService.test.ts` (new)
 
 ## Remaining Issues
 

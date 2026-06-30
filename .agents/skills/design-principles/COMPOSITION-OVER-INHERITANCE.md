@@ -29,42 +29,42 @@ Favor object composition over class inheritance. Build complex behavior by combi
 ```typescript
 // Deep hierarchy with fragile base class
 abstract class BaseRepository {
-  protected db: Database;
-  protected cache: Cache;
-  protected logger: Logger;
+    protected db: Database;
+    protected cache: Cache;
+    protected logger: Logger;
 
-  constructor(db: Database, cache: Cache, logger: Logger) {
-    this.db = db;
-    this.cache = cache;
-    this.logger = logger;
-  }
+    constructor(db: Database, cache: Cache, logger: Logger) {
+        this.db = db;
+        this.cache = cache;
+        this.logger = logger;
+    }
 
-  protected async withCache<T>(key: string, fn: () => Promise<T>): Promise<T> {
-    const cached = await this.cache.get<T>(key);
-    if (cached) return cached;
-    const result = await fn();
-    await this.cache.set(key, result);
-    return result;
-  }
+    protected async withCache<T>(key: string, fn: () => Promise<T>): Promise<T> {
+        const cached = await this.cache.get<T>(key);
+        if (cached) return cached;
+        const result = await fn();
+        await this.cache.set(key, result);
+        return result;
+    }
 
-  protected log(message: string): void {
-    this.logger.info(`[${this.constructor.name}] ${message}`);
-  }
+    protected log(message: string): void {
+        this.logger.info(`[${this.constructor.name}] ${message}`);
+    }
 }
 
 abstract class BaseUserRepository extends BaseRepository {
-  protected validateEmail(email: string): boolean {
-    return email.includes('@');
-  }
+    protected validateEmail(email: string): boolean {
+        return email.includes('@');
+    }
 }
 
 class CachedUserRepository extends BaseUserRepository {
-  async getById(id: string): Promise<User> {
-    return this.withCache(`user:${id}`, async () => {
-      this.log(`Fetching user ${id}`);
-      return this.db.findById('users', id);
-    });
-  }
+    async getById(id: string): Promise<User> {
+        return this.withCache(`user:${id}`, async () => {
+            this.log(`Fetching user ${id}`);
+            return this.db.findById('users', id);
+        });
+    }
 }
 
 // Problems:
@@ -79,74 +79,68 @@ class CachedUserRepository extends BaseUserRepository {
 ```typescript
 // Small, focused interfaces
 interface Storage {
-  get<T>(key: string): Promise<T | null>;
-  set<T>(key: string, value: T): Promise<void>;
+    get<T>(key: string): Promise<T | null>;
+    set<T>(key: string, value: T): Promise<void>;
 }
 
 interface Logger {
-  info(message: string): void;
+    info(message: string): void;
 }
 
 interface UserDataSource {
-  findById(id: string): Promise<User | null>;
+    findById(id: string): Promise<User | null>;
 }
 
 // Behaviors as composable wrappers
 class CachingUserDataSource implements UserDataSource {
-  constructor(
-    private readonly source: UserDataSource,
-    private readonly cache: Storage,
-    private readonly ttl: number = 3600
-  ) {}
+    constructor(
+        private readonly source: UserDataSource,
+        private readonly cache: Storage,
+        private readonly ttl: number = 3600
+    ) {}
 
-  async findById(id: string): Promise<User | null> {
-    const cacheKey = `user:${id}`;
-    const cached = await this.cache.get<User>(cacheKey);
-    if (cached) return cached;
+    async findById(id: string): Promise<User | null> {
+        const cacheKey = `user:${id}`;
+        const cached = await this.cache.get<User>(cacheKey);
+        if (cached) return cached;
 
-    const user = await this.source.findById(id);
-    if (user) {
-      await this.cache.set(cacheKey, user);
+        const user = await this.source.findById(id);
+        if (user) {
+            await this.cache.set(cacheKey, user);
+        }
+        return user;
     }
-    return user;
-  }
 }
 
 class LoggingUserDataSource implements UserDataSource {
-  constructor(
-    private readonly source: UserDataSource,
-    private readonly logger: Logger
-  ) {}
+    constructor(
+        private readonly source: UserDataSource,
+        private readonly logger: Logger
+    ) {}
 
-  async findById(id: string): Promise<User | null> {
-    this.logger.info(`Fetching user ${id}`);
-    return this.source.findById(id);
-  }
+    async findById(id: string): Promise<User | null> {
+        this.logger.info(`Fetching user ${id}`);
+        return this.source.findById(id);
+    }
 }
 
 // Concrete implementation
 class PostgresUserDataSource implements UserDataSource {
-  constructor(private readonly db: Database) {}
+    constructor(private readonly db: Database) {}
 
-  async findById(id: string): Promise<User | null> {
-    return this.db.query('SELECT * FROM users WHERE id = ?', [id]);
-  }
+    async findById(id: string): Promise<User | null> {
+        return this.db.query('SELECT * FROM users WHERE id = ?', [id]);
+    }
 }
 
 // Compose behaviors as needed
 const simpleUserSource = new PostgresUserDataSource(db);
 
-const cachedUserSource = new CachingUserDataSource(
-  simpleUserSource,
-  redisCache
-);
+const cachedUserSource = new CachingUserDataSource(simpleUserSource, redisCache);
 
 const fullUserSource = new LoggingUserDataSource(
-  new CachingUserDataSource(
-    new PostgresUserDataSource(db),
-    redisCache
-  ),
-  logger
+    new CachingUserDataSource(new PostgresUserDataSource(db), redisCache),
+    logger
 );
 
 // Testing is easy — just test each piece
@@ -159,59 +153,59 @@ const cachedSource = new CachingUserDataSource(mockSource, mockCache);
 ```typescript
 // ❌ Inheritance for code reuse
 class TimestampedEntity {
-  createdAt: Date = new Date();
-  updatedAt: Date = new Date();
+    createdAt: Date = new Date();
+    updatedAt: Date = new Date();
 
-  touch(): void {
-    this.updatedAt = new Date();
-  }
+    touch(): void {
+        this.updatedAt = new Date();
+    }
 }
 
 class User extends TimestampedEntity {
-  constructor(public name: string) {
-    super();
-  }
+    constructor(public name: string) {
+        super();
+    }
 }
 
 class Order extends TimestampedEntity {
-  constructor(public items: Item[]) {
-    super();
-  }
+    constructor(public items: Item[]) {
+        super();
+    }
 }
 
 // ✅ Composition with delegation
 interface Timestamps {
-  createdAt: Date;
-  updatedAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 function createTimestamps(): Timestamps {
-  const now = new Date();
-  return { createdAt: now, updatedAt: now };
+    const now = new Date();
+    return { createdAt: now, updatedAt: now };
 }
 
 function touch(timestamps: Timestamps): Timestamps {
-  return { ...timestamps, updatedAt: new Date() };
+    return { ...timestamps, updatedAt: new Date() };
 }
 
 interface User {
-  name: string;
-  timestamps: Timestamps;
+    name: string;
+    timestamps: Timestamps;
 }
 
 interface Order {
-  items: Item[];
-  timestamps: Timestamps;
+    items: Item[];
+    timestamps: Timestamps;
 }
 
 const user: User = {
-  name: 'Alice',
-  timestamps: createTimestamps(),
+    name: 'Alice',
+    timestamps: createTimestamps(),
 };
 
 const updatedUser = {
-  ...user,
-  timestamps: touch(user.timestamps),
+    ...user,
+    timestamps: touch(user.timestamps),
 };
 ```
 
@@ -225,23 +219,27 @@ const updatedUser = {
 ```typescript
 // Acceptable: one level, true is-a, clear extension point
 abstract class PaymentProcessor {
-  async process(payment: Payment): Promise<Result> {
-    this.validate(payment);
-    const result = await this.executePayment(payment);
-    await this.notifyComplete(result);
-    return result;
-  }
+    async process(payment: Payment): Promise<Result> {
+        this.validate(payment);
+        const result = await this.executePayment(payment);
+        await this.notifyComplete(result);
+        return result;
+    }
 
-  protected abstract executePayment(payment: Payment): Promise<Result>;
-  
-  protected validate(payment: Payment): void { /* common validation */ }
-  protected notifyComplete(result: Result): Promise<void> { /* common notification */ }
+    protected abstract executePayment(payment: Payment): Promise<Result>;
+
+    protected validate(payment: Payment): void {
+        /* common validation */
+    }
+    protected notifyComplete(result: Result): Promise<void> {
+        /* common notification */
+    }
 }
 
 class StripeProcessor extends PaymentProcessor {
-  protected async executePayment(payment: Payment): Promise<Result> {
-    // Stripe-specific implementation
-  }
+    protected async executePayment(payment: Payment): Promise<Result> {
+        // Stripe-specific implementation
+    }
 }
 ```
 

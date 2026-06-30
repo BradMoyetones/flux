@@ -24,11 +24,11 @@ Refactor code to fix design principle violations. Plans with Opus, executes with
 
 ## Arguments
 
-| Flag | Description |
-|------|-------------|
-| `<path>` | File or directory to refactor |
-| `--branch [name]` | Refactor branch diff (default: main/master) |
-| `--uncommitted` | Refactor uncommitted changes |
+| Flag                  | Description                                 |
+| --------------------- | ------------------------------------------- |
+| `<path>`              | File or directory to refactor               |
+| `--branch [name]`     | Refactor branch diff (default: main/master) |
+| `--uncommitted`       | Refactor uncommitted changes                |
 | `--principles <list>` | Comma-separated list of principles to apply |
 
 ## Available Principles
@@ -46,6 +46,7 @@ Refactor code to fix design principle violations. Plans with Opus, executes with
 ## Controls
 
 At each file modification:
+
 - `y` — Apply change, continue
 - `n` — Skip this file, continue
 - `abort` — Stop refactoring

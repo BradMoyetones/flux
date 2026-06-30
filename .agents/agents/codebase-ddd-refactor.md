@@ -104,9 +104,9 @@ New file: `src/domain/billing/index.ts`
 
 ```typescript
 // Public API - only these exports allowed
-export { BillingService } from "./application/BillingService";
-export type { InvoiceDto } from "./application/dtos/InvoiceDto";
-export type { CreateInvoiceCommand } from "./application/commands";
+export { BillingService } from './application/BillingService';
+export type { InvoiceDto } from './application/dtos/InvoiceDto';
+export type { CreateInvoiceCommand } from './application/commands';
 ```
 ````
 
@@ -144,26 +144,26 @@ Isolate Stripe payment types from domain.
 `src/domain/billing/infrastructure/StripeAdapter.ts`:
 
 ```typescript
-import Stripe from "stripe";
-import { PaymentGateway } from "../domain/ports/PaymentGateway";
-import { Payment } from "../domain/Payment";
-import { PaymentResult } from "../domain/PaymentResult";
+import Stripe from 'stripe';
+import { PaymentGateway } from '../domain/ports/PaymentGateway';
+import { Payment } from '../domain/Payment';
+import { PaymentResult } from '../domain/PaymentResult';
 
 export class StripeAdapter implements PaymentGateway {
-  constructor(private readonly stripe: Stripe) {}
+    constructor(private readonly stripe: Stripe) {}
 
-  async charge(payment: Payment): Promise<PaymentResult> {
-    const stripeResult = await this.stripe.charges.create({
-      amount: payment.amount.cents,
-      currency: payment.amount.currency.code,
-      source: payment.methodToken.value,
-    });
-    return this.toDomain(stripeResult);
-  }
+    async charge(payment: Payment): Promise<PaymentResult> {
+        const stripeResult = await this.stripe.charges.create({
+            amount: payment.amount.cents,
+            currency: payment.amount.currency.code,
+            source: payment.methodToken.value,
+        });
+        return this.toDomain(stripeResult);
+    }
 
-  private toDomain(result: Stripe.Charge): PaymentResult {
-    // Translation logic
-  }
+    private toDomain(result: Stripe.Charge): PaymentResult {
+        // Translation logic
+    }
 }
 ```
 
@@ -171,8 +171,8 @@ export class StripeAdapter implements PaymentGateway {
 
 ```typescript
 export interface PaymentGateway {
-  charge(payment: Payment): Promise<PaymentResult>;
-  refund(transactionId: TransactionId, amount: Money): Promise<RefundResult>;
+    charge(payment: Payment): Promise<PaymentResult>;
+    refund(transactionId: TransactionId, amount: Money): Promise<RefundResult>;
 }
 ```
 
@@ -261,9 +261,9 @@ On confirmation:
 
 2. **Run tests** — Verify no regressions:
 
-   ```bash
-   npm test
-   ```
+    ```bash
+    npm test
+    ```
 
 3. **Update API consumers** — If external services call BillingService
 

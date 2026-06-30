@@ -158,15 +158,15 @@ Everything React-specific for the bounded context.
 // ✅ Simple CRUD → direct adapter
 const { itemRepository } = useDependencies();
 const query = useQuery({
-  queryKey: ["item", id],
-  queryFn: () => itemRepository.getById(id),
+    queryKey: ['item', id],
+    queryFn: () => itemRepository.getById(id),
 });
 
 // ✅ Business logic → use case
 const { authRepository } = useDependencies();
 const result = await new LoginUseCase(authRepository).execute({
-  email,
-  password,
+    email,
+    password,
 });
 ```
 
@@ -190,29 +190,29 @@ Usage in a use case:
 
 ```typescript
 // modules/authentication/core/usecases/Login.usecase.ts
-import { Result, ok, fail } from "@/types/Result";
-import { User } from "../entities/User.entity";
-import { AuthRepository } from "../ports/AuthRepository.port";
-import { AuthError } from "../entities/AuthError.entity";
+import { Result, ok, fail } from '@/types/Result';
+import { User } from '../entities/User.entity';
+import { AuthRepository } from '../ports/AuthRepository.port';
+import { AuthError } from '../entities/AuthError.entity';
 
 interface LoginParams {
-  email: string;
-  password: string;
+    email: string;
+    password: string;
 }
 
 export class LoginUseCase {
-  constructor(private authRepository: AuthRepository) {}
+    constructor(private authRepository: AuthRepository) {}
 
-  async execute(params: LoginParams): Promise<Result<User, AuthError>> {
-    const result = await this.authRepository.login(params);
+    async execute(params: LoginParams): Promise<Result<User, AuthError>> {
+        const result = await this.authRepository.login(params);
 
-    if (!result.success) {
-      return fail(result.error);
+        if (!result.success) {
+            return fail(result.error);
+        }
+
+        // Business logic here if needed
+        return ok(result.data);
     }
-
-    // Business logic here if needed
-    return ok(result.data);
-  }
 }
 ```
 
@@ -220,30 +220,30 @@ Usage in a viewModel:
 
 ```typescript
 // modules/authentication/ui/viewModels/useLogin.viewModel.tsx
-import { LoginUseCase } from "../../core/usecases/Login.usecase";
+import { LoginUseCase } from '../../core/usecases/Login.usecase';
 
 export const useLoginViewModel = () => {
-  const { authRepository } = useDependencies();
-  const [state, setState] = useState<LoginState>({ status: "idle" });
+    const { authRepository } = useDependencies();
+    const [state, setState] = useState<LoginState>({ status: 'idle' });
 
-  const handlers = {
-    login: async (email: string, password: string) => {
-      setState({ status: "loading" });
+    const handlers = {
+        login: async (email: string, password: string) => {
+            setState({ status: 'loading' });
 
-      const result = await new LoginUseCase(authRepository).execute({
-        email,
-        password,
-      });
+            const result = await new LoginUseCase(authRepository).execute({
+                email,
+                password,
+            });
 
-      if (result.success) {
-        setState({ status: "success", user: result.data });
-      } else {
-        setState({ status: "error", error: result.error });
-      }
-    },
-  };
+            if (result.success) {
+                setState({ status: 'success', user: result.data });
+            } else {
+                setState({ status: 'error', error: result.error });
+            }
+        },
+    };
 
-  return { state, handlers };
+    return { state, handlers };
 };
 ```
 
@@ -271,11 +271,11 @@ Use a factory object for consistency and autocompletion:
 ```typescript
 // modules/items/ui/hooks/items.queryKeys.ts
 export const itemsKeys = {
-  all: ["items"] as const,
-  lists: () => [...itemsKeys.all, "list"] as const,
-  list: (filters: ItemFilters) => [...itemsKeys.lists(), filters] as const,
-  details: () => [...itemsKeys.all, "detail"] as const,
-  detail: (id: string) => [...itemsKeys.details(), id] as const,
+    all: ['items'] as const,
+    lists: () => [...itemsKeys.all, 'list'] as const,
+    list: (filters: ItemFilters) => [...itemsKeys.lists(), filters] as const,
+    details: () => [...itemsKeys.all, 'detail'] as const,
+    detail: (id: string) => [...itemsKeys.details(), id] as const,
 };
 ```
 
@@ -283,18 +283,18 @@ export const itemsKeys = {
 
 ```typescript
 // modules/items/ui/hooks/useItem.query.ts
-import { useQuery } from "@tanstack/react-query";
-import { useDependencies } from "@app/react/useDependencies";
-import { itemsKeys } from "./items.queryKeys";
+import { useQuery } from '@tanstack/react-query';
+import { useDependencies } from '@app/react/useDependencies';
+import { itemsKeys } from './items.queryKeys';
 
 export const useItemQuery = (id: string) => {
-  const { itemRepository } = useDependencies();
+    const { itemRepository } = useDependencies();
 
-  return useQuery({
-    queryKey: itemsKeys.detail(id),
-    queryFn: () => itemRepository.getById(id),
-    enabled: !!id,
-  });
+    return useQuery({
+        queryKey: itemsKeys.detail(id),
+        queryFn: () => itemRepository.getById(id),
+        enabled: !!id,
+    });
 };
 ```
 
@@ -302,23 +302,23 @@ export const useItemQuery = (id: string) => {
 
 ```typescript
 // modules/items/ui/hooks/useCreateItem.mutation.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useDependencies } from "@app/react/useDependencies";
-import { CreateItemUseCase } from "../../core/usecases/CreateItem.usecase";
-import { itemsKeys } from "./items.queryKeys";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDependencies } from '@app/react/useDependencies';
+import { CreateItemUseCase } from '../../core/usecases/CreateItem.usecase';
+import { itemsKeys } from './items.queryKeys';
 
 export const useCreateItemMutation = () => {
-  const { itemRepository } = useDependencies();
-  const queryClient = useQueryClient();
+    const { itemRepository } = useDependencies();
+    const queryClient = useQueryClient();
 
-  const createItemUseCase = new CreateItemUseCase(itemRepository);
+    const createItemUseCase = new CreateItemUseCase(itemRepository);
 
-  return useMutation({
-    mutationFn: (params: CreateItemParams) => createItemUseCase.execute(params),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: itemsKeys.lists() });
-    },
-  });
+    return useMutation({
+        mutationFn: (params: CreateItemParams) => createItemUseCase.execute(params),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: itemsKeys.lists() });
+        },
+    });
 };
 ```
 
@@ -326,25 +326,25 @@ export const useCreateItemMutation = () => {
 
 ```typescript
 // modules/items/ui/viewModels/useItemList.viewModel.tsx
-import { useItemsQuery } from "../hooks/useItems.query";
-import { useCreateItemMutation } from "../hooks/useCreateItem.mutation";
+import { useItemsQuery } from '../hooks/useItems.query';
+import { useCreateItemMutation } from '../hooks/useCreateItem.mutation';
 
 export const useItemListViewModel = () => {
-  const itemsQuery = useItemsQuery();
-  const createItemMutation = useCreateItemMutation();
+    const itemsQuery = useItemsQuery();
+    const createItemMutation = useCreateItemMutation();
 
-  const state = {
-    items: itemsQuery.data ?? [],
-    isLoading: itemsQuery.isLoading,
-    error: itemsQuery.error,
-  };
+    const state = {
+        items: itemsQuery.data ?? [],
+        isLoading: itemsQuery.isLoading,
+        error: itemsQuery.error,
+    };
 
-  const handlers = {
-    createItem: (params: CreateItemParams) => createItemMutation.mutate(params),
-    refresh: () => itemsQuery.refetch(),
-  };
+    const handlers = {
+        createItem: (params: CreateItemParams) => createItemMutation.mutate(params),
+        refresh: () => itemsQuery.refetch(),
+    };
 
-  return { state, handlers };
+    return { state, handlers };
 };
 ```
 
@@ -384,17 +384,17 @@ Defines the contract of available dependencies in the app:
 
 ```typescript
 // modules/app/dependencies/Dependencies.type.ts
-import { AuthRepository } from "@modules/authentication/core/ports/AuthRepository.port";
-import { ItemRepository } from "@modules/items/core/ports/ItemRepository.port";
-import { StorageService } from "@modules/shared/storage/Storage.port";
+import { AuthRepository } from '@modules/authentication/core/ports/AuthRepository.port';
+import { ItemRepository } from '@modules/items/core/ports/ItemRepository.port';
+import { StorageService } from '@modules/shared/storage/Storage.port';
 
 export interface Dependencies {
-  // Repositories
-  authRepository: AuthRepository;
-  itemRepository: ItemRepository;
+    // Repositories
+    authRepository: AuthRepository;
+    itemRepository: ItemRepository;
 
-  // Services
-  storageService: StorageService;
+    // Services
+    storageService: StorageService;
 }
 ```
 
@@ -402,29 +402,29 @@ export interface Dependencies {
 
 ```typescript
 // modules/app/dependencies/dependencies.prod.ts
-import { Dependencies } from "./Dependencies.type";
-import { AuthApiAdapter } from "@modules/authentication/infrastructure/adapters/AuthApi.adapter";
-import { ItemApiAdapter } from "@modules/items/infrastructure/adapters/ItemApi.adapter";
-import { AsyncStorageAdapter } from "@modules/shared/storage/AsyncStorage.adapter";
+import { Dependencies } from './Dependencies.type';
+import { AuthApiAdapter } from '@modules/authentication/infrastructure/adapters/AuthApi.adapter';
+import { ItemApiAdapter } from '@modules/items/infrastructure/adapters/ItemApi.adapter';
+import { AsyncStorageAdapter } from '@modules/shared/storage/AsyncStorage.adapter';
 
 export const prodDependencies: Dependencies = {
-  authRepository: new AuthApiAdapter(),
-  itemRepository: new ItemApiAdapter(),
-  storageService: new AsyncStorageAdapter(),
+    authRepository: new AuthApiAdapter(),
+    itemRepository: new ItemApiAdapter(),
+    storageService: new AsyncStorageAdapter(),
 };
 ```
 
 ```typescript
 // modules/app/dependencies/dependencies.test-env.ts
-import { Dependencies } from "./Dependencies.type";
-import { AuthInMemoryAdapter } from "@modules/authentication/infrastructure/adapters/AuthInMemory.adapter";
-import { ItemInMemoryAdapter } from "@modules/items/infrastructure/adapters/ItemInMemory.adapter";
-import { InMemoryStorageAdapter } from "@modules/shared/storage/InMemoryStorage.adapter";
+import { Dependencies } from './Dependencies.type';
+import { AuthInMemoryAdapter } from '@modules/authentication/infrastructure/adapters/AuthInMemory.adapter';
+import { ItemInMemoryAdapter } from '@modules/items/infrastructure/adapters/ItemInMemory.adapter';
+import { InMemoryStorageAdapter } from '@modules/shared/storage/InMemoryStorage.adapter';
 
 export const testDependencies: Dependencies = {
-  authRepository: new AuthInMemoryAdapter(),
-  itemRepository: new ItemInMemoryAdapter(),
-  storageService: new InMemoryStorageAdapter(),
+    authRepository: new AuthInMemoryAdapter(),
+    itemRepository: new ItemInMemoryAdapter(),
+    storageService: new InMemoryStorageAdapter(),
 };
 ```
 
@@ -434,37 +434,37 @@ Application bootstrap with environment-based dependency selection:
 
 ```typescript
 // modules/app/main.ts
-import { Dependencies } from "@app/dependencies/Dependencies.type";
+import { Dependencies } from '@app/dependencies/Dependencies.type';
 
 export class Main {
-  public dependencies: Dependencies;
+    public dependencies: Dependencies;
 
-  constructor() {
-    this.dependencies = this.setupDependencies();
-  }
-
-  setupDependencies(): Dependencies {
-    let importPath;
-    let dependencies: Dependencies;
-
-    switch (process.env.NODE_ENV) {
-      case "production":
-        importPath = require("@app/dependencies/dependencies.prod");
-        dependencies = importPath.prodDependencies;
-        break;
-      case "test":
-        importPath = require("@app/dependencies/dependencies.test-env");
-        dependencies = importPath.testDependencies;
-        break;
-      default:
-      case "development":
-        importPath = require("@app/dependencies/dependencies.dev");
-        dependencies = importPath.devDependencies;
-        break;
+    constructor() {
+        this.dependencies = this.setupDependencies();
     }
 
-    return dependencies;
-  }
+    setupDependencies(): Dependencies {
+        let importPath;
+        let dependencies: Dependencies;
+
+        switch (process.env.NODE_ENV) {
+            case 'production':
+                importPath = require('@app/dependencies/dependencies.prod');
+                dependencies = importPath.prodDependencies;
+                break;
+            case 'test':
+                importPath = require('@app/dependencies/dependencies.test-env');
+                dependencies = importPath.testDependencies;
+                break;
+            default:
+            case 'development':
+                importPath = require('@app/dependencies/dependencies.dev');
+                dependencies = importPath.devDependencies;
+                break;
+        }
+
+        return dependencies;
+    }
 }
 
 export const app = new Main();
@@ -499,18 +499,18 @@ export const DependenciesProvider = ({
 
 ```typescript
 // modules/app/react/useDependencies.tsx
-import { useContext } from "react";
-import { DependenciesContext } from "./DependenciesProvider";
-import { Dependencies } from "@app/dependencies/Dependencies.type";
+import { useContext } from 'react';
+import { DependenciesContext } from './DependenciesProvider';
+import { Dependencies } from '@app/dependencies/Dependencies.type';
 
 export const useDependencies = (): Dependencies => {
-  const dependencies = useContext(DependenciesContext);
+    const dependencies = useContext(DependenciesContext);
 
-  if (!dependencies) {
-    throw new Error("useDependencies must be used within DependenciesProvider");
-  }
+    if (!dependencies) {
+        throw new Error('useDependencies must be used within DependenciesProvider');
+    }
 
-  return dependencies;
+    return dependencies;
 };
 ```
 
@@ -541,17 +541,15 @@ Define business types.
 ```typescript
 // modules/events/core/entities/Event.entity.ts
 export interface Event {
-  id: string;
-  title: string;
-  date: ISO8601;
-  organizerId: string;
+    id: string;
+    title: string;
+    date: ISO8601;
+    organizerId: string;
 }
 
 // modules/events/core/entities/EventError.entity.ts
 export type EventError =
-  | { type: "VALIDATION_ERROR"; message: string }
-  | { type: "NETWORK_ERROR" }
-  | { type: "UNAUTHORIZED" };
+    { type: 'VALIDATION_ERROR'; message: string } | { type: 'NETWORK_ERROR' } | { type: 'UNAUTHORIZED' };
 ```
 
 #### Step 2: Core — Port
@@ -560,18 +558,18 @@ Define the repository contract.
 
 ```typescript
 // modules/events/core/ports/EventRepository.port.ts
-import { Result } from "@/types/Result";
-import { Event, EventError } from "../entities/Event.entity";
+import { Result } from '@/types/Result';
+import { Event, EventError } from '../entities/Event.entity';
 
 export interface CreateEventParams {
-  title: string;
-  date: ISO8601;
+    title: string;
+    date: ISO8601;
 }
 
 export interface EventRepository {
-  create(params: CreateEventParams): Promise<Result<Event, EventError>>;
-  getById(id: string): Promise<Result<Event, EventError>>;
-  list(): Promise<Result<Event[], EventError>>;
+    create(params: CreateEventParams): Promise<Result<Event, EventError>>;
+    getById(id: string): Promise<Result<Event, EventError>>;
+    list(): Promise<Result<Event[], EventError>>;
 }
 ```
 
@@ -579,31 +577,28 @@ export interface EventRepository {
 
 ```typescript
 // modules/events/core/usecases/CreateEvent.usecase.ts
-import { Result, ok, fail } from "@/types/Result";
-import { Event, EventError } from "../entities/Event.entity";
-import {
-  EventRepository,
-  CreateEventParams,
-} from "../ports/EventRepository.port";
+import { Result, ok, fail } from '@/types/Result';
+import { Event, EventError } from '../entities/Event.entity';
+import { EventRepository, CreateEventParams } from '../ports/EventRepository.port';
 
 export class CreateEventUseCase {
-  constructor(private eventRepository: EventRepository) {}
+    constructor(private eventRepository: EventRepository) {}
 
-  async execute(params: CreateEventParams): Promise<Result<Event, EventError>> {
-    // Business validation
-    if (params.title.length < 3) {
-      return fail({ type: "VALIDATION_ERROR", message: "Title too short" });
+    async execute(params: CreateEventParams): Promise<Result<Event, EventError>> {
+        // Business validation
+        if (params.title.length < 3) {
+            return fail({ type: 'VALIDATION_ERROR', message: 'Title too short' });
+        }
+
+        if (new Date(params.date) < new Date()) {
+            return fail({
+                type: 'VALIDATION_ERROR',
+                message: 'Date must be in future',
+            });
+        }
+
+        return this.eventRepository.create(params);
     }
-
-    if (new Date(params.date) < new Date()) {
-      return fail({
-        type: "VALIDATION_ERROR",
-        message: "Date must be in future",
-      });
-    }
-
-    return this.eventRepository.create(params);
-  }
 }
 ```
 
@@ -613,46 +608,43 @@ Implement the port.
 
 ```typescript
 // modules/events/infrastructure/adapters/EventApi.adapter.ts
-import { Result, ok, fail } from "@/types/Result";
-import { Event, EventError } from "../../core/entities/Event.entity";
-import {
-  EventRepository,
-  CreateEventParams,
-} from "../../core/ports/EventRepository.port";
-import { EventApiResponse } from "./EventApiResponse.model";
+import { Result, ok, fail } from '@/types/Result';
+import { Event, EventError } from '../../core/entities/Event.entity';
+import { EventRepository, CreateEventParams } from '../../core/ports/EventRepository.port';
+import { EventApiResponse } from './EventApiResponse.model';
 
 export class EventApiAdapter implements EventRepository {
-  private baseUrl = "https://api.example.com";
+    private baseUrl = 'https://api.example.com';
 
-  async create(params: CreateEventParams): Promise<Result<Event, EventError>> {
-    try {
-      const response = await fetch(`${this.baseUrl}/events`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
+    async create(params: CreateEventParams): Promise<Result<Event, EventError>> {
+        try {
+            const response = await fetch(`${this.baseUrl}/events`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(params),
+            });
 
-      if (!response.ok) {
-        return fail({ type: "NETWORK_ERROR" });
-      }
+            if (!response.ok) {
+                return fail({ type: 'NETWORK_ERROR' });
+            }
 
-      const data: EventApiResponse = await response.json();
-      return ok(this.mapToEntity(data));
-    } catch {
-      return fail({ type: "NETWORK_ERROR" });
+            const data: EventApiResponse = await response.json();
+            return ok(this.mapToEntity(data));
+        } catch {
+            return fail({ type: 'NETWORK_ERROR' });
+        }
     }
-  }
 
-  private mapToEntity(response: EventApiResponse): Event {
-    return {
-      id: response.id,
-      title: response.title,
-      date: response.date,
-      organizerId: response.organizer_id, // snake_case → camelCase
-    };
-  }
+    private mapToEntity(response: EventApiResponse): Event {
+        return {
+            id: response.id,
+            title: response.title,
+            date: response.date,
+            organizerId: response.organizer_id, // snake_case → camelCase
+        };
+    }
 
-  // ... other methods
+    // ... other methods
 }
 ```
 
@@ -660,19 +652,19 @@ export class EventApiAdapter implements EventRepository {
 
 ```typescript
 // modules/app/dependencies/Dependencies.type.ts
-import { EventRepository } from "@modules/events/core/ports/EventRepository.port";
+import { EventRepository } from '@modules/events/core/ports/EventRepository.port';
 
 export interface Dependencies {
-  // ... others
-  eventRepository: EventRepository;
+    // ... others
+    eventRepository: EventRepository;
 }
 
 // modules/app/dependencies/dependencies.prod.ts
-import { EventApiAdapter } from "@modules/events/infrastructure/adapters/EventApi.adapter";
+import { EventApiAdapter } from '@modules/events/infrastructure/adapters/EventApi.adapter';
 
 export const prodDependencies: Dependencies = {
-  // ... others
-  eventRepository: new EventApiAdapter(),
+    // ... others
+    eventRepository: new EventApiAdapter(),
 };
 ```
 
@@ -681,10 +673,10 @@ export const prodDependencies: Dependencies = {
 ```typescript
 // modules/events/ui/hooks/events.queryKeys.ts
 export const eventsKeys = {
-  all: ["events"] as const,
-  lists: () => [...eventsKeys.all, "list"] as const,
-  details: () => [...eventsKeys.all, "detail"] as const,
-  detail: (id: string) => [...eventsKeys.details(), id] as const,
+    all: ['events'] as const,
+    lists: () => [...eventsKeys.all, 'list'] as const,
+    details: () => [...eventsKeys.all, 'detail'] as const,
+    detail: (id: string) => [...eventsKeys.details(), id] as const,
 };
 ```
 
@@ -692,23 +684,23 @@ export const eventsKeys = {
 
 ```typescript
 // modules/events/ui/hooks/useCreateEvent.mutation.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useDependencies } from "@app/react/useDependencies";
-import { CreateEventUseCase } from "../../core/usecases/CreateEvent.usecase";
-import { eventsKeys } from "./events.queryKeys";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDependencies } from '@app/react/useDependencies';
+import { CreateEventUseCase } from '../../core/usecases/CreateEvent.usecase';
+import { eventsKeys } from './events.queryKeys';
 
 export const useCreateEventMutation = () => {
-  const { eventRepository } = useDependencies();
-  const queryClient = useQueryClient();
+    const { eventRepository } = useDependencies();
+    const queryClient = useQueryClient();
 
-  const createEventUseCase = new CreateEventUseCase(eventRepository);
+    const createEventUseCase = new CreateEventUseCase(eventRepository);
 
-  return useMutation({
-    mutationFn: createEventUseCase.execute.bind(createEventUseCase),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: eventsKeys.lists() });
-    },
-  });
+    return useMutation({
+        mutationFn: createEventUseCase.execute.bind(createEventUseCase),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: eventsKeys.lists() });
+        },
+    });
 };
 ```
 
@@ -716,31 +708,31 @@ export const useCreateEventMutation = () => {
 
 ```typescript
 // modules/events/ui/viewModels/useCreateEvent.viewModel.tsx
-import { useState } from "react";
-import { useCreateEventMutation } from "../hooks/useCreateEvent.mutation";
+import { useState } from 'react';
+import { useCreateEventMutation } from '../hooks/useCreateEvent.mutation';
 
 interface FormState {
-  title: string;
-  date: string;
+    title: string;
+    date: string;
 }
 
 export const useCreateEventViewModel = () => {
-  const [form, setForm] = useState<FormState>({ title: "", date: "" });
-  const mutation = useCreateEventMutation();
+    const [form, setForm] = useState<FormState>({ title: '', date: '' });
+    const mutation = useCreateEventMutation();
 
-  const state = {
-    form,
-    isLoading: mutation.isPending,
-    error: mutation.data?.success === false ? mutation.data.error : null,
-  };
+    const state = {
+        form,
+        isLoading: mutation.isPending,
+        error: mutation.data?.success === false ? mutation.data.error : null,
+    };
 
-  const handlers = {
-    setTitle: (title: string) => setForm((f) => ({ ...f, title })),
-    setDate: (date: string) => setForm((f) => ({ ...f, date })),
-    submit: () => mutation.mutate({ title: form.title, date: form.date }),
-  };
+    const handlers = {
+        setTitle: (title: string) => setForm((f) => ({ ...f, title })),
+        setDate: (date: string) => setForm((f) => ({ ...f, date })),
+        submit: () => mutation.mutate({ title: form.title, date: form.date }),
+    };
 
-  return { state, handlers };
+    return { state, handlers };
 };
 ```
 
@@ -805,13 +797,13 @@ export const CreateEventScreen = () => {
 ```typescript
 // ❌ Direct API call in component
 const EventList = () => {
-  const [events, setEvents] = useState([]);
+    const [events, setEvents] = useState([]);
 
-  useEffect(() => {
-    fetch("https://api.example.com/events")
-      .then((r) => r.json())
-      .then(setEvents);
-  }, []);
+    useEffect(() => {
+        fetch('https://api.example.com/events')
+            .then((r) => r.json())
+            .then(setEvents);
+    }, []);
 };
 ```
 

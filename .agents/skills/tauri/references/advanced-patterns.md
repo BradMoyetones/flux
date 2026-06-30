@@ -38,11 +38,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 ```json
 // plugins/my-plugin/permissions/default.json
 {
-  "identifier": "my-plugin:default",
-  "description": "Default permissions for my-plugin",
-  "permissions": [
-    "my-plugin:allow-safe-command"
-  ]
+    "identifier": "my-plugin:default",
+    "description": "Default permissions for my-plugin",
+    "permissions": ["my-plugin:allow-safe-command"]
 }
 ```
 
@@ -195,8 +193,8 @@ const results = await invoke('batch_operations', {
     operations: [
         { type: 'read', path: 'file1.txt' },
         { type: 'read', path: 'file2.txt' },
-        { type: 'write', path: 'file3.txt', content: '...' }
-    ]
+        { type: 'write', path: 'file3.txt', content: '...' },
+    ],
 });
 ```
 
@@ -312,16 +310,14 @@ async fn get_data(key: String) -> Result<Data, String> {
 ```json
 // tauri.conf.json
 {
-  "plugins": {
-    "updater": {
-      "active": true,
-      "endpoints": [
-        "https://releases.example.com/{{target}}/{{arch}}/{{current_version}}"
-      ],
-      "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6..."
+    "plugins": {
+        "updater": {
+            "active": true,
+            "endpoints": ["https://releases.example.com/{{target}}/{{arch}}/{{current_version}}"],
+            "dialog": true,
+            "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6..."
+        }
     }
-  }
 }
 ```
 
@@ -332,14 +328,14 @@ async fn get_data(key: String) -> Result<Data, String> {
 - name: Build and Sign
   uses: tauri-apps/tauri-action@v0
   env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-    TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PASSWORD }}
-    # Windows
-    TAURI_SIGNING_IDENTITY: ${{ secrets.WINDOWS_CERTIFICATE }}
-    # macOS
-    APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-    APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PASSWORD }}
+      # Windows
+      TAURI_SIGNING_IDENTITY: ${{ secrets.WINDOWS_CERTIFICATE }}
+      # macOS
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 ```
 
 ### Environment-Specific Builds

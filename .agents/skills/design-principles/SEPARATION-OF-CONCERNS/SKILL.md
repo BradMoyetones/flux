@@ -51,11 +51,11 @@ Domain has NO dependencies on Presentation or Infrastructure
 
 ## Quick Checks by Layer
 
-| Layer | Should NOT contain |
-|-------|-------------------|
-| **Domain** | React imports, HTTP clients, AsyncStorage, navigation |
-| **Presentation** | Direct API calls, SQL queries, business rules |
-| **Infrastructure** | UI components, business decisions, routing |
+| Layer              | Should NOT contain                                    |
+| ------------------ | ----------------------------------------------------- |
+| **Domain**         | React imports, HTTP clients, AsyncStorage, navigation |
+| **Presentation**   | Direct API calls, SQL queries, business rules         |
+| **Infrastructure** | UI components, business decisions, routing            |
 
 ## When Concerns Can Stay Together
 

@@ -32,11 +32,11 @@ Review code for design principle violations. Analyzes targeted scope (branch dif
 
 ## Arguments
 
-| Flag | Description |
-|------|-------------|
-| `--branch [name]` | Compare to branch (default: main/master) |
-| `--uncommitted` | Review staged + unstaged changes |
-| `--file <path>` | Review specific file or directory |
+| Flag                  | Description                                 |
+| --------------------- | ------------------------------------------- |
+| `--branch [name]`     | Compare to branch (default: main/master)    |
+| `--uncommitted`       | Review staged + unstaged changes            |
+| `--file <path>`       | Review specific file or directory           |
 | `--principles <list>` | Comma-separated list of principles to check |
 
 ## Available Principles
@@ -46,6 +46,7 @@ Review code for design principle violations. Analyzes targeted scope (branch dif
 ## Output
 
 Generates a structured report with:
+
 - Summary (files analyzed, violations by severity)
 - Violations grouped by principle
 - Detailed refactoring plan

@@ -22,13 +22,13 @@ import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 
 const CustomNode = memo(function CustomNode({ data }) {
-  return (
-    <div>
-      <Handle type="target" position={Position.Top} />
-      <span>{data.label}</span>
-      <Handle type="source" position={Position.Bottom} />
-    </div>
-  );
+    return (
+        <div>
+            <Handle type="target" position={Position.Top} />
+            <span>{data.label}</span>
+            <Handle type="source" position={Position.Bottom} />
+        </div>
+    );
 });
 
 export default CustomNode;
@@ -80,8 +80,8 @@ const selectedNodeIds = nodes.filter((n) => n.selected).map((n) => n.id);
 
 // GOOD: only re-renders when selection actually changes
 const selectedNodeIds = useStore(
-  (state) => state.nodes.filter((n) => n.selected).map((n) => n.id),
-  shallow, // import from zustand/shallow
+    (state) => state.nodes.filter((n) => n.selected).map((n) => n.id),
+    shallow // import from zustand/shallow
 );
 ```
 
@@ -91,7 +91,7 @@ Use `useReactFlow()` for on-demand reads that don't need reactive updates:
 const { getNodes, getEdges } = useReactFlow();
 
 const handleSave = () => {
-  const currentNodes = getNodes(); // no subscription, no re-render
+    const currentNodes = getNodes(); // no subscription, no re-render
 };
 ```
 
@@ -111,23 +111,17 @@ Use the `hidden` property to toggle visibility of subtrees:
 
 ```tsx
 const toggleChildren = (parentId) => {
-  // Read current nodes once to use in both updates
-  const currentNodes = getNodes();
-  const childIds = new Set(
-    currentNodes.filter((n) => n.parentId === parentId).map((n) => n.id),
-  );
+    // Read current nodes once to use in both updates
+    const currentNodes = getNodes();
+    const childIds = new Set(currentNodes.filter((n) => n.parentId === parentId).map((n) => n.id));
 
-  setNodes((nodes) =>
-    nodes.map((node) =>
-      childIds.has(node.id) ? { ...node, hidden: !node.hidden } : node,
-    ),
-  );
-  setEdges((edges) =>
-    edges.map((edge) => {
-      const isChild = childIds.has(edge.source) || childIds.has(edge.target);
-      return isChild ? { ...edge, hidden: !edge.hidden } : edge;
-    }),
-  );
+    setNodes((nodes) => nodes.map((node) => (childIds.has(node.id) ? { ...node, hidden: !node.hidden } : node)));
+    setEdges((edges) =>
+        edges.map((edge) => {
+            const isChild = childIds.has(edge.source) || childIds.has(edge.target);
+            return isChild ? { ...edge, hidden: !edge.hidden } : edge;
+        })
+    );
 };
 ```
 
@@ -147,8 +141,8 @@ Track UI concerns (selection, hover, focus) separately from the flow data to pre
 ```tsx
 // In your Zustand store
 type UIState = {
-  selectedNodeIds: Set<string>;
-  hoveredNodeId: string | null;
+    selectedNodeIds: Set<string>;
+    hoveredNodeId: string | null;
 };
 ```
 
@@ -162,11 +156,11 @@ React Flow supports light, dark, and system color modes:
 <ReactFlow colorMode="dark" ... />
 ```
 
-| Value | Description |
-|-------|-------------|
-| `'light'` | Light theme (default) |
-| `'dark'` | Dark theme |
-| `'system'` | Match OS preference |
+| Value      | Description           |
+| ---------- | --------------------- |
+| `'light'`  | Light theme (default) |
+| `'dark'`   | Dark theme            |
+| `'system'` | Match OS preference   |
 
 This adds a class to the `.react-flow` container (`dark` or `light`) for conditional CSS.
 
@@ -176,51 +170,51 @@ Override default styles by setting CSS variables on `.react-flow` or `:root`:
 
 ```css
 .react-flow {
-  /* Node defaults */
-  --xy-node-background-color-default: #fff;
-  --xy-node-border-default: 1px solid #1a192b;
-  --xy-node-border-radius-default: 3px;
-  --xy-node-color-default: #222;
-  --xy-node-boxshadow-hover-default: 0 1px 4px 1px rgba(0, 0, 0, 0.08);
-  --xy-node-boxshadow-selected-default: 0 0 0 0.5px #1a192b;
+    /* Node defaults */
+    --xy-node-background-color-default: #fff;
+    --xy-node-border-default: 1px solid #1a192b;
+    --xy-node-border-radius-default: 3px;
+    --xy-node-color-default: #222;
+    --xy-node-boxshadow-hover-default: 0 1px 4px 1px rgba(0, 0, 0, 0.08);
+    --xy-node-boxshadow-selected-default: 0 0 0 0.5px #1a192b;
 
-  /* Handle defaults */
-  --xy-handle-background-color-default: #1a192b;
-  --xy-handle-border-color-default: #fff;
+    /* Handle defaults */
+    --xy-handle-background-color-default: #1a192b;
+    --xy-handle-border-color-default: #fff;
 
-  /* Edge defaults */
-  --xy-edge-stroke-default: #b1b1b7;
-  --xy-edge-stroke-width-default: 1;
-  --xy-edge-stroke-selected-default: #555;
+    /* Edge defaults */
+    --xy-edge-stroke-default: #b1b1b7;
+    --xy-edge-stroke-width-default: 1;
+    --xy-edge-stroke-selected-default: #555;
 
-  /* Selection */
-  --xy-selection-background-color-default: rgba(0, 89, 220, 0.08);
-  --xy-selection-border-default: 1px dotted rgba(0, 89, 220, 0.8);
+    /* Selection */
+    --xy-selection-background-color-default: rgba(0, 89, 220, 0.08);
+    --xy-selection-border-default: 1px dotted rgba(0, 89, 220, 0.8);
 
-  /* Connection line */
-  --xy-connectionline-stroke-default: #b1b1b7;
-  --xy-connectionline-stroke-width-default: 1;
+    /* Connection line */
+    --xy-connectionline-stroke-default: #b1b1b7;
+    --xy-connectionline-stroke-width-default: 1;
 
-  /* Attribution */
-  --xy-attribution-background-color-default: rgba(255, 255, 255, 0.5);
+    /* Attribution */
+    --xy-attribution-background-color-default: rgba(255, 255, 255, 0.5);
 
-  /* Controls */
-  --xy-controls-button-background-color-default: #fefefe;
-  --xy-controls-button-background-color-hover-default: #f4f4f4;
-  --xy-controls-button-color-default: inherit;
-  --xy-controls-button-color-hover-default: inherit;
-  --xy-controls-button-border-color-default: #eee;
+    /* Controls */
+    --xy-controls-button-background-color-default: #fefefe;
+    --xy-controls-button-background-color-hover-default: #f4f4f4;
+    --xy-controls-button-color-default: inherit;
+    --xy-controls-button-color-hover-default: inherit;
+    --xy-controls-button-border-color-default: #eee;
 
-  /* MiniMap */
-  --xy-minimap-background-color-default: #fff;
-  --xy-minimap-mask-background-color-default: rgb(240, 240, 240, 0.6);
-  --xy-minimap-mask-stroke-color-default: transparent;
-  --xy-minimap-node-background-color-default: #e2e2e2;
-  --xy-minimap-node-stroke-color-default: transparent;
+    /* MiniMap */
+    --xy-minimap-background-color-default: #fff;
+    --xy-minimap-mask-background-color-default: rgb(240, 240, 240, 0.6);
+    --xy-minimap-mask-stroke-color-default: transparent;
+    --xy-minimap-node-background-color-default: #e2e2e2;
+    --xy-minimap-node-stroke-color-default: transparent;
 
-  /* Background */
-  --xy-background-pattern-color-default: #81818a;
-  --xy-background-color-default: #fff;
+    /* Background */
+    --xy-background-pattern-color-default: #81818a;
+    --xy-background-color-default: #fff;
 }
 ```
 
@@ -228,43 +222,43 @@ Override default styles by setting CSS variables on `.react-flow` or `:root`:
 
 ```css
 .react-flow.dark {
-  --xy-node-background-color-default: #1e1e1e;
-  --xy-node-border-default: 1px solid #444;
-  --xy-node-color-default: #eee;
-  --xy-edge-stroke-default: #666;
-  --xy-background-color-default: #121212;
-  --xy-background-pattern-color-default: #333;
-  --xy-controls-button-background-color-default: #2a2a2a;
-  --xy-controls-button-border-color-default: #444;
-  --xy-minimap-background-color-default: #1e1e1e;
+    --xy-node-background-color-default: #1e1e1e;
+    --xy-node-border-default: 1px solid #444;
+    --xy-node-color-default: #eee;
+    --xy-edge-stroke-default: #666;
+    --xy-background-color-default: #121212;
+    --xy-background-pattern-color-default: #333;
+    --xy-controls-button-background-color-default: #2a2a2a;
+    --xy-controls-button-border-color-default: #444;
+    --xy-minimap-background-color-default: #1e1e1e;
 }
 ```
 
 ### CSS class targets
 
-| Selector | Target |
-|----------|--------|
-| `.react-flow` | Root container |
-| `.react-flow__node` | All nodes |
-| `.react-flow__node-default` | Default node type |
-| `.react-flow__node-input` | Input node type |
-| `.react-flow__node-output` | Output node type |
-| `.react-flow__node-group` | Group node type |
-| `.react-flow__node.selected` | Selected nodes |
-| `.react-flow__edge` | All edges |
-| `.react-flow__edge.selected` | Selected edges |
-| `.react-flow__edge-path` | Edge SVG path |
-| `.react-flow__handle` | Handles |
-| `.react-flow__handle-top` | Top-positioned handles |
-| `.react-flow__handle-right` | Right-positioned handles |
+| Selector                     | Target                    |
+| ---------------------------- | ------------------------- |
+| `.react-flow`                | Root container            |
+| `.react-flow__node`          | All nodes                 |
+| `.react-flow__node-default`  | Default node type         |
+| `.react-flow__node-input`    | Input node type           |
+| `.react-flow__node-output`   | Output node type          |
+| `.react-flow__node-group`    | Group node type           |
+| `.react-flow__node.selected` | Selected nodes            |
+| `.react-flow__edge`          | All edges                 |
+| `.react-flow__edge.selected` | Selected edges            |
+| `.react-flow__edge-path`     | Edge SVG path             |
+| `.react-flow__handle`        | Handles                   |
+| `.react-flow__handle-top`    | Top-positioned handles    |
+| `.react-flow__handle-right`  | Right-positioned handles  |
 | `.react-flow__handle-bottom` | Bottom-positioned handles |
-| `.react-flow__handle-left` | Left-positioned handles |
-| `.react-flow__connection` | Connection line |
-| `.react-flow__controls` | Controls container |
-| `.react-flow__minimap` | MiniMap container |
-| `.react-flow__background` | Background container |
-| `.react-flow__panel` | Panel container |
-| `.react-flow__attribution` | Attribution link |
+| `.react-flow__handle-left`   | Left-positioned handles   |
+| `.react-flow__connection`    | Connection line           |
+| `.react-flow__controls`      | Controls container        |
+| `.react-flow__minimap`       | MiniMap container         |
+| `.react-flow__background`    | Background container      |
+| `.react-flow__panel`         | Panel container           |
+| `.react-flow__attribution`   | Attribution link          |
 
 ### Inline styles via style prop
 
@@ -291,26 +285,18 @@ import '@xyflow/react/dist/base.css';
 import { Handle, Position } from '@xyflow/react';
 
 function TailwindNode({ data }) {
-  return (
-    <div className="px-4 py-2 shadow-md rounded-md bg-white border-2 border-stone-400">
-      <div className="flex items-center">
-        <div className="ml-2">
-          <div className="text-lg font-bold">{data.name}</div>
-          <div className="text-gray-500">{data.role}</div>
+    return (
+        <div className="px-4 py-2 shadow-md rounded-md bg-white border-2 border-stone-400">
+            <div className="flex items-center">
+                <div className="ml-2">
+                    <div className="text-lg font-bold">{data.name}</div>
+                    <div className="text-gray-500">{data.role}</div>
+                </div>
+            </div>
+            <Handle type="target" position={Position.Top} className="w-16 !bg-teal-500" />
+            <Handle type="source" position={Position.Bottom} className="w-16 !bg-teal-500" />
         </div>
-      </div>
-      <Handle
-        type="target"
-        position={Position.Top}
-        className="w-16 !bg-teal-500"
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="w-16 !bg-teal-500"
-      />
-    </div>
-  );
+    );
 }
 ```
 
@@ -320,11 +306,11 @@ function TailwindNode({ data }) {
 
 React Flow provides utility classes for custom node content:
 
-| Class | Effect |
-|-------|--------|
-| `nodrag` | Prevents node drag on the element |
-| `nowheel` | Prevents zoom on scroll |
-| `nopan` | Prevents viewport pan |
+| Class     | Effect                            |
+| --------- | --------------------------------- |
+| `nodrag`  | Prevents node drag on the element |
+| `nowheel` | Prevents zoom on scroll           |
+| `nopan`   | Prevents viewport pan             |
 
 These can be combined with Tailwind classes:
 
@@ -359,12 +345,12 @@ These can be combined with Tailwind classes:
 
 ```tsx
 const nodes = [
-  {
-    id: '1',
-    data: { label: 'Start' },
-    position: { x: 0, y: 0 },
-    ariaLabel: 'Start node - beginning of the workflow',
-  },
+    {
+        id: '1',
+        data: { label: 'Start' },
+        position: { x: 0, y: 0 },
+        ariaLabel: 'Start node - beginning of the workflow',
+    },
 ];
 ```
 
