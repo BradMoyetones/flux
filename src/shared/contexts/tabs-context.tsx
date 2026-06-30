@@ -95,7 +95,7 @@ export const useTabsStore = create<TabsState>()(
                 const route = getRoute(path);
                 if (!route) return path;
 
-                const focusExisting = options?.focusExisting ?? !route.closable;
+                const focusExisting = options?.focusExisting ?? true;
                 const { tabs } = get();
 
                 if (focusExisting) {

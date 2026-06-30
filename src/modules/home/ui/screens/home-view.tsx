@@ -5,6 +5,7 @@ import { Bell, Database, FileSpreadsheet, Mail, Plus, Search, Webhook, Workflow,
 import { cn } from '@/shared/utils/utils';
 import { Button } from '@/ui/components/ui/button';
 import { useTabs } from '@/shared/contexts/tabs-context';
+import { useNavigate } from 'react-router';
 
 interface WorkflowCard {
     title: string;
@@ -65,6 +66,12 @@ const workflows: WorkflowCard[] = [
 
 export function HomeView() {
     const { openTab } = useTabs();
+    const navigate = useNavigate();
+
+    const handleOpenTab = (path: string) => {
+        const openedPath = openTab(path);
+        navigate(openedPath);
+    };
 
     return (
         <div className="app-scroll h-full overflow-y-auto">
@@ -87,7 +94,7 @@ export function HomeView() {
                                 className="h-9 w-56 rounded-lg border border-border bg-card pl-9 pr-3 text-sm outline-none transition placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
                             />
                         </div>
-                        <Button onClick={() => openTab('/flows/sales')}>
+                        <Button onClick={() => handleOpenTab('/flows/sales')}>
                             <Plus data-icon="inline-start" />
                             Nuevo flujo
                         </Button>
@@ -99,7 +106,7 @@ export function HomeView() {
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <button
                             type="button"
-                            onClick={() => openTab('/release-notes/v1.2')}
+                            onClick={() => handleOpenTab('/release-notes/v1.2')}
                             className={cn(
                                 'group flex flex-col rounded-xl border border-border bg-card p-5 text-left shadow-sm transition',
                                 'cursor-pointer hover:-translate-y-0.5 hover:bg-primary/40 hover:shadow-md'
@@ -115,7 +122,7 @@ export function HomeView() {
                                     key={flow.title}
                                     type="button"
                                     disabled={!interactive}
-                                    onClick={() => flow.path && openTab(flow.path)}
+                                    onClick={() => flow.path && handleOpenTab(flow.path)}
                                     className={cn(
                                         'group flex flex-col rounded-xl border border-border bg-card p-5 text-left shadow-sm transition',
                                         interactive
