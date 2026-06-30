@@ -21,7 +21,7 @@ function TabHost() {
 
 export function Workspace() {
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen flex-col overflow-hidden bg-background/80 text-foreground">
       <TabBar />
       <main className="min-h-0 flex-1">
         <TabHost />

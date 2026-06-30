@@ -168,7 +168,7 @@
 }
 
 @utility dot-grid {
-    background-color: var(--background);
+    /* background-color: var(--background); */
     background-image: radial-gradient(color-mix(in oklch, var(--foreground) 18%, transparent) 1px,
             transparent 1px);
     background-size: 22px 22px;

@@ -10,8 +10,8 @@ use std::collections::HashMap;
 
 use tauri::Manager;
 use tokio::sync::Mutex;
-use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
-
+use window_vibrancy::*;
+use tauri_plugin_os;
 use services::whatsapp_client::WhatsAppCore;
 // use services::http_client::HttpClient;
 use state::AppState;
@@ -31,7 +31,7 @@ pub fn run() {
                 .expect("No se pudo aplicar el Vibrancy en macOS");
 
             #[cfg(target_os = "windows")]
-            window_vibrancy::apply_blur(&window, Some((18, 18, 18, 125)))
+            apply_acrylic(&window, Some((0, 0, 0, 0)))
                 .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
 
             app.manage(AppState {
@@ -43,6 +43,7 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_os::init())
         .invoke_handler(commands::get_handlers())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

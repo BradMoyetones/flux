@@ -18,6 +18,7 @@
         "resizable": true,
         "transparent": true,
         "titleBarStyle": "Overlay",
+        "decorations": false,
         "hiddenTitle": true,
         "trafficLightPosition": {
           "x": 16,
