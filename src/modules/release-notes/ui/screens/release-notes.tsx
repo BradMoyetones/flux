@@ -1,102 +1,173 @@
-import { Sparkles } from 'lucide-react';
+import { useEffect, ReactNode } from 'react';
+import { Calendar, Code2, Sparkles } from 'lucide-react';
+import { Streamdown } from 'streamdown';
 
-interface ChangeGroup {
-    label: string;
-    tone: 'feature' | 'fix' | 'improvement';
-    items: string[];
-}
+import { APP_CONFIG } from '@/shared/config/app';
+import { cn } from '@/shared/utils/utils';
+import { useReleaseNotesViewModel, generateSlug } from '../viewModels/useReleaseNotes.viewModel';
 
-const groups: ChangeGroup[] = [
-    {
-        label: 'Novedades',
-        tone: 'feature',
-        items: [
-            'Nuevo sistema de pestañas estilo navegador con persistencia entre sesiones.',
-            'Lienzo de nodos rediseñado con widgets premium y puertos de conexión.',
-            'Paleta de comandos global accesible con ⌘K desde cualquier vista.',
-        ],
-    },
-    {
-        label: 'Mejoras',
-        tone: 'improvement',
-        items: [
-            'El arranque en frío de la app es ahora un 40% más rápido en Tauri.',
-            'Las conexiones entre nodos usan curvas suaves con indicadores de dirección.',
-            'Modo oscuro OLED afinado para pantallas de portátiles modernos.',
-        ],
-    },
-    {
-        label: 'Correcciones',
-        tone: 'fix',
-        items: [
-            'Se corrigió el cierre de pestañas que a veces enfocaba la pestaña incorrecta.',
-            'Se solucionó un parpadeo del lienzo al cambiar entre flujos.',
-        ],
-    },
-];
-
-const toneStyles: Record<ChangeGroup['tone'], string> = {
-    feature: 'bg-muted text-primary',
-    improvement: 'bg-sky-500/15 text-sky-400',
-    fix: 'bg-emerald-500/15 text-emerald-400',
+// Helper to extract text from ReactNode children to generate slug
+const extractText = (children: ReactNode): string => {
+    if (typeof children === 'string') return children;
+    if (Array.isArray(children)) return children.map(extractText).join('');
+    return '';
 };
 
 export function ReleaseNotes() {
+    const { state, handlers } = useReleaseNotesViewModel();
+    const { isLoading, attributes, body, toc, activeId } = state;
+
+    // Intersection Observer for TOC highlighting
+    useEffect(() => {
+        if (toc.length === 0) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        handlers.setActiveId(entry.target.id);
+                    }
+                }
+            },
+            { rootMargin: '0px 0px -80% 0px' }
+        );
+
+        for (const item of toc) {
+            const element = document.getElementById(item.id);
+            if (element) {
+                observer.observe(element);
+            }
+        }
+
+        return () => {
+            for (const item of toc) {
+                const element = document.getElementById(item.id);
+                if (element) {
+                    observer.unobserve(element);
+                }
+            }
+        };
+    }, [toc, handlers]);
+
+    if (isLoading) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                <p className="text-muted-foreground animate-pulse">Cargando notas de la versión...</p>
+            </div>
+        );
+    }
+
+    const versionTitle = attributes.title || 'Actualización de Flux';
+    const releaseDate = attributes.date;
+    const sourceLink = attributes.tag ? APP_CONFIG.getReleaseUrl(attributes.tag) : null;
+
     return (
-        <div className="app-scroll h-full overflow-y-auto">
-            <article className="mx-auto w-full max-w-2xl px-6 py-12 lg:px-8">
-                <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                    <Sparkles className="size-4" />
-                    Notas de la versión
-                </div>
+        <div className="app-scroll relative h-full overflow-y-auto">
+            <div className="mx-auto flex w-full max-w-5xl px-6 py-12 lg:px-8">
+                {/* Main Content Area */}
+                <article className="mx-auto w-full max-w-2xl shrink-0">
+                    <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                        <Sparkles className="size-4" />
+                        Notas de la versión
+                    </div>
 
-                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance">Flux v1.0.1</h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                    Publicado el 30 de junio de 2026 · Actualización recomendada
-                </p>
+                    <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance">{versionTitle}</h1>
 
-                <hr className="my-8 border-border" />
-
-                <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-                    Esta versión se centra en hacer que Flux se sienta como una aplicación de escritorio nativa de
-                    primera clase. Reconstruimos el shell de la interfaz desde cero, con un sistema de pestañas y un
-                    lienzo de automatización completamente nuevos.
-                </p>
-
-                <div className="mt-10 flex flex-col gap-10">
-                    {groups.map((group) => (
-                        <section key={group.label}>
-                            <div className="flex items-center gap-3">
-                                <span
-                                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${toneStyles[group.tone]}`}
-                                >
-                                    {group.label}
-                                </span>
-                                <span className="h-px flex-1 bg-border" />
+                    <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        {releaseDate && (
+                            <div className="flex items-center gap-1.5">
+                                <Calendar className="size-4" />
+                                {releaseDate}
                             </div>
+                        )}
+                        {sourceLink && (
+                            <a
+                                href={sourceLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                            >
+                                <Code2 className="size-4" />
+                                Source code
+                            </a>
+                        )}
+                    </div>
 
-                            <ul className="mt-4 flex flex-col gap-3">
-                                {group.items.map((item) => (
-                                    <li
-                                        key={item}
-                                        className="flex gap-3 text-[15px] leading-relaxed text-foreground/90"
-                                    >
+                    <hr className="my-8 border-border" />
+
+                    {/* Markdown Body using Streamdown */}
+                    <div className="prose prose-sm dark:prose-invert prose-p:text-muted-foreground prose-li:text-muted-foreground prose-a:text-primary max-w-none text-[15px] leading-relaxed">
+                        <Streamdown
+                            components={{
+                                h2: (props) => {
+                                    const text = extractText(props.children);
+                                    const id = generateSlug(text);
+                                    return (
+                                        <h2
+                                            id={id}
+                                            className="scroll-m-12 border-b border-border/50 pb-2 mt-10 mb-4 text-xl font-semibold text-foreground tracking-tight"
+                                            {...props}
+                                        />
+                                    );
+                                },
+                                h3: (props) => {
+                                    const text = extractText(props.children);
+                                    const id = generateSlug(text);
+                                    return (
+                                        <h3
+                                            id={id}
+                                            className="scroll-m-12 mt-8 mb-3 text-lg font-medium text-foreground tracking-tight"
+                                            {...props}
+                                        />
+                                    );
+                                },
+                                ul: (props) => <ul className="mt-4 flex flex-col gap-3 list-none pl-0" {...props} />,
+                                li: (props) => (
+                                    <li className="flex gap-3 m-0" {...props}>
                                         <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
-                                        <span className="text-pretty">{item}</span>
+                                        <span className="text-pretty flex-1">{props.children}</span>
                                     </li>
-                                ))}
-                            </ul>
-                        </section>
-                    ))}
-                </div>
+                                ),
+                            }}
+                        >
+                            {body}
+                        </Streamdown>
+                    </div>
 
-                <hr className="my-10 border-border" />
+                    <hr className="my-10 border-border" />
 
-                <p className="text-sm text-muted-foreground text-pretty">
-                    ¿Tienes comentarios? Comparte tus ideas en el repositorio del proyecto o únete a la conversación en
-                    la comunidad. Gracias por usar Flux.
-                </p>
-            </article>
+                    <p className="text-sm text-muted-foreground text-pretty">
+                        ¿Tienes comentarios? Comparte tus ideas en el repositorio del proyecto o únete a la conversación
+                        en la comunidad. Gracias por usar Flux.
+                    </p>
+                </article>
+
+                {/* Right Sidebar: Table of Contents (Sticky) */}
+                {toc.length > 0 && (
+                    <aside className="hidden lg:block w-56 shrink-0 pl-10">
+                        <div className="sticky top-12 flex flex-col gap-1 border-l border-border/50 pl-4">
+                            <p className="mb-2 text-sm font-medium text-foreground">En esta página</p>
+                            {toc.map((item) => (
+                                <a
+                                    key={item.id}
+                                    href={`#${item.id}`}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
+                                    }}
+                                    className={cn(
+                                        'block py-1 text-sm transition-colors hover:text-foreground',
+                                        item.isSub ? 'pl-3' : '',
+                                        activeId === item.id ? 'font-medium text-primary' : 'text-muted-foreground'
+                                    )}
+                                >
+                                    {item.text}
+                                </a>
+                            ))}
+                        </div>
+                    </aside>
+                )}
+            </div>
         </div>
     );
 }

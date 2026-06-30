@@ -19,12 +19,12 @@ interface WorkflowCard {
 
 const workflows: WorkflowCard[] = [
     {
-        title: "Release Notes",
-        description: "Version 1.0.1",
+        title: "Notas de la versión",
+        description: "Descubre las novedades de la actualización actual.",
         icon: FileSpreadsheet,
         active: true,
-        edited: 'hace 2 horas',
-        path: '/release-notes/v1.0.1',
+        edited: 'ahora',
+        path: '/release-notes',
     },
     {
         title: 'Flujo de Ventas',

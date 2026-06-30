@@ -47,8 +47,8 @@ export const routes: TabRoute[] = [
         element: HomeView,
     },
     {
-        path: '/release-notes/v1.0.1',
-        title: 'Release Notes v1.0.1',
+        path: '/release-notes',
+        title: 'Notas de la versión',
         icon: Sparkles,
         closable: true,
         element: ReleaseNotes,

@@ -14,14 +14,12 @@ import {
     CustomToastIcon,
     CustomToastTitle,
 } from '@/ui/components/ui/custom-toast';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui/components/ui/dialog';
-import { Streamdown } from 'streamdown';
-import { ScrollArea } from '@/ui/components/ui/scroll-area';
+import { useReleaseNotesStore } from '@/shared/contexts/release-notes-store';
+import { useTabsStore } from '@/shared/contexts/tabs-context';
+import router from '@/shared/router';
 
 const useUpdater = () => {
     const [appVersion, setAppVersion] = useState('');
-    const [isNotesOpen, setIsNotesOpen] = useState(false);
-    const [notesContent, setNotesContent] = useState('');
 
     useEffect(() => {
         getVersion().then((v) => setAppVersion(v));
@@ -31,9 +29,6 @@ const useUpdater = () => {
         try {
             const update = await check();
             if (update) {
-                // Guarda las notas para poder mostrarlas en el Dialog
-                setNotesContent(update.body || 'Hay mejoras y correcciones disponibles.');
-
                 toast.custom(
                     (t) => (
                         <CustomToast type="info">
@@ -51,7 +46,10 @@ const useUpdater = () => {
                             <CustomToastActions className="mt-4">
                                 <Button
                                     onClick={() => {
-                                        setIsNotesOpen(true);
+                                        toast.dismiss(t);
+                                        useReleaseNotesStore.getState().setPendingNotes(update.body || '');
+                                        const tabPath = useTabsStore.getState().openTab('/release-notes');
+                                        router.navigate(tabPath);
                                     }}
                                     variant="outline"
                                     size="sm"
@@ -131,22 +129,7 @@ const useUpdater = () => {
         }
     }
 
-    // El componente Dialog que el consumidor del hook deberá renderizar
-    const UpdaterDialog = () => (
-        <Dialog open={isNotesOpen} onOpenChange={setIsNotesOpen}>
-            <DialogContent className="max-w-2xl! w-full">
-                <DialogHeader>
-                    <DialogTitle>Notas de la versión</DialogTitle>
-                    <DialogDescription>Descubre qué hay de nuevo en esta actualización</DialogDescription>
-                </DialogHeader>
-                <ScrollArea className="max-h-[calc(100vh-16rem)]">
-                    <Streamdown>{notesContent}</Streamdown>
-                </ScrollArea>
-            </DialogContent>
-        </Dialog>
-    );
-
-    return { appVersion, checkForUpdates, UpdaterDialog };
+    return { appVersion, checkForUpdates };
 };
 
 export { useUpdater };

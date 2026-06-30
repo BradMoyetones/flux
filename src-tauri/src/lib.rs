@@ -8,17 +8,18 @@ mod steps;
 
 use std::collections::HashMap;
 
+use services::whatsapp_client::WhatsAppCore;
 use tauri::Manager;
+use tauri_plugin_os;
 use tokio::sync::Mutex;
 use window_vibrancy::*;
-use tauri_plugin_os;
-use services::whatsapp_client::WhatsAppCore;
 // use services::http_client::HttpClient;
 use state::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
