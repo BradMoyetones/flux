@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, Suspense } from 'react';
-import { TabBar } from '@/ui/components/layout/tab-bar';
+import { Titlebar } from '@/ui/components/layout/titlebar';
 import { Outlet, useLocation } from 'react-router';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { getRoute } from '@/shared/router/tab-routes';
@@ -44,7 +44,7 @@ function TabHost() {
 export function Workspace() {
     return (
         <div className="flex h-screen flex-col overflow-hidden bg-background/80 text-foreground">
-            <TabBar />
+            <Titlebar />
             <main className="min-h-0 flex-1">
                 <TabHost />
             </main>

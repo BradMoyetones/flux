@@ -50,9 +50,9 @@ export function ReleaseNotes() {
                     Notas de la versión
                 </div>
 
-                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance">Flux v1.2</h1>
+                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance">Flux v1.0.1</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
-                    Publicado el 12 de marzo de 2026 · Actualización recomendada
+                    Publicado el 30 de junio de 2026 · Actualización recomendada
                 </p>
 
                 <hr className="my-8 border-border" />

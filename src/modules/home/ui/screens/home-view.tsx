@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Database, FileSpreadsheet, Mail, Plus, Search, Webhook, Workflow, type LucideIcon } from 'lucide-react';
+import { Database, FileSpreadsheet, Plus, Search, Workflow, type LucideIcon } from 'lucide-react';
 
 import { cn } from '@/shared/utils/utils';
 import { Button } from '@/ui/components/ui/button';
@@ -19,6 +19,14 @@ interface WorkflowCard {
 
 const workflows: WorkflowCard[] = [
     {
+        title: "Release Notes",
+        description: "Version 1.0.1",
+        icon: FileSpreadsheet,
+        active: true,
+        edited: 'hace 2 horas',
+        path: '/release-notes/v1.0.1',
+    },
+    {
         title: 'Flujo de Ventas',
         description: 'Captura leads del webhook y los enruta a tu CRM.',
         icon: Workflow,
@@ -33,34 +41,6 @@ const workflows: WorkflowCard[] = [
         active: true,
         edited: 'ayer',
         path: '/flows/onboarding',
-    },
-    {
-        title: 'Resumen Diario',
-        description: 'Agrega métricas y las envía por email cada mañana.',
-        icon: Mail,
-        active: false,
-        edited: 'hace 3 días',
-    },
-    {
-        title: 'Sincronización de Inventario',
-        description: 'Mantiene el stock alineado entre tienda y almacén.',
-        icon: FileSpreadsheet,
-        active: true,
-        edited: 'hace 5 días',
-    },
-    {
-        title: 'Alertas de Errores',
-        description: 'Notifica al equipo en Slack cuando algo falla.',
-        icon: Bell,
-        active: false,
-        edited: 'la semana pasada',
-    },
-    {
-        title: 'Webhook de Pagos',
-        description: 'Concilia pagos entrantes y actualiza facturas.',
-        icon: Webhook,
-        active: true,
-        edited: 'hace 2 semanas',
     },
 ];
 
@@ -104,16 +84,6 @@ export function HomeView() {
                 <section className="mt-8">
                     <h2 className="mb-3 text-sm font-medium text-muted-foreground">Tus workflows</h2>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <button
-                            type="button"
-                            onClick={() => handleOpenTab('/release-notes/v1.2')}
-                            className={cn(
-                                'group flex flex-col rounded-xl border border-border bg-card p-5 text-left shadow-sm transition',
-                                'cursor-pointer hover:-translate-y-0.5 hover:bg-primary/40 hover:shadow-md'
-                            )}
-                        >
-                            Notas
-                        </button>
                         {workflows.map((flow) => {
                             const Icon = flow.icon;
                             const interactive = Boolean(flow.path);
