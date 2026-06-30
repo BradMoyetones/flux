@@ -1,10 +1,17 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { TabBar } from '@/ui/components/layout/tab-bar';
 import { Outlet, useLocation } from 'react-router';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { getRoute } from '@/shared/router/tab-routes';
+import { Spinner } from '@/ui/components/ui/spinner';
+
+const Fallback = () => (
+    <div className="flex h-full w-full items-center justify-center">
+        <Spinner className='size-8 text-primary' />
+    </div>
+);
 
 /**
  * Renders the active tab's view using React Router Outlet.
@@ -27,7 +34,11 @@ function TabHost() {
     }, [location.pathname]);
 
     // `key` forces a fresh mount per route so each view starts clean.
-    return <Outlet key={location.pathname} />;
+    return (
+        <Suspense fallback={<Fallback />}>
+            <Outlet key={location.pathname} />
+        </Suspense>
+    );
 }
 
 export function Workspace() {
