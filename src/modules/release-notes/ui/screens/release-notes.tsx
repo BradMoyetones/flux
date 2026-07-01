@@ -65,33 +65,35 @@ export function ReleaseNotes() {
         <div className="app-scroll relative h-full overflow-y-auto">
             <div className="mx-auto flex w-full max-w-5xl px-6 py-12 lg:px-8">
                 {/* Main Content Area */}
-                <article className="mx-auto w-full max-w-2xl shrink-0">
+                <article className="mx-auto w-full max-w-2xl shrink-0 space-y-4">
                     <div className="flex items-center gap-2 text-sm font-medium text-primary">
                         <Sparkles className="size-4" />
                         Notas de la versión
                     </div>
 
-                    <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance">{versionTitle}</h1>
+                    <h1 className="text-3xl font-semibold tracking-tight text-balance">{versionTitle}</h1>
 
-                    <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                        {releaseDate && (
-                            <div className="flex items-center gap-1.5">
-                                <Calendar className="size-4" />
-                                {releaseDate}
-                            </div>
-                        )}
-                        {sourceLink && (
-                            <a
-                                href={sourceLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-1.5 transition-colors hover:text-foreground"
-                            >
-                                <Code2 className="size-4" />
-                                Source code
-                            </a>
-                        )}
-                    </div>
+                    {(releaseDate || sourceLink) && (
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                            {releaseDate && (
+                                <div className="flex items-center gap-1.5">
+                                    <Calendar className="size-4" />
+                                    {releaseDate}
+                                </div>
+                            )}
+                            {sourceLink && (
+                                <a
+                                    href={sourceLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                                >
+                                    <Code2 className="size-4" />
+                                    Source code
+                                </a>
+                            )}
+                        </div>
+                    )}
 
                     <hr className="my-8 border-border" />
 
