@@ -1,13 +1,9 @@
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import {
     ReactFlow,
     Background,
-    Controls,
-    MiniMap,
     Panel,
-    BackgroundVariant,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
 
 import { useFlowStore, setupFlowListeners, AppNode } from '../../core/use-flow-store';
 import { HttpNode } from '../../plugins/http/http-node';
