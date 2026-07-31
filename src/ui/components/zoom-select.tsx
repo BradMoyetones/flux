@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { Panel, useReactFlow, useStore, type PanelProps } from "@xyflow/react";
 
 import {
@@ -54,7 +54,7 @@ export function ZoomSelect({
       {...props}
     >
       <Select onValueChange={handleZoomChange}>
-        <SelectTrigger className="bg-primary-foreground w-[140px]">
+        <SelectTrigger className="bg-primary-foreground w-35">
           <SelectValue placeholder="Zoom" />
         </SelectTrigger>
         <SelectContent>
