@@ -41,6 +41,7 @@ interface FlowState {
   // Custom Actions
   updateNodeStatus: (nodeId: string, status: NodeStatus, result?: any, error?: string) => void;
   executeWorkflow: () => Promise<void>;
+  loadWorkflow: (filePath: string) => Promise<void>;
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
@@ -48,6 +49,38 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   nodes: [],
   edges: [],
   isExecuting: false,
+
+  loadWorkflow: async (filePath: string) => {
+    try {
+      const workflow: Workflow = await invoke('cmd_get_workflow', { path: filePath });
+      
+      const reactFlowNodes: AppNode[] = workflow.nodes.map((n, index) => ({
+        id: n.id,
+        type: n.type || 'http', // Default to http for now
+        position: n.position || { x: 200, y: index * 150 },
+        data: {
+          label: n.label,
+          config: n.config,
+        }
+      }));
+
+      const reactFlowEdges: Edge[] = workflow.edges.map(e => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        sourceHandle: e.sourceHandle,
+        targetHandle: e.targetHandle,
+      }));
+
+      set({
+        workflowId: workflow.id,
+        nodes: reactFlowNodes,
+        edges: reactFlowEdges,
+      });
+    } catch (err) {
+      console.error("Failed to load workflow", err);
+    }
+  },
 
   onNodesChange: (changes: NodeChange<AppNode>[]) => {
     set({
@@ -101,13 +134,14 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     // Build the Rust-compatible Workflow JSON
     const workflowPayload: Workflow = {
       id: workflowId,
-      name: "Local Flow",
+      name: "Local Flow", // Debería extraerse del path o metadata
       trigger: { type: "manual" },
       nodes: nodes.map(n => ({
         id: n.id,
         type: n.type || 'default',
         label: n.data.label,
         config: n.data.config,
+        position: n.position,
       })),
       edges: edges.map(e => ({
         id: e.id,
@@ -119,6 +153,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     };
 
     try {
+      // Opcional: auto-guardar antes de ejecutar si tenemos el filePath en el state, 
+      // pero por ahora solo ejecutamos.
       await invoke('cmd_execute_workflow', { workflow: workflowPayload });
     } catch (err) {
       console.error("Failed to start workflow execution", err);

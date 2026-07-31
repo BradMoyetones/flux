@@ -23,3 +23,14 @@ pub fn cmd_scan_workflows(app: AppHandle) -> Result<Vec<Workflow>, String> {
     let workspaces = get_workspaces(&app)?;
     scan_workspaces(workspaces)
 }
+
+#[command]
+pub fn cmd_save_workflow(path: String, workflow: Workflow) -> Result<(), String> {
+    crate::storage::file_scanner::save_workflow(&path, &workflow)
+}
+
+#[command]
+pub fn cmd_get_workflow(path: String) -> Result<Workflow, String> {
+    let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    serde_json::from_str(&content).map_err(|e| e.to_string())
+}

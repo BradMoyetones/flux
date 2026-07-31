@@ -9,11 +9,17 @@ export interface WorkflowNodeConfig {
   [key: string]: any;
 }
 
+export interface XYPosition {
+  x: number;
+  y: number;
+}
+
 export interface WorkflowNode {
   id: string;
   type: string;
   label: string;
   config: WorkflowNodeConfig;
+  position?: XYPosition;
 }
 
 export interface WorkflowEdge {

@@ -54,16 +54,9 @@ export const routes: TabRoute[] = [
         element: ReleaseNotes,
     },
     {
-        path: '/flows/sales',
-        title: 'Flujo de Ventas',
+        path: '/flows/:pathId',
+        title: 'Flujo de Trabajo',
         icon: Workflow,
-        closable: true,
-        element: FlowCanvas,
-    },
-    {
-        path: '/flows/onboarding',
-        // Intentionally has NO `icon` to demonstrate the fallback in action.
-        title: 'Onboarding Automático',
         closable: true,
         element: FlowCanvas,
     },
@@ -72,7 +65,30 @@ export const routes: TabRoute[] = [
 const routeMap = new Map(routes.map((route) => [route.path, route]));
 
 export function getRoute(path: string): TabRoute | undefined {
-    return routeMap.get(path);
+    // 1. Búsqueda exacta
+    if (routeMap.has(path)) {
+        return routeMap.get(path);
+    }
+    
+    // 2. Búsqueda dinámica manual sencilla (dado que usamos react-router v7 o similar, podemos usar matchPath o Regex)
+    for (const route of routes) {
+        if (route.path.includes(':')) {
+            const baseRoute = route.path.split('/:')[0];
+            if (path.startsWith(baseRoute + '/')) {
+                const pathId = path.replace(baseRoute + '/', '');
+                // Decodificamos y extraemos el nombre del archivo para el título
+                try {
+                    const decoded = decodeURIComponent(pathId);
+                    const filename = decoded.split(/[/\\]/).pop()?.replace('.json', '') || 'Flujo';
+                    return { ...route, title: filename };
+                } catch {
+                    return { ...route };
+                }
+            }
+        }
+    }
+    
+    return undefined;
 }
 
 /**

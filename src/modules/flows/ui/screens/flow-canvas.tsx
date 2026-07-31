@@ -5,33 +5,79 @@ import {
     Panel,
 } from '@xyflow/react';
 
+import { useParams } from 'react-router';
 import { useFlowStore, setupFlowListeners, AppNode } from '../../core/use-flow-store';
 import { HttpNode } from '../../plugins/http/http-node';
-import { Play, Plus } from 'lucide-react';
+import { Play, Plus, Save } from 'lucide-react';
 import { ZoomSlider } from '@/ui/components/react-flow/zoom-slider';
 import { SidebarProvider, SidebarTrigger } from '@/ui/components/ui/sidebar';
 import { FlowSidebar } from '../components/sidebar';
 import { Button } from '@/ui/components/ui/button';
+import { invoke } from '@tauri-apps/api/core';
 
 const nodeTypes = {
     http: HttpNode,
 };
 
 export default function FlowCanvas() {
+    const { pathId } = useParams();
+    
     const {
         nodes,
         edges,
+        workflowId,
         onNodesChange,
         onEdgesChange,
         onConnect,
         setNodes,
         executeWorkflow,
+        loadWorkflow,
         isExecuting,
     } = useFlowStore();
+
+    // Hydration
+    useEffect(() => {
+        if (pathId) {
+            const decodedPath = decodeURIComponent(pathId);
+            loadWorkflow(decodedPath).catch(console.error);
+        }
+    }, [pathId, loadWorkflow]);
 
     useEffect(() => {
         setupFlowListeners();
     }, []);
+
+    const onSave = useCallback(async () => {
+        if (!pathId) return;
+        const decodedPath = decodeURIComponent(pathId);
+        
+        const workflowPayload = {
+            id: workflowId,
+            name: decodedPath.split(/[/\\]/).pop()?.replace('.json', '') || 'Flujo',
+            trigger: { type: "manual" },
+            nodes: nodes.map(n => ({
+                id: n.id,
+                type: n.type || 'default',
+                label: n.data.label,
+                config: n.data.config,
+                position: n.position,
+            })),
+            edges: edges.map(e => ({
+                id: e.id,
+                source: e.source,
+                target: e.target,
+                sourceHandle: e.sourceHandle,
+                targetHandle: e.targetHandle,
+            })),
+        };
+        
+        try {
+            await invoke('cmd_save_workflow', { path: decodedPath, workflow: workflowPayload });
+            console.log("Saved successfully");
+        } catch (e) {
+            console.error("Save failed", e);
+        }
+    }, [pathId, workflowId, nodes, edges]);
 
     const onAddNode = useCallback(() => {
         const newNode: AppNode = {
@@ -76,6 +122,15 @@ export default function FlowCanvas() {
                             title="Add HTTP Node"
                         >
                             <Plus />
+                        </Button>
+
+                        <Button
+                            onClick={onSave}
+                            variant='outline'
+                            title="Save Workflow"
+                        >
+                            <Save className="w-4 h-4 mr-2" />
+                            Save
                         </Button>
 
                         <Button

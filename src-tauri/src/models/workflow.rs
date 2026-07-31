@@ -19,12 +19,19 @@ pub struct Trigger {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct XYPosition {
+    pub x: f64,
+    pub y: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
     pub id: String,
     #[serde(rename = "type")]
     pub node_type: String, // e.g., "http", "whatsapp", "excel"
     pub label: String,
     pub config: Value,
+    pub position: Option<XYPosition>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
