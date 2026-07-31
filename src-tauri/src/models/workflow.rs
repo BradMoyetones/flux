@@ -6,6 +6,7 @@ pub struct Workflow {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
+    pub path: Option<String>,
     pub trigger: Trigger,
     pub nodes: Vec<Node>,
     pub edges: Vec<Edge>,
