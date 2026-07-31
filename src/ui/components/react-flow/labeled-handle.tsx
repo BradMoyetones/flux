@@ -2,7 +2,7 @@ import React, { type ComponentProps } from "react";
 import { type HandleProps } from "@xyflow/react";
 
 import { cn } from "@/shared/utils/utils";
-import { BaseHandle } from "@/ui/components/base-handle";
+import { BaseHandle } from "@/ui/components/react-flow/base-handle";
 
 const flexDirections = {
   top: "flex-col",

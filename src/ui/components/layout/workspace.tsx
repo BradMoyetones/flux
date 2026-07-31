@@ -48,7 +48,7 @@ export function Workspace() {
     return (
         <div className="flex h-screen flex-col overflow-hidden bg-background/80 text-foreground">
             <Titlebar />
-            <main className="min-h-0 flex-1">
+            <main className="min-h-[calc(100vh-44px)] flex-1 overflow-y-auto">
                 <TabHost />
             </main>
         </div>

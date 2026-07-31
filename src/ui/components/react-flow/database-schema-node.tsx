@@ -4,7 +4,7 @@ import {
   BaseNode,
   BaseNodeContent,
   BaseNodeHeader,
-} from "@/ui/components/base-node";
+} from "@/ui/components/react-flow/base-node";
 import { TableBody, TableRow, TableCell } from "@/ui/components/ui/table";
 
 /* DATABASE SCHEMA NODE HEADER ------------------------------------------------ */

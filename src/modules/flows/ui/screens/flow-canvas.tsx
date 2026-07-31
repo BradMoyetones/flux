@@ -1,65 +1,97 @@
-'use client';
+import { useEffect, useMemo, useCallback } from 'react';
+import {
+    ReactFlow,
+    Background,
+    Controls,
+    MiniMap,
+    Panel,
+    BackgroundVariant,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 
-import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Background } from '@xyflow/react';
-import { useCallback, useState } from 'react';
-import { ZoomSlider } from '@/ui/components/zoom-slider';
+import { useFlowStore, setupFlowListeners, AppNode } from '../../core/use-flow-store';
+import { HttpNode } from '../../plugins/http/http-node';
+import { Play, Plus } from 'lucide-react';
+import { ZoomSlider } from '@/ui/components/react-flow/zoom-slider';
+import { SidebarProvider, SidebarTrigger } from '@/ui/components/ui/sidebar';
+import { FlowSidebar } from '../components/sidebar';
+import { Button } from '@/ui/components/ui/button';
 
-const initialNodes = [
-    {
-        id: 'n1',
-        position: { x: 0, y: 0 },
-        data: { label: 'Node 1' },
-        type: 'input',
-    },
-    {
-        id: 'n2',
-        position: { x: 100, y: 100 },
-        data: { label: 'Node 2' },
-        type: 'output',
-    },
-];
-const initialEdges = [
-    {
-        id: 'n1-n2',
-        source: 'n1',
-        target: 'n2',
-        type: 'smoothstep',
-        label: 'connects with',
-    },
-];
-export function FlowCanvas() {
-    const [nodes, setNodes] = useState(initialNodes);
-    const [edges, setEdges] = useState(initialEdges);
+const nodeTypes = {
+    http: HttpNode,
+};
 
-    const onNodesChange = useCallback(
-        (changes: any) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
-        [],
-    );
-    const onEdgesChange = useCallback(
-        (changes: any) => setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
-        [],
-    );
+export default function FlowCanvas() {
+    const {
+        nodes,
+        edges,
+        onNodesChange,
+        onEdgesChange,
+        onConnect,
+        setNodes,
+        executeWorkflow,
+        isExecuting,
+    } = useFlowStore();
 
-    const onConnect = useCallback(
-        (params: any) => setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
-        [],
-    );
+    useEffect(() => {
+        setupFlowListeners();
+    }, []);
+
+    const onAddNode = useCallback(() => {
+        const newNode: AppNode = {
+            id: crypto.randomUUID(),
+            type: 'http',
+            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            data: {
+                label: `HTTP Request ${nodes.length + 1}`,
+                config: { method: 'GET', url: 'https://api.github.com' }
+            }
+        };
+        setNodes([...nodes, newNode]);
+    }, [nodes, setNodes]);
 
     return (
-        <div style={{ height: '100%', width: '100%' }}>
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                fitView
-            >
-                <Background
-                    color="color-mix(in srgb, var(--muted-foreground) 50%, transparent)"
-                />
-                <ZoomSlider />
-            </ReactFlow>
-        </div>
+        <SidebarProvider className='min-h-full!'>
+            <FlowSidebar />
+            <div className="flex-1">
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    nodeTypes={nodeTypes}
+                    fitView
+                >
+                    <Panel position="top-left">
+                        <SidebarTrigger />
+                    </Panel>
+
+                    <Background
+                        color="color-mix(in srgb, var(--muted-foreground) 50%, transparent)"
+                    />
+                    <ZoomSlider position='bottom-left' />
+
+                    <Panel position="top-right" className="flex gap-2 bg-card p-2 rounded-xl shadow-lg border">
+                        <Button
+                            onClick={onAddNode}
+                            variant='secondary'
+                            size='icon'
+                            title="Add HTTP Node"
+                        >
+                            <Plus />
+                        </Button>
+
+                        <Button
+                            onClick={executeWorkflow}
+                            disabled={isExecuting || nodes.length === 0}
+                        >
+                            <Play className={isExecuting ? "animate-pulse" : ""} />
+                            {isExecuting ? 'Running...' : 'Execute Flow'}
+                        </Button>
+                    </Panel>
+                </ReactFlow>
+            </div>
+        </SidebarProvider>
     );
 }

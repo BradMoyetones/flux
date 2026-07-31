@@ -1,5 +1,5 @@
 import { Position, type HandleProps } from "@xyflow/react";
-import { BaseHandle } from "@/ui/components/base-handle";
+import { BaseHandle } from "@/ui/components/react-flow/base-handle";
 
 const wrapperClassNames: Record<Position, string> = {
   [Position.Top]:

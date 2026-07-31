@@ -3,7 +3,7 @@ import { File, House, Sparkles, Workflow, type LucideIcon } from 'lucide-react';
 
 import { HomeView } from '@/modules/home/ui/screens/home-view';
 import { ReleaseNotes } from '@/modules/release-notes/ui/screens/release-notes';
-import { FlowCanvas } from '@/modules/flows/ui/screens/flow-canvas';
+import FlowCanvas from '@/modules/flows/ui/screens/flow-canvas';
 
 /**
  * A `TabRoute` is OUR domain model. It is shaped *like* a react-router route
