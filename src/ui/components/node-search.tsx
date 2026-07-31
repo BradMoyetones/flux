@@ -121,7 +121,7 @@ export function NodeSearch({
   return (
     <Command
       shouldFilter={false}
-      className="rounded-lg border shadow-md md:min-w-[450px]"
+      className="rounded-lg border shadow-md md:min-w-112.5"
     >
       <NodeSearchInternal
         className={className}

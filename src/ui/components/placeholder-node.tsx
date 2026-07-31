@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, type ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import {
   useReactFlow,
   useNodeId,
@@ -47,7 +47,7 @@ export function PlaceholderNode({ children }: PlaceholderNodeProps) {
 
   return (
     <BaseNode
-      className="bg-card w-[150px] border-dashed border-gray-400 p-2 text-center text-gray-400 shadow-none"
+      className="bg-card w-37.5 border-dashed border-gray-400 p-2 text-center text-gray-400 shadow-none"
       onClick={handleClick}
     >
       {children}
