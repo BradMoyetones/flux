@@ -1,22 +1,16 @@
-pub mod execution;
-pub mod whatsapp;
 pub mod window;
-pub mod workflow;
+pub mod workflows;
+pub mod execution;
 
-pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
+pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
     tauri::generate_handler![
-        whatsapp::init_whatsapp,
-        whatsapp::send_message,
         window::minimize_window,
         window::close_window,
         window::toggle_fullscreen,
-        workflow::create_workflow,
-        workflow::update_workflow,
-        workflow::delete_workflow,
-        workflow::list_workflows,
-        workflow::get_workflow,
-        execution::run_workflow,
-        execution::stop_workflow,
-        execution::get_execution_status,
+        workflows::cmd_get_workspaces,
+        workflows::cmd_add_workspace,
+        workflows::cmd_remove_workspace,
+        workflows::cmd_scan_workflows,
+        execution::cmd_execute_workflow,
     ]
 }

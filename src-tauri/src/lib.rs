@@ -1,24 +1,18 @@
 mod commands;
-mod engine;
+mod core;
 mod errors;
 mod models;
-mod services;
-mod state;
-mod steps;
+mod plugins;
+mod storage;
 
-use std::collections::HashMap;
-
-use services::whatsapp_client::WhatsAppCore;
 use tauri::Manager;
 use tauri_plugin_os;
-use tokio::sync::Mutex;
 use window_vibrancy::*;
-// use services::http_client::HttpClient;
-use state::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -34,12 +28,6 @@ pub fn run() {
             #[cfg(target_os = "windows")]
             apply_acrylic(&window, Some((0, 0, 0, 0)))
                 .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
-
-            app.manage(AppState {
-                workflows: Mutex::new(HashMap::new()),
-                wa_client: Mutex::new(WhatsAppCore::new()),
-                // http_client: HttpClient::new(),
-            });
 
             Ok(())
         })

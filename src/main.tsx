@@ -28,7 +28,12 @@ function FloatVersionComponent() {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
-        <ThemeProvider attribute="class" defaultTheme="dark">
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
             <RouterProvider router={router} />
             <Toaster />
 

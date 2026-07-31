@@ -1,30 +1,37 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Workflow {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
-    pub steps: Vec<StepConfig>,
-    pub schedule: Option<String>, // Cron expression, ej: "0 */5 * * *"
-    pub enabled: bool,
-    pub created_at: String,
-    pub updated_at: String,
+    pub trigger: Trigger,
+    pub nodes: Vec<Node>,
+    pub edges: Vec<Edge>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StepConfig {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Trigger {
+    #[serde(rename = "type")]
+    pub trigger_type: String, // e.g., "manual", "cron", "webhook"
+    pub config: Option<Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Node {
     pub id: String,
-    pub name: String,
-    pub step_type: StepType,
-    pub config: serde_json::Value,
-    pub order: u32,
+    #[serde(rename = "type")]
+    pub node_type: String, // e.g., "http", "whatsapp", "excel"
+    pub label: String,
+    pub config: Value,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum StepType {
-    HttpRequest,
-    DataTransform,
-    WhatsApp,
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Edge {
+    pub id: String,
+    pub source: String, // source Node ID
+    pub target: String, // target Node ID
+    pub source_handle: Option<String>,
+    pub target_handle: Option<String>,
 }

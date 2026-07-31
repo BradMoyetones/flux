@@ -1,41 +1,13 @@
-use tauri::State;
+use tauri::{AppHandle, command};
+use crate::models::workflow::Workflow;
+use crate::core::executor::execute_workflow;
 
-use crate::engine::executor::WorkflowExecutor;
-use crate::errors::AppError;
-use crate::models::execution::{ExecutionResult, ExecutionStatus};
-use crate::state::AppState;
-
-#[tauri::command]
-pub async fn run_workflow(
-    state: State<'_, AppState>,
-    workflow_id: String,
-) -> Result<ExecutionResult, AppError> {
-    let workflows = state.workflows.lock().await;
-    let workflow = workflows
-        .get(&workflow_id)
-        .ok_or_else(|| AppError::WorkflowNotFound(workflow_id.clone()))?
-        .clone();
-    drop(workflows);
-
-    // Ejecutar el workflow
-    let result = WorkflowExecutor::execute(&workflow).await;
-    Ok(result)
-}
-
-#[tauri::command]
-pub async fn stop_workflow(
-    _state: State<'_, AppState>,
-    _execution_id: String,
-) -> Result<(), AppError> {
-    // TODO: Implementar lógica para cancelar una ejecución en progreso
+#[command]
+pub async fn cmd_execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), String> {
+    // Spawn en tokio para no bloquear el hilo principal de Tauri
+    tokio::spawn(async move {
+        let _ = execute_workflow(app, workflow).await;
+    });
+    
     Ok(())
-}
-
-#[tauri::command]
-pub async fn get_execution_status(
-    _state: State<'_, AppState>,
-    _execution_id: String,
-) -> Result<ExecutionStatus, AppError> {
-    // TODO: Implementar lógica para obtener estado de una ejecución
-    Ok(ExecutionStatus::Running)
 }

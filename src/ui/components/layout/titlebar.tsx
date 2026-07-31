@@ -5,6 +5,7 @@ import { TabBar } from './tab-bar';
 import { WindowControls } from './window-controls';
 import { Settings } from 'lucide-react';
 import { Logo } from '@/ui/components/ui/logo';
+import { cn } from '@/shared/utils/utils';
 
 export function Titlebar() {
     const osPlatform = platform();
@@ -13,7 +14,10 @@ export function Titlebar() {
         <div data-tauri-drag-region className="flex h-11 items-stretch justify-between bg-background/0 select-none overflow-hidden border-b border-border/50">
             {/* LEFT ZONE: Logo & macOS Margin */}
             <div data-tauri-drag-region className="flex items-center shrink-0">
-                <div className={osPlatform === 'macos' ? 'ml-18' : 'ml-4'} />
+                <div className={cn({
+                    'ml-22': osPlatform === 'macos',
+                    'ml-4': osPlatform !== 'macos'
+                })} />
                 <div className="flex items-center gap-2 pointer-events-none">
                     <Logo className="size-6 rounded-md" />
                     <span className="text-sm font-bold tracking-tight text-primary">Flux</span>
