@@ -5,6 +5,8 @@ import { Input } from "@/ui/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/ui/select";
 import { invoke } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
+import SelectWorkspaceModal from "./select-workspace";
+import { Folder } from "lucide-react";
 
 interface CreateFlowDialogProps {
     open: boolean;
@@ -27,6 +29,9 @@ export function CreateFlowDialog({
     const [selectedWorkspace, setSelectedWorkspace] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    // State para modal de selección de workspace
+    const [selectWorkspaceOpen, setSelectWorkspaceOpen] = useState(false);
 
     // Auto-select
     useEffect(() => {
@@ -58,10 +63,10 @@ export function CreateFlowDialog({
             // sanitize name and force .flux extension
             const sanitizedName = name.trim().replace(/[^a-zA-Z0-9_-]/g, "-");
             const filename = sanitizedName.endsWith(".flux") ? sanitizedName : `${sanitizedName}.flux`;
-            
+
             // Usamos path.join nativo para construir la ruta absoluta perfecta
             const fullPath = await join(selectedWorkspace, filename);
-            
+
             const newWorkflow = {
                 id: crypto.randomUUID(),
                 name: sanitizedName,
@@ -96,53 +101,51 @@ export function CreateFlowDialog({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Crear Nuevo Workflow</DialogTitle>
-                    <DialogDescription>
-                        Nombra tu flujo y selecciona la carpeta (Workspace) donde deseas guardarlo. La extensión será .flux.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                        <label htmlFor="name" className="text-sm font-medium">Nombre del Flujo</label>
-                        <Input
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="ej. lead-routing-ventas"
-                        />
+        <>
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Crear Nuevo Workflow</DialogTitle>
+                        <DialogDescription>
+                            Nombra tu flujo y selecciona la carpeta (Workspace) donde deseas guardarlo. La extensión será .flux.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <label htmlFor="name" className="text-sm font-medium">Nombre del Flujo</label>
+                            <Input
+                                id="name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="ej. lead-routing-ventas"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Workspace Destino</label>
+                            <Button onClick={() => setSelectWorkspaceOpen(true)} variant="outline" className="justify-start overflow-hidden">
+                                <Folder />
+                                {selectedWorkspace.split(/[/\\]/).pop()} <span className="text-xs text-muted-foreground ml-2 truncate!">({selectedWorkspace})</span>
+                            </Button>
+                        </div>
+                        {error && <p className="text-sm text-red-500">{error}</p>}
                     </div>
-                    <div className="grid gap-2">
-                        <label className="text-sm font-medium">Workspace Destino</label>
-                        <Select value={selectedWorkspace} onValueChange={handleWorkspaceChange}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecciona un workspace" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {workspaces.map((ws) => (
-                                    <SelectItem key={ws} value={ws}>
-                                        {ws.split(/[/\\]/).pop()} <span className="text-xs text-muted-foreground ml-2 truncate">({ws})</span>
-                                    </SelectItem>
-                                ))}
-                                <SelectItem value="new_workspace" className="text-primary font-medium border-t mt-1 pt-2">
-                                    + Seleccionar otra carpeta del equipo...
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    {error && <p className="text-sm text-red-500">{error}</p>}
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-                        Cancelar
-                    </Button>
-                    <Button onClick={handleCreate} disabled={loading}>
-                        {loading ? "Guardando..." : "Crear Flujo"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleCreate} disabled={loading}>
+                            {loading ? "Guardando..." : "Crear Flujo"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <SelectWorkspaceModal 
+                open={selectWorkspaceOpen}
+                onOpenChange={setSelectWorkspaceOpen}
+                onSelect={handleWorkspaceChange}
+                workspaces={workspaces}
+                defaultWorkspace={selectedWorkspace}
+            />
+        </>
     );
 }

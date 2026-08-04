@@ -6,12 +6,21 @@ import { WindowControls } from './window-controls';
 import { Settings } from 'lucide-react';
 import { Logo } from '@/ui/components/ui/logo';
 import { cn } from '@/shared/utils/utils';
+import { useNavigate } from 'react-router';
+import { useTabs } from '@/shared/contexts/tabs-context';
 
 export function Titlebar() {
     const osPlatform = platform();
+    const navigate = useNavigate();
+    const { openTab } = useTabs();
+
+    const handleOpenTab = (path: string) => {
+        const openedPath = openTab(path);
+        navigate(openedPath);
+    };
 
     return (
-        <div data-tauri-drag-region className="flex h-11 items-stretch justify-between bg-background/0 select-none overflow-hidden border-b border-border/50">
+        <div data-tauri-drag-region className="flex z-1000 relative h-11 items-stretch justify-between bg-background/0 select-none overflow-hidden border-b border-border/50 pointer-events-auto!">
             {/* LEFT ZONE: Logo & macOS Margin */}
             <div data-tauri-drag-region className="flex items-center shrink-0">
                 <div className={cn({
@@ -31,7 +40,7 @@ export function Titlebar() {
 
             {/* RIGHT ZONE: App Utilities & Window Controls */}
             <div data-tauri-drag-region className="flex items-stretch shrink-0">
-                <button className="px-3 h-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
+                <button onClick={() => handleOpenTab("/settings")} className="px-3 h-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
                     <Settings className="size-4" />
                 </button>
                 <WindowControls />

@@ -1,9 +1,10 @@
 import { type ComponentType } from 'react';
-import { File, House, Sparkles, Workflow, type LucideIcon } from 'lucide-react';
+import { File, House, Settings, Sparkles, Workflow, type LucideIcon } from 'lucide-react';
 
 import { HomeView } from '@/modules/home/ui/screens/home-view';
 import { ReleaseNotes } from '@/modules/release-notes/ui/screens/release-notes';
 import FlowCanvas from '@/modules/flows/ui/screens/flow-canvas';
+import SettingsView from '@/modules/settings/ui/screens/settings-view';
 
 /**
  * A `TabRoute` is OUR domain model. It is shaped *like* a react-router route
@@ -60,6 +61,13 @@ export const routes: TabRoute[] = [
         closable: true,
         element: FlowCanvas,
     },
+    {
+        path: "/settings",
+        title: "Configuración",
+        icon: Settings,
+        closable: true,
+        element: SettingsView,
+    }
 ];
 
 const routeMap = new Map(routes.map((route) => [route.path, route]));
