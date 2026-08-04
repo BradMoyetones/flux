@@ -107,7 +107,7 @@ export function TabBar() {
                                         mass: 0.6,
                                     }}
                                     className={cn(
-                                        'group relative flex h-9 min-w-[140px] max-w-[220px] items-center shrink-0 cursor-pointer',
+                                        'group relative flex h-9 min-w-35 max-w-55 items-center shrink-0 cursor-pointer',
                                         !isActive &&
                                             'rounded-t-lg text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground',
                                         isActive && 'text-foreground'

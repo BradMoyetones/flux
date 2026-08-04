@@ -72,5 +72,87 @@ Finalmente, hemos sentado las bases para configurar visualmente cada nodo. Hemos
 
 ---
 
-**Conclusión del Estado Actual:** 
+**Conclusión del Estado Actual (Pre-Fase 5):** 
 Tenemos una infraestructura híbrida, robusta, 100% tipada (los tipos en TS replican exactamente los structs en Rust), basada en el filesystem local del usuario, y con el andamiaje listo para empezar a crear lógica pesada en los plugins y menús laterales dinámicos sin romper la escalabilidad.
+
+---
+
+## 4. Fase 5: Plugins, Interpolación y Performance
+
+### A. Fix de Performance (Async Commands)
+Detectamos que los comandos IPC (`cmd_scan_workflows`, `cmd_save_workflow`, `cmd_get_workflow`) eran síncronos, lo que bloqueaba el hilo principal de Tauri y congelaba la UI de React mientras se escaneaban carpetas grandes. Los refactorizamos a `async fn` y envolvimos todas las operaciones de I/O pesadas (`WalkDir`, `std::fs::read_to_string`, `std::fs::write`) dentro de `tauri::async_runtime::spawn_blocking`, garantizando que React jamás se congele.
+
+### B. Contratos JSON de Plugins
+
+Diseñamos un sistema de contratos duales: cada plugin tiene un **struct tipado en Rust** (que se deserializa desde el `config: Value` genérico del nodo) y un **schema Zod en TypeScript** (que genera y valida los formularios en el frontend).
+
+#### Nodo HTTP (`plugins/http/`)
+El contrato del HTTP Request es exhaustivo y pensado a escala. No es solo URL + Method. Incluye:
+- **Autenticación:** Basic Auth, Bearer Token, y API Key (en header o query param), modelado como un enum tagged (`HttpAuth`).
+- **Proxy:** URL del proxy con credenciales opcionales.
+- **Redirects:** `follow_redirects: bool` + `max_redirects: u32`. Si necesitas desactivar el redirect (ej. para capturar un 302), pones `followRedirects: false`.
+- **SSL:** `ignore_ssl_errors: bool` para APIs internas con certs auto-firmados.
+- **Query Params:** `HashMap<String, String>` que se adjuntan como `?key=value`.
+- **Retry:** `retry_count` y `retry_delay_ms` para reintentar automáticamente ante fallos de red o HTTP 5xx.
+- **Cookies:** `persist_cookies: bool` para mantener sesión entre nodos del mismo flujo.
+- **Response Type:** `auto | json | text | binary` — el parser de respuesta se adapta.
+- **Timeout:** Configurable en milisegundos.
+
+La implementación real del plugin (`plugins/http/plugin.rs`) utiliza `reqwest` con todas estas opciones activas, incluyendo lógica de retry con `try_clone()` y manejo de binary/base64.
+
+#### Nodo WhatsApp (`plugins/whatsapp/`)
+Modelado con un enum de acciones (`WhatsAppAction`) que dicta qué campos son requeridos. Soporta: `SendMessage`, `SendMedia`, `GetChats`, `GetMessages`, `GetContacts`, `GetGroupInfo`, `GetProfilePicture`. Incluye filtros por contacto y rango de fechas. La lógica de ejecución devuelve resultados simulados — diseñado para enchufar el SDK real sin modificar el contrato.
+
+### C. Motor de Interpolación (`core/interpolator.rs`)
+
+El sistema de templating permite que la data fluya entre nodos del DAG. La sintaxis es `{{ expresión }}` y soporta:
+
+| Patrón | Ejemplo | Qué resuelve |
+|---|---|---|
+| `nodeId.data.ruta.json` | `{{api_call.data.body.user}}` | Output del nodo `api_call`, campo `body.user` |
+| `global.variable` | `{{global.time_pm}}` | Variable global calculada en runtime |
+| `env.VARIABLE` | `{{env.API_KEY}}` | Variable de entorno del sistema operativo |
+| Acceso a arrays | `{{api.data.items.0.name}}` | Índice numérico dentro de un array JSON |
+
+**Variables globales disponibles:** `time_pm`, `time_24`, `date`, `datetime`, `timestamp`, `day_name`, `month_name`, `year`, `timeEmoji`.
+
+El `timeEmoji` mapea las **24 posiciones del reloj analógico** (12 horas en punto + 12 medias horas), desde 🕐 (1:00) hasta 🕧 (12:30), basándose en la hora local del sistema.
+
+El interpolador se ejecuta justo antes de que cada plugin procese su configuración dentro del `executor.rs`, aplicándose recursivamente a todo el `Value` JSON (strings, objetos anidados y arrays).
+
+### D. Executor Integrado
+
+El `executor.rs` ahora:
+1. Construye un `PluginRegistry` real con HTTP y WhatsApp registrados.
+2. Ordena los nodos topológicamente (DAG con `petgraph`).
+3. **Interpola** la configuración de cada nodo antes de ejecutarlo.
+4. Busca el plugin por `node_type` en el registry y ejecuta.
+5. Almacena el resultado en el `ExecutionContext` para que el siguiente nodo lo use.
+6. Emite eventos granulares al frontend (`workflow://node-status`) con status, result o error.
+
+### E. Registry Frontend (`plugins/registry.ts`)
+
+Un mapa centralizado en TypeScript donde cada tipo de plugin declara: `schema` (Zod), `defaultConfig`, `label`, `description`, `icon`, `category` y `color`. Esto permite que la Sidebar de plugins y los formularios de configuración se auto-generen sin hardcodear nada.
+
+### F. Frontend: Drag & Drop, Sidebar de Plugins y Panel de Configuración
+
+#### Sidebar de Plugins (`ui/components/sidebar.tsx`)
+La sidebar izquierda del canvas fue reescrita para consumir el `pluginRegistry`. Agrupa los nodos disponibles por categoría (`network`, `messaging`, etc.) y cada item es arrastrable al canvas via `dataTransfer` nativo con el tipo `application/flux-node-type`.
+
+#### Nodo WhatsApp (`plugins/whatsapp/whatsapp-node.tsx`)
+Se construyó el componente visual del nodo WhatsApp usando los mismos componentes base de Shadcn que el HTTP (`BaseNode`, `BaseNodeHeader`, `NodeStatusIndicator`, `BaseHandle`). Muestra un preview de la acción seleccionada, el número de teléfono y un fragmento del mensaje.
+
+#### NodeTypes Centralizado (`plugins/node-types.ts`)
+Se extrajo el mapa `nodeTypes` del canvas a un archivo dedicado. Así, `flow-canvas.tsx` importa `nodeTypes` directamente y cada plugin nuevo solo necesita registrarse en un solo lugar.
+
+#### Panel de Configuración de Nodos (`ui/components/node-config-panel.tsx`)
+Al hacer clic en un nodo del canvas, se despliega un panel lateral derecho con el formulario de edición completo del plugin. Los campos se renderizan condicionalmente según el tipo:
+- **HTTP:** Method, URL, Content-Type, Body (solo para POST/PUT/PATCH), Response Type, switches de Follow Redirects / Ignore SSL / Persist Cookies, Timeout, Retry count/delay.
+- **WhatsApp:** Acción (select condicional), teléfono, mensaje con hint de interpolación `{{ }}`, media path, chat/group ID, y límite de resultados.
+
+#### Flow Canvas (`ui/screens/flow-canvas.tsx`)
+Refactorizado para soportar:
+- Drag & Drop desde la sidebar (detecta `onDrop` + `screenToFlowPosition`).
+- Selección de nodos (`onNodeClick` → abre panel lateral).
+- Deselección al hacer clic en el canvas vacío (`onPaneClick`).
+- Eliminación del botón "Add" hardcodeado — ahora todo se hace via drag.

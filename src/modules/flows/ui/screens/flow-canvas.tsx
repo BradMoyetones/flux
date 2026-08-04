@@ -1,27 +1,30 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState} from 'react';
 import {
     ReactFlow,
     Background,
     Panel,
+    useReactFlow
 } from '@xyflow/react';
 
 import { useParams } from 'react-router';
-import { useFlowStore, setupFlowListeners, AppNode } from '../../core/use-flow-store';
-import { HttpNode } from '../../plugins/http/http-node';
-import { Play, Plus, Save } from 'lucide-react';
+import { useFlowStore, setupFlowListeners, type AppNode } from '../../core/use-flow-store';
+import { nodeTypes } from '../../plugins/node-types';
+import { pluginRegistry } from '../../plugins/registry';
+import { Play, Save } from 'lucide-react';
 import { ZoomSlider } from '@/ui/components/react-flow/zoom-slider';
 import { SidebarProvider, SidebarTrigger } from '@/ui/components/ui/sidebar';
 import { FlowSidebar } from '../components/sidebar';
+import { NodeConfigPanel } from '../components/node-config-panel';
 import { Button } from '@/ui/components/ui/button';
 import { invoke } from '@tauri-apps/api/core';
-
-const nodeTypes = {
-    http: HttpNode,
-};
+import { useDnD } from '@/shared/contexts/dnd-context';
 
 export default function FlowCanvas() {
     const { pathId } = useParams();
-    
+    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+    const { screenToFlowPosition } = useReactFlow();
+    const { type } = useDnD();
+
     const {
         nodes,
         edges,
@@ -47,13 +50,14 @@ export default function FlowCanvas() {
         setupFlowListeners();
     }, []);
 
+    // ──── Save ────
     const onSave = useCallback(async () => {
         if (!pathId) return;
         const decodedPath = decodeURIComponent(pathId);
-        
+
         const workflowPayload = {
             id: workflowId,
-            name: decodedPath.split(/[/\\]/).pop()?.replace('.json', '') || 'Flujo',
+            name: decodedPath.split(/[/\\]/).pop()?.replace('.flux', '').replace('.json', '') || 'Flujo',
             trigger: { type: "manual" },
             nodes: nodes.map(n => ({
                 id: n.id,
@@ -70,7 +74,7 @@ export default function FlowCanvas() {
                 targetHandle: e.targetHandle,
             })),
         };
-        
+
         try {
             await invoke('cmd_save_workflow', { path: decodedPath, workflow: workflowPayload });
             console.log("Saved successfully");
@@ -79,29 +83,78 @@ export default function FlowCanvas() {
         }
     }, [pathId, workflowId, nodes, edges]);
 
-    const onAddNode = useCallback(() => {
+    // ──── Drag & Drop from sidebar ────
+    const onDragOver = useCallback((event: React.DragEvent) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+    }, []);
+
+    const onDrop = useCallback((event: React.DragEvent) => {
+        event.preventDefault();
+        if (!type) return;
+
+        const plugin = pluginRegistry[type];
+        if (!plugin) return;
+
+        const position = screenToFlowPosition({
+            x: event.clientX,
+            y: event.clientY,
+        });
+
         const newNode: AppNode = {
             id: crypto.randomUUID(),
-            type: 'http',
-            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            type: type,
+            position,
             data: {
-                label: `HTTP Request ${nodes.length + 1}`,
-                config: { method: 'GET', url: 'https://api.github.com' }
-            }
+                label: plugin.label,
+                config: { ...plugin.defaultConfig },
+            },
         };
+
         setNodes([...nodes, newNode]);
+    }, [nodes, setNodes, type, screenToFlowPosition]);
+
+    // ──── Node selection ────
+    const onNodeClick = useCallback((_: React.MouseEvent, node: AppNode) => {
+        setSelectedNodeId(node.id);
+    }, []);
+
+    const onPaneClick = useCallback(() => {
+        setSelectedNodeId(null);
+    }, []);
+
+    const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : undefined;
+
+    const onUpdateNodeConfig = useCallback((nodeId: string, config: Record<string, any>) => {
+        setNodes(nodes.map(n =>
+            n.id === nodeId
+                ? { ...n, data: { ...n.data, config } }
+                : n
+        ));
+    }, [nodes, setNodes]);
+
+    const onUpdateNodeLabel = useCallback((nodeId: string, label: string) => {
+        setNodes(nodes.map(n =>
+            n.id === nodeId
+                ? { ...n, data: { ...n.data, label } }
+                : n
+        ));
     }, [nodes, setNodes]);
 
     return (
         <SidebarProvider className='min-h-full!'>
             <FlowSidebar />
-            <div className="flex-1">
+            <div className="flex-1 relative">
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
+                    onDragOver={onDragOver}
+                    onDrop={onDrop}
+                    onNodeClick={onNodeClick}
+                    onPaneClick={onPaneClick}
                     nodeTypes={nodeTypes}
                     fitView
                 >
@@ -115,15 +168,6 @@ export default function FlowCanvas() {
                     <ZoomSlider position='bottom-left' />
 
                     <Panel position="top-right" className="flex gap-2 bg-card p-2 rounded-xl shadow-lg border">
-                        <Button
-                            onClick={onAddNode}
-                            variant='secondary'
-                            size='icon'
-                            title="Add HTTP Node"
-                        >
-                            <Plus />
-                        </Button>
-
                         <Button
                             onClick={onSave}
                             variant='outline'
@@ -142,6 +186,14 @@ export default function FlowCanvas() {
                         </Button>
                     </Panel>
                 </ReactFlow>
+
+                {/* Panel de configuración del nodo seleccionado */}
+                <NodeConfigPanel
+                    node={selectedNode}
+                    onClose={() => setSelectedNodeId(null)}
+                    onUpdateConfig={onUpdateNodeConfig}
+                    onUpdateLabel={onUpdateNodeLabel}
+                />
             </div>
         </SidebarProvider>
     );
