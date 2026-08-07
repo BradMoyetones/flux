@@ -28,9 +28,8 @@ function DraggablePluginItem({ plugin }: { plugin: PluginDefinition }) {
     const Icon = ICON_MAP[plugin.icon] || Puzzle;
     const { setType } = useDnD();
 
-    const onDragStart = (event: React.DragEvent) => {
+    const onDragStart = (_event: React.DragEvent) => {
         setType(plugin.type);
-        event.dataTransfer.effectAllowed = 'move';
     };
 
     return (

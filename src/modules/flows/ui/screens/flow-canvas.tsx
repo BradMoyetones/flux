@@ -1,9 +1,9 @@
-import { useEffect, useCallback, useState} from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import {
     ReactFlow,
     Background,
     Panel,
-    useReactFlow
+    useReactFlow,
 } from '@xyflow/react';
 
 import { useParams } from 'react-router';
@@ -83,7 +83,7 @@ export default function FlowCanvas() {
         }
     }, [pathId, workflowId, nodes, edges]);
 
-    // ──── Drag & Drop from sidebar ────
+    // ──── Drag & Drop (API nativa dataTransfer, sin React state) ────
     const onDragOver = useCallback((event: React.DragEvent) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
@@ -91,6 +91,7 @@ export default function FlowCanvas() {
 
     const onDrop = useCallback((event: React.DragEvent) => {
         event.preventDefault();
+
         if (!type) return;
 
         const plugin = pluginRegistry[type];
@@ -112,7 +113,8 @@ export default function FlowCanvas() {
         };
 
         setNodes([...nodes, newNode]);
-    }, [nodes, setNodes, type, screenToFlowPosition]);
+        
+    }, [nodes, setNodes, screenToFlowPosition, type]);
 
     // ──── Node selection ────
     const onNodeClick = useCallback((_: React.MouseEvent, node: AppNode) => {

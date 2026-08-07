@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/ui/components/ui/dialog";
 import { Button } from "@/ui/components/ui/button";
 import { Input } from "@/ui/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/ui/select";
 import { invoke } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
 import SelectWorkspaceModal from "./select-workspace";
@@ -76,6 +75,14 @@ export function CreateFlowDialog({
             };
 
             await invoke('cmd_save_workflow', { path: fullPath, workflow: newWorkflow });
+            
+            // Registrar en el índice para que aparezca instantáneamente en el Home
+            await invoke('cmd_register_workflow', {
+                path: fullPath,
+                name: sanitizedName,
+                workspace: selectedWorkspace,
+            });
+
             onCreated(fullPath);
             onOpenChange(false);
         } catch (err: any) {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, Workflow, FolderPlus, FolderOpen, Folder } from 'lucide-react';
+import { Plus, Workflow, FolderPlus, FolderOpen, Folder, Trash2, FolderX, RefreshCw } from 'lucide-react';
 import { Button } from '@/ui/components/ui/button';
 import { useTabs } from '@/shared/contexts/tabs-context';
 import { useNavigate } from 'react-router';
@@ -8,12 +8,18 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { CreateFlowDialog } from '../components/create-flow-dialog';
 import { cn } from '@/shared/utils/utils';
 
+interface FluxEntry {
+    name: string;
+    path: string;
+    workspace: string;
+}
+
 export function HomeView() {
     const { openTab } = useTabs();
     const navigate = useNavigate();
     
     const [workspaces, setWorkspaces] = useState<string[]>([]);
-    const [workflows, setWorkflows] = useState<any[]>([]);
+    const [workflows, setWorkflows] = useState<FluxEntry[]>([]);
     
     const [dialogOpen, setDialogOpen] = useState(false);
     const [targetWorkspace, setTargetWorkspace] = useState<string | undefined>(undefined);
@@ -23,7 +29,7 @@ export function HomeView() {
             const wks: string[] = await invoke('cmd_get_workspaces');
             setWorkspaces(wks);
             
-            const flows: any[] = await invoke('cmd_scan_workflows');
+            const flows: FluxEntry[] = await invoke('cmd_scan_workflows');
             setWorkflows(flows);
         } catch (error) {
             console.error("Failed to load data", error);
@@ -48,11 +54,38 @@ export function HomeView() {
         });
         
         if (selectedPath && typeof selectedPath === 'string') {
-            await invoke('cmd_add_workspace', { path: selectedPath });
-            await loadData();
+            // cmd_add_workspace ahora escanea e indexa automáticamente
+            const updatedIndex: FluxEntry[] = await invoke('cmd_add_workspace', { path: selectedPath });
+            setWorkflows(updatedIndex);
+            const wks: string[] = await invoke('cmd_get_workspaces');
+            setWorkspaces(wks);
             return selectedPath;
         }
         return null;
+    };
+
+    const handleRemoveWorkspace = async (workspace: string) => {
+        await invoke('cmd_remove_workspace', { path: workspace });
+        await loadData();
+    };
+
+    const handleDeleteWorkflow = async (e: React.MouseEvent, path: string) => {
+        e.stopPropagation();
+        try {
+            await invoke('cmd_delete_workflow', { path });
+            await loadData();
+        } catch (error) {
+            console.error("Failed to delete workflow", error);
+        }
+    };
+
+    const handleResync = async () => {
+        try {
+            const flows: FluxEntry[] = await invoke('cmd_resync_workspaces');
+            setWorkflows(flows);
+        } catch (error) {
+            console.error("Failed to resync", error);
+        }
     };
 
     const openCreateDialog = (workspace?: string) => {
@@ -62,13 +95,10 @@ export function HomeView() {
 
     // Group workflows by workspace
     const groupedData = useMemo(() => {
-        const grouped = workspaces.map(ws => {
-            return {
-                workspace: ws,
-                flows: workflows.filter(flow => flow.path?.startsWith(ws))
-            };
-        });
-        return grouped;
+        return workspaces.map(ws => ({
+            workspace: ws,
+            flows: workflows.filter(flow => flow.workspace === ws),
+        }));
     }, [workspaces, workflows]);
 
     return (
@@ -84,6 +114,9 @@ export function HomeView() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={handleResync} title="Resincronizar índice">
+                            <RefreshCw className="w-4 h-4" />
+                        </Button>
                         <Button variant="outline" onClick={handleAddWorkspace}>
                             <FolderPlus className="w-4 h-4 mr-2" />
                             Vincular Workspace
@@ -116,11 +149,23 @@ export function HomeView() {
                                     <div className="flex items-center gap-2">
                                         <Folder className="text-muted-foreground w-4 h-4" />
                                         <h2 className="text-sm font-semibold truncate max-w-md">{workspace.split(/[/\\]/).pop() || workspace}</h2>
+                                        <span className="text-[10px] text-muted-foreground truncate max-w-xs hidden lg:block">({workspace})</span>
                                     </div>
-                                    <Button variant="secondary" size="sm" onClick={() => openCreateDialog(workspace)}>
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Añadir workflow aquí
-                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                        <Button variant="secondary" size="sm" onClick={() => openCreateDialog(workspace)}>
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Añadir workflow
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            title="Desvincular workspace"
+                                            onClick={() => handleRemoveWorkspace(workspace)}
+                                        >
+                                            <FolderX className="w-4 h-4" />
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 {/* Grilla de Workflows */}
@@ -130,25 +175,36 @@ export function HomeView() {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                        {flows.map((flow: any) => (
+                                        {flows.map((flow) => (
                                             <button
-                                                key={flow.id}
+                                                key={flow.path}
                                                 type="button"
-                                                onClick={() => flow.path && handleOpenTab(flow.path)}
-                                                className="group flex flex-col rounded-xl border border-border bg-card p-5 text-left shadow-sm transition cursor-pointer hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                                                onClick={() => handleOpenTab(flow.path)}
+                                                className="group flex flex-col rounded-xl border border-border bg-card p-5 text-left shadow-sm transition cursor-pointer hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md relative"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="grid size-11 place-items-center rounded-lg bg-muted text-primary">
                                                         <Workflow className="size-5" />
                                                     </div>
-                                                    <StatusBadge active={true} />
+                                                    <div className="flex items-center gap-1">
+                                                        <StatusBadge active={true} />
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"
+                                                            title="Eliminar workflow"
+                                                            onClick={(e) => handleDeleteWorkflow(e, flow.path)}
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
                                                 </div>
 
                                                 <h3 className="mt-4 font-medium">{flow.name}</h3>
                                                 <p className="mt-1 text-xs text-muted-foreground truncate opacity-75">{flow.path}</p>
 
                                                 <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
-                                                    <span className="font-mono">.flux file</span>
+                                                    <span className="font-mono">.flux</span>
                                                     <span className="text-primary opacity-0 transition group-hover:opacity-100">
                                                         Abrir en el editor →
                                                     </span>

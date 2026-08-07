@@ -1,4 +1,3 @@
-import { useEffect, useState, useMemo } from 'react';
 import type { AppNode } from '../../core/use-flow-store';
 import { getPluginDefinition } from '../../plugins/registry';
 import { Input } from '@/ui/components/ui/input';
@@ -103,7 +102,7 @@ function ConfigFields({ nodeType, config, onChange }: ConfigFieldsProps) {
 
 // ──── HTTP Fields ────
 
-function HttpConfigFields({ config, update, onChange }: {
+function HttpConfigFields({ config, update }: {
     config: Record<string, any>;
     update: (key: string, value: any) => void;
     onChange: (config: Record<string, any>) => void;
@@ -231,7 +230,7 @@ function HttpConfigFields({ config, update, onChange }: {
 
 // ──── WhatsApp Fields ────
 
-function WhatsAppConfigFields({ config, update, onChange }: {
+function WhatsAppConfigFields({ config, update }: {
     config: Record<string, any>;
     update: (key: string, value: any) => void;
     onChange: (config: Record<string, any>) => void;

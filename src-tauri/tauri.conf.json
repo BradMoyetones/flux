@@ -19,6 +19,7 @@
                 "minHeight": 600,
                 "resizable": true,
                 "transparent": true,
+                "dragDropEnabled": false,
                 "titleBarStyle": "Overlay",
                 "decorations": true,
                 "hiddenTitle": true,

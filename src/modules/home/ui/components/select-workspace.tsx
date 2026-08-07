@@ -16,7 +16,6 @@ import {
     Folder,
     FolderPlus,
 } from "lucide-react"
-import { useState } from "react";
 
 interface SelectWorkspaceModalProps {
     open: boolean;
