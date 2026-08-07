@@ -17,13 +17,11 @@ import { FlowSidebar } from '../components/sidebar';
 import { NodeConfigPanel } from '../components/node-config-panel';
 import { Button } from '@/ui/components/ui/button';
 import { invoke } from '@tauri-apps/api/core';
-import { useDnD } from '@/shared/contexts/dnd-context';
 
 export default function FlowCanvas() {
     const { pathId } = useParams();
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const { screenToFlowPosition } = useReactFlow();
-    const { type } = useDnD();
 
     const {
         nodes,
@@ -92,9 +90,10 @@ export default function FlowCanvas() {
     const onDrop = useCallback((event: React.DragEvent) => {
         event.preventDefault();
 
-        if (!type) return;
+        const nodeType = event.dataTransfer.getData("application/flux-node-type");
+        if (!nodeType) return;
 
-        const plugin = pluginRegistry[type];
+        const plugin = pluginRegistry[nodeType];
         if (!plugin) return;
 
         const position = screenToFlowPosition({
@@ -104,7 +103,7 @@ export default function FlowCanvas() {
 
         const newNode: AppNode = {
             id: crypto.randomUUID(),
-            type: type,
+            type: nodeType,
             position,
             data: {
                 label: plugin.label,
@@ -114,7 +113,7 @@ export default function FlowCanvas() {
 
         setNodes([...nodes, newNode]);
         
-    }, [nodes, setNodes, screenToFlowPosition, type]);
+    }, [nodes, setNodes, screenToFlowPosition]);
 
     // ──── Node selection ────
     const onNodeClick = useCallback((_: React.MouseEvent, node: AppNode) => {

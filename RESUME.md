@@ -156,3 +156,242 @@ Refactorizado para soportar:
 - Selección de nodos (`onNodeClick` → abre panel lateral).
 - Deselección al hacer clic en el canvas vacío (`onPaneClick`).
 - Eliminación del botón "Add" hardcodeado — ahora todo se hace via drag.
+
+---
+
+## Fase 7 — Bloque 1: Motor HTTP Real + KeyValueBuilder + Drag & Drop Nativo
+
+### Contexto y Motivación
+Llegó el momento de ponerle vida real al motor de ejecución DAG. El caso de uso objetivo era un flujo de 3 nodos: un HTTP POST Login que captura cookies de sesión, un HTTP GET que las inyecta para obtener datos, y un WhatsApp que envía esos datos. Para esto necesitaba mejorar el plugin HTTP para que exponga las cookies parseadas y el nodo siguiente pueda referenciarlas con `{{node1.data.cookies.PHPSESSID}}`.
+
+### Cambios en el Backend (Rust)
+
+#### Plugin HTTP Mejorado (`plugins/http/config.rs`)
+Añadí dos campos nuevos al contrato:
+- **`raw_cookies`** (`Option<String>`): Permite inyectar cookies manualmente con interpolación (ej: `"PHPSESSID={{node1.data.cookies.PHPSESSID}}"`). El plugin las inyecta como header `Cookie` automáticamente.
+- **`body_params`** (`HashMap<String, String>`): Pares clave-valor que se serializan automáticamente como body `application/x-www-form-urlencoded` (ej: `txtUsuario=admin&txtClave=123`). Tiene prioridad sobre `body` cuando el content-type es form-urlencoded.
+
+#### Ejecución HTTP con Cookies Parseadas (`plugins/http/plugin.rs`)
+La reescritura más importante del Bloque 1:
+- **Parseo de `set-cookie`**: Ahora recojo TODOS los headers `set-cookie` (incluyendo duplicados) y los parseo en un mapa `cookies: { "PHPSESSID": "abc123", "token": "xyz456" }`. La función `parse_set_cookies()` extrae `nombre=valor` de cada header, ignorando atributos como `path`, `HttpOnly`, etc.
+- **Inyección de `raw_cookies`**: Si el config tiene `rawCookies`, se inyecta como header `Cookie` antes de enviar la petición.
+- **Serialización de `bodyParams`**: Cuando el content-type es form-urlencoded y hay bodyParams, se construye el body automáticamente con URL encoding propio (`urlencoded()`).
+- **Output reestructurado**: El JSON de salida ahora tiene 4 campos: `statusCode`, `headers`, `cookies` (mapa parseado), y `body`.
+
+### Cambios en el Frontend (React)
+
+#### Componente `KeyValueBuilder` (NUEVO - `ui/components/key-value-builder.tsx`)
+Creé un componente reutilizable tipo Postman para editar pares clave-valor. Lo uso en 3 lugares del panel de configuración HTTP:
+- **Headers**: Cada header es una fila editable con Key + Value + botón eliminar
+- **Query Params**: Mismo patrón
+- **Body Form-Urlencoded**: Cuando el Content-Type es `application/x-www-form-urlencoded`, el textarea del body se reemplaza automáticamente por el KeyValueBuilder donde cada fila es un campo del formulario
+
+El componente maneja su propio estado interno (`KVPair[]` con UUIDs) y emite cambios como `Record<string, string>` al padre.
+
+#### Schema HTTP del Frontend (`plugins/http/schema.ts`)
+Actualicé el esquema Zod para incluir `rawCookies` (string opcional) y `bodyParams` (record opcional con default `{}`), manteniendo la paridad con el contrato Rust.
+
+#### Panel de Configuración Mejorado (`node-config-panel.tsx`)
+- El campo **Body** ahora es condicional: muestra `Textarea` para JSON/plain text, y `KeyValueBuilder` para form-urlencoded. Se detecta por `config.contentType`.
+- Se añadió sección **Headers** con `KeyValueBuilder` (antes no se podían editar).
+- Se añadió sección **Query Params** con `KeyValueBuilder`.
+- Se añadió campo **Cookies (Raw)** con input y hint de interpolación.
+- Se importó el `KeyValueBuilder` desde el mismo directorio de componentes.
+
+### Drag & Drop — Migración a API Nativa
+
+Eliminé por completo el `DnDContext`/`DnDProvider` con React state y migré a la API nativa del browser `dataTransfer`:
+- **Sidebar**: `event.dataTransfer.setData("application/flux-node-type", plugin.type)` + `effectAllowed = "move"`
+- **Canvas (onDrop)**: `event.dataTransfer.getData("application/flux-node-type")` → determinista y síncrono
+- **tab-routes.tsx**: Eliminado el wrapper `<DnDProvider>` — ya no es necesario
+
+Esto resuelve el bug donde el nodo no se posicionaba al soltar porque `setType()` (React state async) no se sincronizaba a tiempo con el `onDrop` del mismo frame.
+
+
+### Compilación
+- **Rust** (`cargo check`): ✅ Compila limpio — solo dead code warnings de variantes de error no usadas aún.
+- **TypeScript** (`tsc --noEmit`): ✅ Cero errores.
+
+---
+
+## Fase 7 — Bloque 2: WhatsApp Sidecar con whatsmeow (Go)
+
+### Contexto y Decisión Arquitectónica
+Para la integración con WhatsApp necesitaba una solución E2E real, no una API cloud como Twilio. Descubrí **whatsmeow** (`go.mau.fi/whatsmeow`), una librería Go que implementa el protocolo Multi-Device de WhatsApp directamente — QR nativo, E2E encryption, persistencia de sesión, envío de media con upload, todo localmente sin servidores terceros.
+
+El problema: ¿cómo integrar Go en una app Tauri que usa Rust + React? La respuesta fue el **patrón Sidecar** de Tauri — un binario externo empaquetado dentro de la app que se ejecuta como proceso hijo. El sidecar de Go expone un servidor HTTP local (puerto aleatorio) con JSON API, y Rust se comunica con él via `reqwest`.
+
+### Arquitectura del Sidecar
+
+```
+[React Frontend] ──IPC──▶ [Rust Backend (Tauri)]
+                                │
+                          ┌─────▼──────┐
+                          │ WhatsApp   │
+                          │ Manager    │ ◀── Gestiona sesiones
+                          └─────┬──────┘
+                                │ spawn + HTTP JSON
+                          ┌─────▼──────┐
+                          │ Go Sidecar │ ◀── whatsmeow
+                          │ :random_port│
+                          └────────────┘
+```
+
+### Archivos Creados y Modificados
+
+#### Go Sidecar (`src-tauri/sidecar/main.go` + `go.mod`)
+Programa Go completo que wrappea whatsmeow. Endpoints:
+- `GET /status` → `{ "connected": bool, "jid": "573001234567@s.whatsapp.net" }`
+- `GET /qr` → SSE stream (Server-Sent Events) que emite QR strings. Al parear, emite `CONNECTED` y cierra.
+- `POST /send-message` → `{ "to": "+573001234567", "text": "Hola" }`
+- `POST /send-media` → `{ "to": "...", "mediaPath": "/ruta/al/archivo", "caption": "opcional" }` (soporta imagen, video, documento con upload automático a los servidores WA)
+- `GET /chats` → Lista de chats
+- `GET /contacts` → Contactos del dispositivo
+- `POST /disconnect` → Desconecta y cierra sesión
+
+Flags CLI: `--port <port>` y `--db-path <path_to_sqlite>`.
+
+#### Rust: WhatsApp Manager (`services/whatsapp_manager.rs`)
+Nuevo módulo de servicios que gestiona las sesiones:
+- **`start_session`**: Encuentra un puerto libre (bind TCP :0 + drop), crea el directorio `app_data_dir/whatsapp/`, spawns el sidecar con `app.shell().sidecar("whatsapp-sidecar")`, espera 2 segundos a que el server arranque, y guarda el `CommandChild` en un `Mutex<HashMap>`.
+- **`stop_session`**: Mata el proceso hijo y limpia del mapa.
+- **`send_request`**: Proxy HTTP genérico (`GET`/`POST`/`PUT`/`DELETE`) hacia el sidecar con `reqwest::Client`.
+- **`list_sessions`**: Devuelve info de todas las sesiones activas.
+
+#### Rust: Comandos IPC (`commands/whatsapp.rs`)
+5 comandos Tauri nuevos:
+- `cmd_wa_start_session` → Inicia el sidecar y retorna la info de sesión
+- `cmd_wa_stop_session` → Mata el sidecar
+- `cmd_wa_list_sessions` → Lista sesiones activas
+- `cmd_wa_get_status` → Proxy a `GET /status` del sidecar
+- `cmd_wa_get_qr_url` → Retorna `http://127.0.0.1:{port}/qr` para que el frontend haga SSE
+
+#### Rust: Plugin WhatsApp Actualizado (`plugins/whatsapp/plugin.rs` + `config.rs`)
+- Añadido `session_id: Option<String>` y `sidecar_port: Option<u16>` al config.
+- El plugin ahora llama al sidecar real via HTTP si `sidecar_port` está presente.
+- Si no tiene port (backward compatible), retorna mock response.
+
+#### Frontend: Schema + Hook + Config Panel
+- **Schema**: Añadido `sessionId` al schema Zod de WhatsApp con default `"default"`.
+- **Hook `useWhatsAppSession`**: Nuevo hook React para start/stop/list/status de sesiones via IPC.
+- **Config Panel**: Añadido input de Session ID y nota informativa sobre el flujo de vinculación QR.
+
+#### Configuración Tauri
+- **`tauri.conf.json`**: Añadido `"externalBin": ["binaries/whatsapp-sidecar"]` al bundle.
+- **`capabilities/default.json`**: Permisos `shell:allow-execute` y `shell:allow-spawn` para el sidecar.
+- **`Cargo.toml`**: Dependencia `tauri-plugin-shell = "2"`.
+- **`lib.rs`**: Registrado el plugin shell, el módulo `services`, y el `WhatsAppManager` como managed state.
+
+### Compilación
+- **Rust** (`cargo check`): ✅ Compila limpio — solo warnings de dead code en `state.rs` (no usado directamente).
+- **TypeScript** (`tsc --noEmit`): ✅ Cero errores.
+
+---
+
+## Instrucciones de Instalación del Sidecar WhatsApp
+
+### 1. Instalar Go
+
+#### macOS
+```bash
+# Opción A: Homebrew (recomendado)
+brew install go
+
+# Opción B: Instalador oficial
+# Descargar de https://go.dev/dl/ el .pkg para macOS
+# Ejecutar el instalador → se instala en /usr/local/go
+
+# Verificar
+go version
+```
+
+#### Linux (Ubuntu/Debian)
+```bash
+# Opción A: Snap
+sudo snap install go --classic
+
+# Opción B: Descarga directa
+wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf go1.22.5.linux-amd64.tar.gz
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+source ~/.bashrc
+
+# Verificar
+go version
+```
+
+#### Windows
+```powershell
+# Opción A: Winget
+winget install GoLang.Go
+
+# Opción B: Instalador oficial
+# Descargar de https://go.dev/dl/ el .msi para Windows
+# Ejecutar el instalador → se agrega al PATH automáticamente
+
+# Verificar (reiniciar terminal después de instalar)
+go version
+```
+
+### 2. Compilar el Sidecar
+
+#### Obtener dependencias
+```bash
+cd src-tauri/sidecar
+go mod tidy
+```
+
+#### Compilar según plataforma
+
+##### macOS (Apple Silicon)
+```bash
+cd src-tauri/sidecar
+GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 go build -o ../binaries/whatsapp-sidecar-aarch64-apple-darwin .
+```
+
+##### macOS (Intel)
+```bash
+cd src-tauri/sidecar
+GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -o ../binaries/whatsapp-sidecar-x86_64-apple-darwin .
+```
+
+##### Linux (x86_64)
+```bash
+cd src-tauri/sidecar
+GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o ../binaries/whatsapp-sidecar-x86_64-unknown-linux-gnu .
+```
+
+##### Windows (x86_64)
+```powershell
+cd src-tauri\sidecar
+set GOOS=windows
+set GOARCH=amd64
+set CGO_ENABLED=1
+go build -o ..\binaries\whatsapp-sidecar-x86_64-pc-windows-msvc.exe .
+```
+
+> **Nota CGO**: whatsmeow requiere SQLite que usa cgo. En macOS y Linux `CGO_ENABLED=1` funciona directamente. En Windows necesitas tener GCC instalado (ej: via MSYS2/MinGW o TDM-GCC).
+
+### 3. Determinar tu Target Triple
+```bash
+# Para saber cuál binario necesitas generar:
+rustc -Vv | grep host
+# Ejemplo output: host: aarch64-apple-darwin
+# Entonces compilas con GOOS=darwin GOARCH=arm64
+```
+
+### 4. Verificar que todo funciona
+```bash
+# Desde la raíz del proyecto:
+cd src-tauri && cargo check
+# Debe compilar sin errores
+```
+
+### 5. Ejecutar la app
+```bash
+# Desde la raíz del proyecto:
+pnpm tauri dev
+```
+
+Al arrastrar un nodo WhatsApp al canvas y configurar una sesión, el backend spawns el sidecar Go en un puerto aleatorio. El QR aparece via SSE en la UI para vincular tu WhatsApp.

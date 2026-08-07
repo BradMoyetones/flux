@@ -1,6 +1,7 @@
 pub mod window;
 pub mod workflows;
 pub mod execution;
+pub mod whatsapp;
 
 pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
     tauri::generate_handler![
@@ -17,5 +18,10 @@ pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
         workflows::cmd_register_workflow,
         workflows::cmd_delete_workflow,
         execution::cmd_execute_workflow,
+        whatsapp::cmd_wa_start_session,
+        whatsapp::cmd_wa_stop_session,
+        whatsapp::cmd_wa_list_sessions,
+        whatsapp::cmd_wa_get_status,
+        whatsapp::cmd_wa_get_qr_url,
     ]
 }

@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
 export const whatsappNodeSchema = z.object({
+  // Sesión de WhatsApp (gestionada por el backend)
+  sessionId: z.string().optional().default('default'),
+
   action: z.enum([
     'send_message',
     'send_media',
@@ -52,6 +55,7 @@ export const whatsappNodeSchema = z.object({
 export type WhatsAppNodeConfig = z.infer<typeof whatsappNodeSchema>;
 
 export const whatsappDefaultConfig: WhatsAppNodeConfig = {
+  sessionId: 'default',
   action: 'send_message',
   phoneNumber: '',
   message: '',

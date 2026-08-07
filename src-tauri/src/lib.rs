@@ -4,6 +4,8 @@ mod errors;
 mod models;
 mod plugins;
 mod storage;
+mod services;
+mod state;
 
 use tauri::Manager;
 use tauri_plugin_os;
@@ -34,6 +36,8 @@ pub fn run() {
         })
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_shell::init())
+        .manage(std::sync::Arc::new(services::whatsapp_manager::WhatsAppManager::new()))
         .invoke_handler(commands::get_handlers())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

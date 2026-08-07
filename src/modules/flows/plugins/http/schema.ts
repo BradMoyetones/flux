@@ -74,6 +74,12 @@ export const httpNodeSchema = z.object({
 
   // Cookies
   persistCookies: z.boolean().optional().default(false),
+
+  // Cookies manuales (soporta interpolación: "{{node1.data.cookies.PHPSESSID}}")
+  rawCookies: z.string().optional(),
+
+  // Body params para form-urlencoded (KeyValueBuilder)
+  bodyParams: z.record(z.string(), z.string()).optional().default({}),
 });
 
 export type HttpNodeConfig = z.infer<typeof httpNodeSchema>;
@@ -92,4 +98,5 @@ export const httpNodeDefaultConfig: HttpNodeConfig = {
   retryCount: 0,
   retryDelayMs: 1000,
   persistCookies: false,
+  bodyParams: {},
 };

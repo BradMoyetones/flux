@@ -5,6 +5,12 @@ use serde::{Deserialize, Serialize};
 pub struct WhatsAppNodeConfig {
     pub action: WhatsAppAction,
 
+    /// ID de sesión de WhatsApp. Referencia a una sesión gestionada por WhatsAppManager.
+    /// Si no se provee, usa "default".
+    pub session_id: Option<String>,
+    
+    pub sidecar_port: Option<u16>,
+
     // ──── Envío ────
     /// Número de teléfono destino con código de país (ej: "+573001234567").
     /// Soporta interpolación: "{{node1.data.body.phone}}"

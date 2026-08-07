@@ -6,7 +6,6 @@ import { ReleaseNotes } from '@/modules/release-notes/ui/screens/release-notes';
 import FlowCanvas from '@/modules/flows/ui/screens/flow-canvas';
 import SettingsView from '@/modules/settings/ui/screens/settings-view';
 import { ReactFlowProvider } from '@xyflow/react';
-import { DnDProvider } from '../contexts/dnd-context';
 
 /**
  * A `TabRoute` is OUR domain model. It is shaped *like* a react-router route
@@ -62,9 +61,7 @@ export const routes: TabRoute[] = [
         icon: Workflow,
         closable: true,
         element: () => <ReactFlowProvider>
-            <DnDProvider>
                 <FlowCanvas />
-            </DnDProvider>
         </ReactFlowProvider>,
     },
     {

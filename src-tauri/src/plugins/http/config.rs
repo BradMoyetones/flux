@@ -67,6 +67,16 @@ pub struct HttpNodeConfig {
     /// Si es `true`, almacena cookies de la respuesta y las reenvía en el mismo workflow.
     #[serde(default)]
     pub persist_cookies: bool,
+
+    /// Cookies manuales inyectadas como string (ej: "PHPSESSID=abc123; token=xyz").
+    /// Soporta interpolación: "{{node1.data.cookies.PHPSESSID}}"
+    pub raw_cookies: Option<String>,
+
+    /// Pares clave-valor para body form-urlencoded.
+    /// Se usa cuando content_type = "application/x-www-form-urlencoded".
+    /// Se serializa automáticamente a "key1=val1&key2=val2".
+    #[serde(default)]
+    pub body_params: HashMap<String, String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

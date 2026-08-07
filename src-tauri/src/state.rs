@@ -1,13 +1,14 @@
-use std::collections::HashMap;
-
-use tokio::sync::Mutex;
-
-use crate::models::workflow::Workflow;
-use crate::services::whatsapp_client::WhatsAppCore;
-// use crate::services::http_client::HttpClient;
+use std::sync::Arc;
+use crate::services::whatsapp_manager::WhatsAppManager;
 
 pub struct AppState {
-    pub workflows: Mutex<HashMap<String, Workflow>>,
-    pub wa_client: Mutex<WhatsAppCore>,
-    // pub http_client: HttpClient,
+    pub wa_manager: Arc<WhatsAppManager>,
+}
+
+impl AppState {
+    pub fn new() -> Self {
+        Self {
+            wa_manager: Arc::new(WhatsAppManager::new()),
+        }
+    }
 }

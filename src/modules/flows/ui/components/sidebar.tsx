@@ -13,7 +13,6 @@ import {
 import { Separator } from "@/ui/components/ui/separator";
 import { pluginRegistry, PLUGIN_CATEGORIES, type PluginCategory, type PluginDefinition } from "../../plugins/registry";
 import { Globe, MessageSquare, Database, GitBranch, Puzzle, Wrench, GripVertical, type LucideIcon } from "lucide-react";
-import { useDnD } from "@/shared/contexts/dnd-context";
 
 const ICON_MAP: Record<string, LucideIcon> = {
     Globe,
@@ -26,10 +25,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 function DraggablePluginItem({ plugin }: { plugin: PluginDefinition }) {
     const Icon = ICON_MAP[plugin.icon] || Puzzle;
-    const { setType } = useDnD();
 
-    const onDragStart = (_event: React.DragEvent) => {
-        setType(plugin.type);
+    const onDragStart = (event: React.DragEvent) => {
+        event.dataTransfer.setData("application/flux-node-type", plugin.type);
+        event.dataTransfer.effectAllowed = "move";
     };
 
     return (

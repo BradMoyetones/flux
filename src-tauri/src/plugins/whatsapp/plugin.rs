@@ -23,16 +23,27 @@ impl NodePlugin for WhatsAppPlugin {
                 let message = cfg.message
                     .ok_or("Se requiere message para enviar un mensaje")?;
 
-                // TODO: Integrar SDK de WhatsApp real (whatsapp-rs o API de WhatsApp Business).
-                // Por ahora retornamos un resultado simulado para validar el flujo completo.
-                Ok(json!({
-                    "success": true,
-                    "action": "send_message",
-                    "to": phone,
-                    "messagePreview": message.chars().take(100).collect::<String>(),
-                    "messageId": format!("SIM_{}", uuid::Uuid::new_v4()),
-                    "timestamp": chrono::Utc::now().to_rfc3339(),
-                }))
+                if let Some(port) = cfg.sidecar_port {
+                    let client = reqwest::Client::new();
+                    let res = client.post(format!("http://127.0.0.1:{}/send-message", port))
+                        .json(&json!({ "to": phone, "text": message }))
+                        .send()
+                        .await
+                        .map_err(|e| format!("Failed to send request: {}", e))?;
+                    
+                    let data = res.json::<Value>().await
+                        .map_err(|e| format!("Failed to parse response: {}", e))?;
+                    Ok(data)
+                } else {
+                    Ok(json!({
+                        "success": true,
+                        "action": "send_message",
+                        "to": phone,
+                        "messagePreview": message.chars().take(100).collect::<String>(),
+                        "messageId": format!("SIM_{}", uuid::Uuid::new_v4()),
+                        "timestamp": chrono::Utc::now().to_rfc3339(),
+                    }))
+                }
             }
             WhatsAppAction::SendMedia => {
                 let phone = cfg.phone_number
@@ -40,23 +51,48 @@ impl NodePlugin for WhatsAppPlugin {
                 let media_path = cfg.media_path
                     .ok_or("Se requiere mediaPath para enviar media")?;
 
-                Ok(json!({
-                    "success": true,
-                    "action": "send_media",
-                    "to": phone,
-                    "mediaPath": media_path,
-                    "caption": cfg.media_caption.unwrap_or_default(),
-                    "messageId": format!("SIM_{}", uuid::Uuid::new_v4()),
-                    "timestamp": chrono::Utc::now().to_rfc3339(),
-                }))
+                if let Some(port) = cfg.sidecar_port {
+                    let client = reqwest::Client::new();
+                    let res = client.post(format!("http://127.0.0.1:{}/send-media", port))
+                        .json(&json!({ "to": phone, "mediaPath": media_path, "caption": cfg.media_caption.unwrap_or_default() }))
+                        .send()
+                        .await
+                        .map_err(|e| format!("Failed to send request: {}", e))?;
+                    
+                    let data = res.json::<Value>().await
+                        .map_err(|e| format!("Failed to parse response: {}", e))?;
+                    Ok(data)
+                } else {
+                    Ok(json!({
+                        "success": true,
+                        "action": "send_media",
+                        "to": phone,
+                        "mediaPath": media_path,
+                        "caption": cfg.media_caption.unwrap_or_default(),
+                        "messageId": format!("SIM_{}", uuid::Uuid::new_v4()),
+                        "timestamp": chrono::Utc::now().to_rfc3339(),
+                    }))
+                }
             }
             WhatsAppAction::GetChats => {
-                Ok(json!({
-                    "success": true,
-                    "action": "get_chats",
-                    "chats": [],
-                    "totalCount": 0,
-                }))
+                if let Some(port) = cfg.sidecar_port {
+                    let client = reqwest::Client::new();
+                    let res = client.get(format!("http://127.0.0.1:{}/chats", port))
+                        .send()
+                        .await
+                        .map_err(|e| format!("Failed to send request: {}", e))?;
+                    
+                    let data = res.json::<Value>().await
+                        .map_err(|e| format!("Failed to parse response: {}", e))?;
+                    Ok(data)
+                } else {
+                    Ok(json!({
+                        "success": true,
+                        "action": "get_chats",
+                        "chats": [],
+                        "totalCount": 0,
+                    }))
+                }
             }
             WhatsAppAction::GetMessages => {
                 let chat_id = cfg.chat_id
@@ -71,11 +107,23 @@ impl NodePlugin for WhatsAppPlugin {
                 }))
             }
             WhatsAppAction::GetContacts => {
-                Ok(json!({
-                    "success": true,
-                    "action": "get_contacts",
-                    "contacts": [],
-                }))
+                if let Some(port) = cfg.sidecar_port {
+                    let client = reqwest::Client::new();
+                    let res = client.get(format!("http://127.0.0.1:{}/contacts", port))
+                        .send()
+                        .await
+                        .map_err(|e| format!("Failed to send request: {}", e))?;
+                    
+                    let data = res.json::<Value>().await
+                        .map_err(|e| format!("Failed to parse response: {}", e))?;
+                    Ok(data)
+                } else {
+                    Ok(json!({
+                        "success": true,
+                        "action": "get_contacts",
+                        "contacts": [],
+                    }))
+                }
             }
             WhatsAppAction::GetGroupInfo => {
                 let group_id = cfg.group_id

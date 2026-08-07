@@ -10,6 +10,7 @@ import { Label } from '@/ui/components/ui/label';
 import { Badge } from '@/ui/components/ui/badge';
 import { ScrollArea } from '@/ui/components/ui/scroll-area';
 import { X, Settings2, Globe, MessageSquare, Puzzle, type LucideIcon } from 'lucide-react';
+import { KeyValueBuilder } from './key-value-builder';
 
 const ICON_MAP: Record<string, LucideIcon> = {
     Globe,
@@ -43,7 +44,7 @@ export function NodeConfigPanel({ node, onClose, onUpdateConfig, onUpdateLabel }
                 </Button>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 overflow-y-auto">
                 <div className="p-4 flex flex-col gap-4">
                     {/* Label */}
                     <div className="space-y-1.5">
@@ -102,11 +103,14 @@ function ConfigFields({ nodeType, config, onChange }: ConfigFieldsProps) {
 
 // ──── HTTP Fields ────
 
-function HttpConfigFields({ config, update }: {
+function HttpConfigFields({ config, update, onChange: _onChange }: {
     config: Record<string, any>;
     update: (key: string, value: any) => void;
     onChange: (config: Record<string, any>) => void;
 }) {
+    const isFormUrlEncoded = config.contentType === 'application/x-www-form-urlencoded';
+    const hasBody = ['POST', 'PUT', 'PATCH'].includes(config.method);
+
     return (
         <div className="flex flex-col gap-3">
             <FieldGroup label="Basics">
@@ -145,16 +149,65 @@ function HttpConfigFields({ config, update }: {
                 </Select>
             </FieldGroup>
 
-            {['POST', 'PUT', 'PATCH'].includes(config.method) && (
-                <FieldGroup label="Body">
-                    <Textarea
-                        value={config.body || ''}
-                        onChange={(e) => update('body', e.target.value)}
-                        placeholder='{"key": "value"}'
-                        className="text-xs font-mono min-h-[80px]"
-                    />
-                </FieldGroup>
+            {/* Body: KeyValueBuilder para form-urlencoded, Textarea para el resto */}
+            {hasBody && (
+                isFormUrlEncoded ? (
+                    <FieldGroup label="Body (Form URL-Encoded)">
+                        <KeyValueBuilder
+                            value={config.bodyParams || {}}
+                            onChange={(v) => update('bodyParams', v)}
+                            keyPlaceholder="Campo"
+                            valuePlaceholder="Valor (soporta {{interpolación}})"
+                        />
+                    </FieldGroup>
+                ) : (
+                    <FieldGroup label="Body">
+                        <Textarea
+                            value={config.body || ''}
+                            onChange={(e) => update('body', e.target.value)}
+                            placeholder='{"key": "value"}'
+                            className="text-xs font-mono min-h-[80px]"
+                        />
+                    </FieldGroup>
+                )
             )}
+
+            <Separator />
+
+            {/* Headers con KeyValueBuilder */}
+            <FieldGroup label="Headers">
+                <KeyValueBuilder
+                    value={config.headers || {}}
+                    onChange={(v) => update('headers', v)}
+                    keyPlaceholder="Header"
+                    valuePlaceholder="Valor (soporta {{interpolación}})"
+                />
+            </FieldGroup>
+
+            {/* Query Params con KeyValueBuilder */}
+            <FieldGroup label="Query Params">
+                <KeyValueBuilder
+                    value={config.queryParams || {}}
+                    onChange={(v) => update('queryParams', v)}
+                    keyPlaceholder="Param"
+                    valuePlaceholder="Value"
+                />
+            </FieldGroup>
+
+            <Separator />
+
+            {/* Raw Cookies */}
+            <FieldGroup label="Cookies (Raw)">
+                <Input
+                    value={config.rawCookies || ''}
+                    onChange={(e) => update('rawCookies', e.target.value)}
+                    placeholder="PHPSESSID={{node1.data.cookies.PHPSESSID}}"
+                    className="h-8 text-xs font-mono"
+                />
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Inyecta cookies de nodos previos con {'{{nodeId.data.cookies.nombre}}'}
+                </p>
+            </FieldGroup>
 
             <FieldGroup label="Response Type">
                 <Select value={config.responseType || 'auto'} onValueChange={(v) => update('responseType', v)}>
@@ -236,9 +289,31 @@ function WhatsAppConfigFields({ config, update }: {
     onChange: (config: Record<string, any>) => void;
 }) {
     const action = config.action || 'send_message';
+    const sessionId = config.sessionId || 'default';
 
     return (
         <div className="flex flex-col gap-3">
+            {/* Sesión */}
+            <FieldGroup label="Sesión WhatsApp">
+                <Input
+                    value={sessionId}
+                    onChange={(e) => update('sessionId', e.target.value)}
+                    placeholder="default"
+                    className="h-8 text-xs font-mono"
+                />
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Identificador de sesión. Múltiples nodos con el mismo ID comparten la misma conexión.
+                </p>
+            </FieldGroup>
+
+            <div className="p-2 rounded-md border border-dashed border-green-500/30 bg-green-500/5">
+                <p className="text-[10px] text-muted-foreground">
+                    ⚡ Para vincular WhatsApp, inicia la sesión desde el <strong>menú de sesiones</strong> en la toolbar del canvas. El QR aparecerá ahí.
+                </p>
+            </div>
+
+            <Separator />
+
             <FieldGroup label="Acción">
                 <Select value={action} onValueChange={(v) => update('action', v)}>
                     <SelectTrigger className="h-8 text-xs">
@@ -275,7 +350,7 @@ function WhatsAppConfigFields({ config, update }: {
                     <Textarea
                         value={config.message || ''}
                         onChange={(e) => update('message', e.target.value)}
-                        placeholder="{{global.timeEmoji}} Hola {{http1.data.body.user}}"
+                        placeholder={"{{global.timeEmoji}} Hola {{http1.data.body.user}}"}
                         className="text-xs min-h-[80px]"
                     />
                     <p className="text-[10px] text-muted-foreground mt-0.5">

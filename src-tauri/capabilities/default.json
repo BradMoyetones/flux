@@ -16,6 +16,26 @@
         "fs:default",
         "fs:allow-read-text-file",
         "fs:allow-resource-read-recursive",
-        "dialog:default"
+        "dialog:default",
+        {
+            "identifier": "shell:allow-execute",
+            "allow": [
+                {
+                    "name": "binaries/whatsapp-sidecar",
+                    "sidecar": true,
+                    "args": true
+                }
+            ]
+        },
+        {
+            "identifier": "shell:allow-spawn",
+            "allow": [
+                {
+                    "name": "binaries/whatsapp-sidecar",
+                    "sidecar": true,
+                    "args": true
+                }
+            ]
+        }
     ]
 }
