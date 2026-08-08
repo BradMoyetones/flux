@@ -1,0 +1,24 @@
+{
+    "app": {
+        "windows": [
+            {
+                "label": "main",
+                "title": "",
+                "width": 1050,
+                "height": 750,
+                "minWidth": 800,
+                "minHeight": 600,
+                "resizable": true,
+                "transparent": true,
+                "decorations": true,
+                "dragDropEnabled": false,
+                "titleBarStyle": "Overlay",
+                "hiddenTitle": true,
+                "trafficLightPosition": {
+                    "x": 16,
+                    "y": 20
+                }
+            }
+        ]
+    }
+}

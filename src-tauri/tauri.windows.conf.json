@@ -1,0 +1,19 @@
+{
+    "app": {
+        "windows": [
+            {
+                "label": "main",
+                "title": "",
+                "width": 1050,
+                "height": 750,
+                "minWidth": 800,
+                "minHeight": 600,
+                "resizable": true,
+                "transparent": true,
+                "decorations": false,
+                "dragDropEnabled": false,
+                "hiddenTitle": true
+            }
+        ]
+    }
+}

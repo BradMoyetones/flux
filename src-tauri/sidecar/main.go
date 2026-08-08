@@ -14,7 +14,7 @@ import (
 	"strings"
 	"syscall"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -49,12 +49,12 @@ func main() {
 	log.SetOutput(os.Stderr)
 
 	dbLog := waLog.Stdout("Database", "WARN", true)
-	container, err := sqlstore.New("sqlite3", fmt.Sprintf("file:%s?_foreign_keys=on", *dbPath), dbLog)
+	container, err := sqlstore.New(context.Background(), "sqlite", fmt.Sprintf("file:%s?_foreign_keys=on", *dbPath), dbLog)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	deviceStore, err := container.GetFirstDevice()
+	deviceStore, err := container.GetFirstDevice(context.Background())
 	if err != nil {
 		log.Fatalf("Failed to get device store: %v", err)
 	}
@@ -233,11 +233,11 @@ func handleSendMedia(w http.ResponseWriter, r *http.Request) {
 			ImageMessage: &waE2E.ImageMessage{
 				Caption:       proto.String(req.Caption),
 				Mimetype:      proto.String(mimeType),
-				Url:           proto.String(resp.URL),
+				URL:           proto.String(resp.URL),
 				DirectPath:    proto.String(resp.DirectPath),
 				MediaKey:      resp.MediaKey,
-				FileEncSha256: resp.FileEncSHA256,
-				FileSha256:    resp.FileSHA256,
+				FileEncSHA256: resp.FileEncSHA256,
+				FileSHA256:    resp.FileSHA256,
 				FileLength:    proto.Uint64(uint64(len(data))),
 			},
 		}
@@ -251,11 +251,11 @@ func handleSendMedia(w http.ResponseWriter, r *http.Request) {
 			VideoMessage: &waE2E.VideoMessage{
 				Caption:       proto.String(req.Caption),
 				Mimetype:      proto.String(mimeType),
-				Url:           proto.String(resp.URL),
+				URL:           proto.String(resp.URL),
 				DirectPath:    proto.String(resp.DirectPath),
 				MediaKey:      resp.MediaKey,
-				FileEncSha256: resp.FileEncSHA256,
-				FileSha256:    resp.FileSHA256,
+				FileEncSHA256: resp.FileEncSHA256,
+				FileSHA256:    resp.FileSHA256,
 				FileLength:    proto.Uint64(uint64(len(data))),
 			},
 		}
@@ -269,11 +269,11 @@ func handleSendMedia(w http.ResponseWriter, r *http.Request) {
 			DocumentMessage: &waE2E.DocumentMessage{
 				Title:         proto.String(filepath.Base(req.MediaPath)),
 				Mimetype:      proto.String(mimeType),
-				Url:           proto.String(resp.URL),
+				URL:           proto.String(resp.URL),
 				DirectPath:    proto.String(resp.DirectPath),
 				MediaKey:      resp.MediaKey,
-				FileEncSha256: resp.FileEncSHA256,
-				FileSha256:    resp.FileSHA256,
+				FileEncSHA256: resp.FileEncSHA256,
+				FileSHA256:    resp.FileSHA256,
 				FileLength:    proto.Uint64(uint64(len(data))),
 			},
 		}
@@ -300,7 +300,7 @@ func handleChats(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleContacts(w http.ResponseWriter, r *http.Request) {
-	contacts, err := cli.Store.Contacts.GetAllContacts()
+	contacts, err := cli.Store.Contacts.GetAllContacts(context.Background())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -314,7 +314,7 @@ func handleDisconnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cli.Disconnect()
-	err := cli.Logout()
+	err := cli.Logout(context.Background())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
