@@ -4,7 +4,7 @@ import { File, House, Settings, Sparkles, Workflow, type LucideIcon } from 'luci
 import { HomeView } from '@/modules/home/ui/screens/home-view';
 import { ReleaseNotes } from '@/modules/release-notes/ui/screens/release-notes';
 import FlowCanvas from '@/modules/flows/ui/screens/flow-canvas';
-import SettingsView from '@/modules/settings/ui/screens/settings-view';
+import SettingsView from '@/modules/settings/ui/screens';
 import { ReactFlowProvider } from '@xyflow/react';
 
 /**

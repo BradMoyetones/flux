@@ -22,6 +22,15 @@ pub async fn cmd_wa_stop_session(
 }
 
 #[command]
+pub async fn cmd_wa_delete_session(
+    app: AppHandle,
+    state: State<'_, Arc<WhatsAppManager>>,
+    session_id: String,
+) -> Result<(), String> {
+    state.delete_session(&app, &session_id).await
+}
+
+#[command]
 pub async fn cmd_wa_list_sessions(
     app: AppHandle,
     state: State<'_, Arc<WhatsAppManager>>,

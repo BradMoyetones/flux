@@ -107,6 +107,26 @@ impl WhatsAppManager {
         Ok(())
     }
 
+    pub async fn delete_session(&self, app: &AppHandle, session_id: &str) -> Result<(), String> {
+        // 1. Try to disconnect via HTTP to logout from WhatsApp servers
+        let _ = self.send_request(session_id, "POST", "/disconnect", None).await;
+
+        // 2. Stop the process and remove from memory map
+        self.stop_session(session_id).await?;
+
+        // 3. Delete the SQLite database file
+        if let Ok(app_data_dir) = app.path().app_data_dir() {
+            let mut db_path = app_data_dir.clone();
+            db_path.push("whatsapp");
+            db_path.push(format!("{}.db", session_id));
+            if db_path.exists() {
+                let _ = std::fs::remove_file(db_path);
+            }
+        }
+
+        Ok(())
+    }
+
     pub async fn list_sessions(&self, app: &AppHandle) -> Vec<WhatsAppSessionInfo> {
         let mut results = HashMap::new();
         

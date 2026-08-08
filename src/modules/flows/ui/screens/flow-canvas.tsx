@@ -23,6 +23,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/ui/compo
 import { ExecutionInspector } from '../components/execution-inspector';
 import { Bug } from 'lucide-react';
 import { Badge } from '@/ui/components/ui/badge';
+import { Spinner } from '@/ui/components/ui/spinner';
 
 export default function FlowCanvas() {
     const { pathId } = useParams();
@@ -56,9 +57,12 @@ export default function FlowCanvas() {
         setupFlowListeners();
     }, []);
 
+    const [isSaving, setIsSaving] = useState(false);
+
     // ──── Save ────
     const onSave = useCallback(async () => {
         if (!pathId) return;
+        setIsSaving(true);
         const decodedPath = decodeURIComponent(pathId);
 
         const workflowPayload = {
@@ -87,6 +91,8 @@ export default function FlowCanvas() {
             console.log("Saved successfully");
         } catch (e) {
             console.error("Save failed", e);
+        } finally {
+            setIsSaving(false);
         }
     }, [pathId, workflowId, nodes, edges]);
 
@@ -200,6 +206,7 @@ export default function FlowCanvas() {
                                     linkingSessionId={wa.linkingSessionId}
                                     onStartSession={wa.startSession}
                                     onStopSession={wa.stopSession}
+                                    onDeleteSession={wa.deleteSession}
                                     onRefresh={wa.refreshSessions}
                                     onSetLinking={wa.setLinkingSessionId}
                                     trigger={
@@ -228,9 +235,10 @@ export default function FlowCanvas() {
                                     onClick={onSave}
                                     variant='outline'
                                     title="Save Workflow"
+                                    disabled={isSaving}
                                 >
-                                    <Save />
-                                    Save
+                                    {isSaving ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                                    {isSaving ? 'Guardando...' : 'Save'}
                                 </Button>
 
                                 <Button

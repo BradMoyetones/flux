@@ -20,6 +20,7 @@ pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
         execution::cmd_execute_workflow,
         whatsapp::cmd_wa_start_session,
         whatsapp::cmd_wa_stop_session,
+        whatsapp::cmd_wa_delete_session,
         whatsapp::cmd_wa_list_sessions,
         whatsapp::cmd_wa_get_status,
         whatsapp::cmd_wa_get_qr_url,

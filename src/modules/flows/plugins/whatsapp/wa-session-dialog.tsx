@@ -7,8 +7,9 @@ import { Badge } from '@/ui/components/ui/badge';
 import { Separator } from '@/ui/components/ui/separator';
 import { ScrollArea } from '@/ui/components/ui/scroll-area';
 import { Spinner } from '@/ui/components/ui/spinner';
-import { MessageSquare, Plus, Power, PowerOff, RefreshCw, Wifi, Smartphone } from 'lucide-react';
+import { MessageSquare, Plus, Power, PowerOff, RefreshCw, Wifi, Smartphone, Trash2 } from 'lucide-react';
 import type { WhatsAppSessionInfo } from './use-whatsapp-session';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/components/ui/tooltip';
 
 interface WaSessionDialogProps {
     sessions: WhatsAppSessionInfo[];
@@ -18,6 +19,7 @@ interface WaSessionDialogProps {
     linkingSessionId: string | null;
     onStartSession: (sessionId: string) => Promise<WhatsAppSessionInfo | null>;
     onStopSession: (sessionId: string) => Promise<void>;
+    onDeleteSession: (sessionId: string) => Promise<void>;
     onRefresh: () => Promise<void>;
     onSetLinking: (id: string | null) => void;
     trigger?: React.ReactNode;
@@ -31,6 +33,7 @@ export function WaSessionDialog({
     linkingSessionId,
     onStartSession,
     onStopSession,
+    onDeleteSession,
     onRefresh,
     onSetLinking,
     trigger,
@@ -39,6 +42,7 @@ export function WaSessionDialog({
     const [newSessionName, setNewSessionName] = useState('');
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [connected, setConnected] = useState(false);
+    const [actionState, setActionState] = useState<{ id: string, type: 'start' | 'stop' | 'delete' } | null>(null);
     const eventSourceRef = useRef<EventSource | null>(null);
 
     // ──── SSE listener for QR ────
@@ -91,22 +95,35 @@ export function WaSessionDialog({
     const handleCreate = useCallback(async () => {
         const name = newSessionName.trim() || `session-${Date.now()}`;
         setNewSessionName('');
+        setActionState({ id: name, type: 'start' });
         await onStartSession(name);
+        setActionState(null);
     }, [newSessionName, onStartSession]);
 
     // ──── Stop session ────
     const handleStop = useCallback(async (id: string) => {
+        setActionState({ id, type: 'stop' });
         await onStopSession(id);
         if (linkingSessionId === id) {
             setQrCode(null);
             setConnected(false);
         }
+        setActionState(null);
     }, [onStopSession, linkingSessionId]);
 
     // ──── Reconnect / show QR for existing session ────
     const handleLink = useCallback(async (id: string) => {
+        setActionState({ id, type: 'start' });
         await onStartSession(id);
+        setActionState(null);
     }, [onStartSession]);
+
+    // ──── Delete session ────
+    const handleDelete = useCallback(async (id: string) => {
+        setActionState({ id, type: 'delete' });
+        await onDeleteSession(id);
+        setActionState(null);
+    }, [onDeleteSession]);
 
     const activeCount = sessions.filter(s => s.connected).length;
 
@@ -186,16 +203,13 @@ export function WaSessionDialog({
                             value={newSessionName}
                             onChange={(e) => setNewSessionName(e.target.value)}
                             placeholder="Nombre de sesión (ej: personal, trabajo)"
-                            className="h-8 text-xs flex-1"
                             onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
                         />
                         <Button
-                            size="sm"
                             onClick={handleCreate}
                             disabled={loading}
-                            className="gap-1 shrink-0"
                         >
-                            {loading ? <Spinner className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                            {loading ? <Spinner /> : <Plus />}
                             Nueva
                         </Button>
                     </div>
@@ -216,11 +230,10 @@ export function WaSessionDialog({
                                         className="flex items-center gap-2 p-2.5 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                                     >
                                         {/* Status dot */}
-                                        <div className={`w-2 h-2 rounded-full shrink-0 ${
-                                            session.connected
-                                                ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]'
-                                                : 'bg-yellow-500/60'
-                                        }`} />
+                                        <div className={`w-2 h-2 rounded-full shrink-0 ${session.connected
+                                            ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]'
+                                            : 'bg-yellow-500/60'
+                                            }`} />
 
                                         {/* Session info */}
                                         <div className="flex-1 min-w-0">
@@ -239,25 +252,65 @@ export function WaSessionDialog({
                                         {/* Actions */}
                                         <div className="flex gap-1 shrink-0">
                                             {!session.connected && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6"
-                                                    onClick={() => handleLink(session.id)}
-                                                    title="Vincular"
-                                                >
-                                                    <Power className="w-3 h-3 text-green-500" />
-                                                </Button>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6"
+                                                            onClick={() => handleLink(session.id)}
+                                                            disabled={loading}
+                                                        >
+                                                            {actionState?.id === session.id && actionState.type === 'start' ? (
+                                                                <Spinner className="text-green-500" />
+                                                            ) : (
+                                                                <Power className="text-green-500" />
+                                                            )}
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Vincular</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
                                             )}
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6"
-                                                onClick={() => handleStop(session.id)}
-                                                title="Desconectar"
-                                            >
-                                                <PowerOff className="w-3 h-3 text-red-400" />
-                                            </Button>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleStop(session.id)}
+                                                        disabled={loading}
+                                                    >
+                                                        {actionState?.id === session.id && actionState.type === 'stop' ? (
+                                                            <Spinner className="text-yellow-500" />
+                                                        ) : (
+                                                            <PowerOff className="text-yellow-500" />
+                                                        )}
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Detener Sidecar</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="icon"
+                                                        onClick={() => handleDelete(session.id)}
+                                                        disabled={loading}
+                                                    >
+                                                        {actionState?.id === session.id && actionState.type === 'delete' ? (
+                                                            <Spinner />
+                                                        ) : (
+                                                            <Trash2 />
+                                                        )}
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Eliminar sesión</p>
+                                                </TooltipContent>
+                                            </Tooltip>
                                         </div>
                                     </div>
                                 ))
@@ -270,8 +323,8 @@ export function WaSessionDialog({
                         <p className="text-[10px] text-muted-foreground">
                             {sessions.length} sesión(es) • {activeCount} conectada(s)
                         </p>
-                        <Button variant="ghost" size="sm" onClick={onRefresh} className="gap-1 h-7 text-xs">
-                            <RefreshCw className="w-3 h-3" />
+                        <Button variant="ghost" size="sm" onClick={onRefresh}>
+                            <RefreshCw />
                             Actualizar
                         </Button>
                     </div>

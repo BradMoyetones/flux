@@ -35,6 +35,7 @@ interface UseWhatsAppSessionReturn {
     linkingSessionId: string | null;
     startSession: (sessionId: string) => Promise<WhatsAppSessionInfo | null>;
     stopSession: (sessionId: string) => Promise<void>;
+    deleteSession: (sessionId: string) => Promise<void>;
     refreshSessions: () => Promise<void>;
     getStatus: (sessionId: string) => Promise<{ connected: boolean; jid: string } | null>;
     fetchContacts: (sessionId: string) => Promise<WaContact[]>;
@@ -102,6 +103,18 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
             await refreshSessions();
         } catch (e: any) {
             setError(typeof e === 'string' ? e : e.message || 'Error stopping session');
+        }
+    }, [linkingSessionId, refreshSessions]);
+
+    // ──── Delete session ────
+    const deleteSession = useCallback(async (sessionId: string) => {
+        try {
+            await invoke('cmd_wa_delete_session', { sessionId });
+            setQrUrl(null);
+            if (linkingSessionId === sessionId) setLinkingSessionId(null);
+            await refreshSessions();
+        } catch (e: any) {
+            setError(typeof e === 'string' ? e : e.message || 'Error deleting session');
         }
     }, [linkingSessionId, refreshSessions]);
 
@@ -177,6 +190,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
         linkingSessionId,
         startSession,
         stopSession,
+        deleteSession,
         refreshSessions,
         getStatus,
         fetchContacts,

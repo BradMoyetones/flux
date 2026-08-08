@@ -77,6 +77,7 @@ export function NodeConfigPanel({ node, onClose, onUpdateConfig, onUpdateLabel, 
 
                     {/* Config fields dinámicos por tipo */}
                     <ConfigFields
+                        key={node.id}
                         nodeType={node.type || ''}
                         config={node.data.config}
                         onChange={(config) => onUpdateConfig(node.id, config)}
@@ -367,6 +368,7 @@ function WhatsAppConfigFields({ config, update }: {
                         linkingSessionId={wa.linkingSessionId}
                         onStartSession={wa.startSession}
                         onStopSession={wa.stopSession}
+                        onDeleteSession={wa.deleteSession}
                         onRefresh={wa.refreshSessions}
                         onSetLinking={wa.setLinkingSessionId}
                         trigger={
