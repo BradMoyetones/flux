@@ -24,8 +24,8 @@ impl NodePlugin for WhatsAppPlugin {
             use std::sync::Arc;
             
             if let Some(state) = ctx.app.try_state::<Arc<WhatsAppManager>>() {
-                if let Ok(port) = state.get_session_port(&session_id).await {
-                    cfg.sidecar_port = Some(port);
+                if let Ok(info) = state.start_session(&ctx.app, &session_id).await {
+                    cfg.sidecar_port = Some(info.port);
                 }
             }
         }

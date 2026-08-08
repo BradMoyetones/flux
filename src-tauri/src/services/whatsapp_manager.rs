@@ -107,9 +107,38 @@ impl WhatsAppManager {
         Ok(())
     }
 
-    pub async fn list_sessions(&self) -> Vec<WhatsAppSessionInfo> {
+    pub async fn list_sessions(&self, app: &AppHandle) -> Vec<WhatsAppSessionInfo> {
+        let mut results = HashMap::new();
+        
+        // 1. Escanear base de datos locales
+        if let Ok(app_data_dir) = app.path().app_data_dir() {
+            let mut db_path = app_data_dir.clone();
+            db_path.push("whatsapp");
+            
+            if let Ok(entries) = std::fs::read_dir(&db_path) {
+                for entry in entries.filter_map(Result::ok) {
+                    let path = entry.path();
+                    if path.is_file() && path.extension().unwrap_or_default() == "db" {
+                        if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                            results.insert(stem.to_string(), WhatsAppSessionInfo {
+                                id: stem.to_string(),
+                                port: 0, // No corriendo aún
+                                connected: false,
+                                jid: None,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Sobrescribir con las sesiones corriendo en memoria
         let sessions = self.sessions.lock().await;
-        sessions.values().map(|s| s.info.clone()).collect()
+        for (id, session) in sessions.iter() {
+            results.insert(id.clone(), session.info.clone());
+        }
+
+        results.into_values().collect()
     }
 
     pub async fn send_request(&self, session_id: &str, method: &str, path: &str, body: Option<&Value>) -> Result<Value, String> {

@@ -23,9 +23,10 @@ pub async fn cmd_wa_stop_session(
 
 #[command]
 pub async fn cmd_wa_list_sessions(
+    app: AppHandle,
     state: State<'_, Arc<WhatsAppManager>>,
 ) -> Result<Value, String> {
-    let sessions = state.list_sessions().await;
+    let sessions = state.list_sessions(&app).await;
     Ok(serde_json::to_value(sessions).unwrap())
 }
 

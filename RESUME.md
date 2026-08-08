@@ -519,3 +519,10 @@ Descubrí que la base del motor de ejecución estaba coja y decidí hacer una re
 3. **Flexibilidad en el Interpolador y Bug del Alias:** Arreglé un bug molesto en el que el botón "Ejecutar" del canvas olvidaba enviar el alias al backend. Pero lo más importante, refactoricé la lógica del archivo `interpolator.rs`. El motor antes era terco y forzaba la sintaxis `{{alias.data.parametro}}`. Lo modifiqué con validaciones flexibles para que soporte el acceso directo `{{node2.body}}` o la ruta completa `{{node2.data.body}}`. Ya no más errores de `sin resultado` solo por omitir el `.data.`.
 
 ¡El backend en Rust ahora sí se siente como un orquestador de nivel empresarial!
+
+### Persistencia y Auto-arranque de WhatsApp
+
+Se solucionó el problema de persistencia en los reinicios de la aplicación:
+1. El sidecar de Go siempre ha persistido su sesión en SQLite (`app_data_dir/whatsapp`), pero el backend de Rust arrancaba "ciego" y con su mapa de sesiones vacío tras un reinicio.
+2. Refactoricé `list_sessions` en `whatsapp_manager.rs` para que escanee proactivamente la carpeta de la base de datos buscando archivos `.db`. Ahora, las sesiones previamente vinculadas aparecen siempre en la lista del frontend, aun cuando el sidecar de la sesión específica no esté ejecutándose.
+3. Actualicé `WhatsAppPlugin::execute` (el core de ejecución de flujos) para que llame a `start_session` en lugar de sólo consultar si el puerto está disponible. Gracias a esto, si tienes un flujo programado y el sidecar de WhatsApp estaba apagado, Flux lo "despertará" automáticamente al vuelo utilizando los datos de SQLite y enviará tu mensaje sin intervención manual (ni escaneos QR).
