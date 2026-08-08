@@ -126,6 +126,7 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleQR(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -300,6 +301,10 @@ func handleChats(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleContacts(w http.ResponseWriter, r *http.Request) {
+	if cli.Store.Contacts == nil {
+		json.NewEncoder(w).Encode(map[string]interface{}{})
+		return
+	}
 	contacts, err := cli.Store.Contacts.GetAllContacts(context.Background())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
