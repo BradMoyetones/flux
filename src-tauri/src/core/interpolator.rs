@@ -38,11 +38,15 @@ fn resolve_expression(expr: &str, ctx: &ExecutionContext) -> String {
         "env" => std::env::var(parts.get(1).copied().unwrap_or(""))
             .unwrap_or_default(),
         node_id => {
-            // nodeId.data.path.to.value
-            let json_path = expr
-                .strip_prefix(node_id)
-                .and_then(|s| s.strip_prefix(".data."))
-                .unwrap_or("");
+            // Soporta tanto nodeId.data.path.to.value como nodeId.path.to.value
+            let suffix = expr.strip_prefix(node_id).unwrap_or("");
+            let json_path = if let Some(stripped) = suffix.strip_prefix(".data.") {
+                stripped
+            } else if let Some(stripped) = suffix.strip_prefix(".") {
+                stripped
+            } else {
+                suffix
+            };
             resolve_node_output(node_id, json_path, ctx)
         }
     }
@@ -50,7 +54,7 @@ fn resolve_expression(expr: &str, ctx: &ExecutionContext) -> String {
 
 fn resolve_node_output(node_id: &str, json_path: &str, ctx: &ExecutionContext) -> String {
     match ctx.get_node_result(node_id) {
-        Some(value) => navigate_json(value, json_path),
+        Some(value) => navigate_json(&value, json_path),
         None => format!("{{{{ERR: node '{}' sin resultado}}}}", node_id),
     }
 }

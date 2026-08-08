@@ -12,7 +12,7 @@ impl NodePlugin for WhatsAppPlugin {
         "whatsapp"
     }
 
-    async fn execute(&self, ctx: &mut ExecutionContext, config: &Value) -> Result<Value, String> {
+    async fn execute(&self, ctx: &ExecutionContext, config: &Value) -> Result<Value, String> {
         let mut cfg: WhatsAppNodeConfig = serde_json::from_value(config.clone())
             .map_err(|e| format!("Config inválida para WhatsAppPlugin: {e}"))?;
 

@@ -507,3 +507,15 @@ Así que metí mano a la arquitectura y construí dos mejoras brutales:
 2. **Inspector de Ejecución:** Para matar el otro problema que era "crear flujos a ciegas", implementé un modo Debug en el Canvas. Agregué un botón con un ícono de un 'Bug' en la toolbar superior derecha que despliega un panel lateral (`ExecutionInspector`). Usé componentes redimensionables de `shadcn` para que pueda expandirlo a mi gusto. El inspector escucha los eventos en tiempo real que escupe Tauri y formatea el JSON completo de los inputs, outputs o errores de cada nodo de manera visual y agrupada, para que si un nodo revienta, yo sepa exactamente por qué.
 
 ¡La experiencia de armar flujos ahora sí se siente super robusta!
+
+### Refactorización Arquitectónica: Motor DAG, Cookie Jar y Flexibilidad de Interpolación
+
+Descubrí que la base del motor de ejecución estaba coja y decidí hacer una refactorización pesada a nivel arquitectónico para resolver 3 problemas críticos:
+
+1. **Verdadero Motor DAG Asíncrono:** Me di cuenta que los nodos se estaban ejecutando en orden secuencial. Si el flujo tenía varias ramas paralelas, una bloqueaba a la otra, y si una fallaba, mataba todo. Reescribí todo el `executor.rs` para implementar el Algoritmo de Kahn concurrente utilizando `tokio::spawn` y canales `watch`. Ahora cada nodo es una tarea asíncrona independiente que inicia de inmediato si no tiene dependencias, o se queda esperando pacientemente a que sus "padres" le den luz verde. Es una ejecución multihilo real, donde un nodo solo corre si sus dependencias fueron un rotundo *Success*.
+
+2. **Cookie Jar Global:** Obligar al usuario a mapear cookies como `{{node1.data.cookies...}}` para pasarlas de una petición HTTP a otra era arcaico. Integré un `cookie_jar` compartido dentro de un `Arc` directamente en el `ExecutionContext`. Ahora, si marco `persistCookies: true` en el nodo de HTTP, el motor de Rust automáticamente inyecta las cookies de la sesión en las peticiones posteriores, igualito a cómo funciona un navegador de verdad. Por supuesto, dejé intacta la flexibilidad por si en un caso rebuscado necesito extraer manualmente las cookies usando la interpolación 1 a 1.
+
+3. **Flexibilidad en el Interpolador y Bug del Alias:** Arreglé un bug molesto en el que el botón "Ejecutar" del canvas olvidaba enviar el alias al backend. Pero lo más importante, refactoricé la lógica del archivo `interpolator.rs`. El motor antes era terco y forzaba la sintaxis `{{alias.data.parametro}}`. Lo modifiqué con validaciones flexibles para que soporte el acceso directo `{{node2.body}}` o la ruta completa `{{node2.data.body}}`. Ya no más errores de `sin resultado` solo por omitir el `.data.`.
+
+¡El backend en Rust ahora sí se siente como un orquestador de nivel empresarial!

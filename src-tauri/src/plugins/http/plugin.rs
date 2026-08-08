@@ -14,7 +14,7 @@ impl NodePlugin for HttpPlugin {
         "http"
     }
 
-    async fn execute(&self, _ctx: &mut ExecutionContext, config: &Value) -> Result<Value, String> {
+    async fn execute(&self, ctx: &ExecutionContext, config: &Value) -> Result<Value, String> {
         let cfg: HttpNodeConfig = serde_json::from_value(config.clone())
             .map_err(|e| format!("Config inválida para HttpPlugin: {e}"))?;
 
@@ -23,6 +23,10 @@ impl NodePlugin for HttpPlugin {
             .timeout(Duration::from_millis(cfg.timeout_ms))
             .danger_accept_invalid_certs(cfg.ignore_ssl_errors)
             .cookie_store(cfg.persist_cookies);
+            
+        if cfg.persist_cookies {
+            client_builder = client_builder.cookie_provider(ctx.cookie_jar.clone());
+        }
 
         // Redirects
         if !cfg.follow_redirects || cfg.max_redirects == 0 {

@@ -140,6 +140,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       trigger: { type: "manual" },
       nodes: nodes.map(n => ({
         id: n.id,
+        name: n.data.name || n.id,
         type: n.type || 'default',
         label: n.data.label,
         config: n.data.config,

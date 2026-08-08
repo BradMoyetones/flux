@@ -10,13 +10,13 @@ export function ExecutionInspector() {
     const executedNodes = nodes.filter(n => n.data.status && n.data.status !== 'pending');
 
     return (
-        <div className="h-full bg-card border-l flex flex-col w-full relative top-0 bottom-0 right-0">
+        <div className="h-full bg-card border-l flex flex-col w-full">
             <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
                 <Bug className="w-4 h-4 text-primary" />
                 <h3 className="text-sm font-semibold">Inspector de Ejecución</h3>
             </div>
 
-            <ScrollArea className="flex-1 overflow-y-auto">
+            <ScrollArea className="flex-1 h-10">
                 {executedNodes.length === 0 ? (
                     <div className="p-8 text-center text-xs text-muted-foreground">
                         No hay registros de ejecución.<br/>Ejecuta el flujo para ver los resultados.

@@ -101,7 +101,7 @@ impl WhatsAppManager {
 
     pub async fn stop_session(&self, session_id: &str) -> Result<(), String> {
         let mut sessions = self.sessions.lock().await;
-        if let Some(mut session) = sessions.remove(session_id) {
+        if let Some(session) = sessions.remove(session_id) {
             session.child.kill().map_err(|e| format!("Failed to kill sidecar: {}", e))?;
         }
         Ok(())

@@ -9,7 +9,7 @@ pub trait NodePlugin: Send + Sync {
     fn identifier(&self) -> &'static str;
     
     /// Ejecuta el plugin tomando la configuración del nodo y el contexto actual
-    async fn execute(&self, ctx: &mut ExecutionContext, config: &Value) -> Result<Value, String>;
+    async fn execute(&self, ctx: &ExecutionContext, config: &Value) -> Result<Value, String>;
 }
 
 pub struct PluginRegistry {
