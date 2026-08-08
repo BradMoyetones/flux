@@ -114,8 +114,8 @@ export function WaSessionDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="outline" size="sm" className="gap-2">
-                        <MessageSquare className="w-4 h-4 text-green-500" />
+                    <Button variant="outline">
+                        <MessageSquare className="text-green-500" />
                         WhatsApp
                         {activeCount > 0 && (
                             <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-green-500/20 text-green-400">

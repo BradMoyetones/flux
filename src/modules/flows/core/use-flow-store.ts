@@ -17,6 +17,7 @@ import { listen } from '@tauri-apps/api/event';
 import { NodeExecutionEvent, WorkflowExecutionEvent, NodeStatus, Workflow } from './types';
 
 export type AppNodeData = {
+  name: string;
   label: string;
   config: Record<string, any>;
   status?: NodeStatus;
@@ -59,9 +60,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         type: n.type || 'http', // Default to http for now
         position: n.position || { x: 200, y: index * 150 },
         data: {
-          label: n.label,
-          config: n.config,
-        }
+          name: (n as any).name || `node_${index + 1}`,
+          label: n.label || 'Node',
+          config: n.config || {},
+        },
       }));
 
       const reactFlowEdges: Edge[] = workflow.edges.map(e => ({

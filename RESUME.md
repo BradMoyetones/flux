@@ -495,3 +495,15 @@ Actualicé `src-tauri/src/plugins/whatsapp/plugin.rs`. Ahora, cuando el nodo Wha
 
 #### 4. Recompilación automática
 Recompilé los binarios (`whatsapp-sidecar-x86_64-apple-darwin` y el aarch64) inyectando todas las correcciones de estabilidad y pragmas SQLite.
+
+### Mejoras de UX/DX: Interpolación de Variables e Inspector de Ejecución
+
+Hoy me dediqué a resolver un dolor de cabeza enorme al momento de escalar los flujos de Flux. Resulta que cada nodo guardaba sus resultados bajo un UUID inmenso e indescifrable (`f0d8bc34...`), lo que me obligaba a escribir cosas horribles como `{{f0d8bc34-d4bc-4fba...data}}` para pasar datos entre nodos.
+
+Así que metí mano a la arquitectura y construí dos mejoras brutales:
+
+1. **Alias de Nodos:** Modifiqué el esquema en Rust (`workflow.rs`) y en el store de React (`use-flow-store.ts`) para que cada nodo ahora tenga un `name` con formato slug, el cual se autogenera cuando lo arrastro al canvas (por ejemplo: `http_1`, `whatsapp_2`). Añadí un campo en el panel derecho para poder editar ese nombre y ponerle algo semántico como `login_request`. El motor en backend (`executor.rs`) ahora es lo suficientemente listo como para guardar el resultado tanto bajo el UUID original como bajo el alias. ¡Ahora puedo hacer interpolaciones elegantes como `{{login_request.data.cookies}}`!
+
+2. **Inspector de Ejecución:** Para matar el otro problema que era "crear flujos a ciegas", implementé un modo Debug en el Canvas. Agregué un botón con un ícono de un 'Bug' en la toolbar superior derecha que despliega un panel lateral (`ExecutionInspector`). Usé componentes redimensionables de `shadcn` para que pueda expandirlo a mi gusto. El inspector escucha los eventos en tiempo real que escupe Tauri y formatea el JSON completo de los inputs, outputs o errores de cada nodo de manera visual y agrupada, para que si un nodo revienta, yo sepa exactamente por qué.
+
+¡La experiencia de armar flujos ahora sí se siente super robusta!

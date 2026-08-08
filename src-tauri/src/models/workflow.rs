@@ -28,6 +28,8 @@ pub struct XYPosition {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Node {
     pub id: String,
+    #[serde(default)]
+    pub name: String,
     #[serde(rename = "type")]
     pub node_type: String, // e.g., "http", "whatsapp", "excel"
     pub label: String,

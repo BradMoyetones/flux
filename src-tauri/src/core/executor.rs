@@ -68,6 +68,9 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                 match plugin.execute(&mut ctx, &interpolated_config).await {
                     Ok(result) => {
                         ctx.set_node_result(&node.id, result.clone());
+                        if !node.name.is_empty() {
+                            ctx.set_node_result(&node.name, result.clone());
+                        }
 
                         emit_node_event(&app, &NodeExecutionEvent {
                             workflow_id: workflow.id.clone(),

@@ -26,9 +26,10 @@ interface NodeConfigPanelProps {
     onClose: () => void;
     onUpdateConfig: (nodeId: string, config: Record<string, any>) => void;
     onUpdateLabel: (nodeId: string, label: string) => void;
+    onUpdateName: (nodeId: string, name: string) => void;
 }
 
-export function NodeConfigPanel({ node, onClose, onUpdateConfig, onUpdateLabel }: NodeConfigPanelProps) {
+export function NodeConfigPanel({ node, onClose, onUpdateConfig, onUpdateLabel, onUpdateName }: NodeConfigPanelProps) {
     if (!node) return null;
 
     const plugin = getPluginDefinition(node.type || '');
@@ -51,12 +52,25 @@ export function NodeConfigPanel({ node, onClose, onUpdateConfig, onUpdateLabel }
                 <div className="p-4 flex flex-col gap-4">
                     {/* Label */}
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground">Nombre del nodo</Label>
+                        <Label className="text-xs font-medium text-muted-foreground">Etiqueta visual</Label>
                         <Input
-                            value={node.data.label}
+                            value={node.data.label || ''}
                             onChange={(e) => onUpdateLabel(node.id, e.target.value)}
                             className="h-8 text-sm"
                         />
+                    </div>
+                    <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                            <Label className="text-xs font-medium text-muted-foreground">ID del Nodo</Label>
+                            <Badge variant="outline" className="text-[9px] font-mono font-normal">{'{{' + (node.data.name || node.id) + '.data}}'}</Badge>
+                        </div>
+                        <Input
+                            value={node.data.name || ''}
+                            onChange={(e) => onUpdateName(node.id, e.target.value)}
+                            className="h-8 text-sm font-mono"
+                            placeholder="ej: mi_nodo"
+                        />
+                        <p className="text-[10px] text-muted-foreground">Úsalo para interpolar variables en otros nodos.</p>
                     </div>
 
                     <Separator />
