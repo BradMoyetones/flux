@@ -41,7 +41,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
         Err(_) => return Err("Ciclo detectado en el DAG del workflow".into()),
     };
 
-    let mut ctx = ExecutionContext::new();
+    let mut ctx = ExecutionContext::new(app.clone());
 
     emit_workflow_event(&app, &WorkflowExecutionEvent {
         workflow_id: workflow.id.clone(),

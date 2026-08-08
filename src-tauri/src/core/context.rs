@@ -1,15 +1,18 @@
 use serde_json::Value;
 use std::collections::HashMap;
+use tauri::AppHandle;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Clone)]
 pub struct ExecutionContext {
     pub variables: HashMap<String, Value>,
+    pub app: AppHandle,
 }
 
 impl ExecutionContext {
-    pub fn new() -> Self {
+    pub fn new(app: AppHandle) -> Self {
         Self {
             variables: HashMap::new(),
+            app,
         }
     }
 

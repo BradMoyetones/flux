@@ -49,7 +49,8 @@ func main() {
 	log.SetOutput(os.Stderr)
 
 	dbLog := waLog.Stdout("Database", "WARN", true)
-	container, err := sqlstore.New(context.Background(), "sqlite", fmt.Sprintf("file:%s?_foreign_keys=on", *dbPath), dbLog)
+	dsn := fmt.Sprintf("file:%s?_foreign_keys=on&_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)", *dbPath)
+	container, err := sqlstore.New(context.Background(), "sqlite", dsn, dbLog)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

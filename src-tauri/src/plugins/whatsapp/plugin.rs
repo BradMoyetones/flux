@@ -12,9 +12,23 @@ impl NodePlugin for WhatsAppPlugin {
         "whatsapp"
     }
 
-    async fn execute(&self, _ctx: &mut ExecutionContext, config: &Value) -> Result<Value, String> {
-        let cfg: WhatsAppNodeConfig = serde_json::from_value(config.clone())
+    async fn execute(&self, ctx: &mut ExecutionContext, config: &Value) -> Result<Value, String> {
+        let mut cfg: WhatsAppNodeConfig = serde_json::from_value(config.clone())
             .map_err(|e| format!("Config inválida para WhatsAppPlugin: {e}"))?;
+
+        // 1. Fetch sidecar port from WhatsAppManager if not provided
+        if cfg.sidecar_port.is_none() {
+            let session_id = cfg.session_id.clone().unwrap_or_else(|| "default".to_string());
+            use tauri::Manager;
+            use crate::services::whatsapp_manager::WhatsAppManager;
+            use std::sync::Arc;
+            
+            if let Some(state) = ctx.app.try_state::<Arc<WhatsAppManager>>() {
+                if let Ok(port) = state.get_session_port(&session_id).await {
+                    cfg.sidecar_port = Some(port);
+                }
+            }
+        }
 
         match cfg.action {
             WhatsAppAction::SendMessage => {

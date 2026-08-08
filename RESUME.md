@@ -470,3 +470,28 @@ Muestra un badge verde con el número de sesiones activas.
 ### Compilación
 - **Rust** (`cargo check`): ✅ Compila limpio
 - **TypeScript** (`tsc --noEmit`): ✅ 0 errores
+
+---
+
+## Fase 7 — Bloque 2.6: WhatsApp Bugfixes (SQLite Busy & Node Execution)
+
+### El Problema
+1. Al reiniciar la app y consultar chats o enviar mensajes con la sesión abierta, el binario arrojaba advertencias de base de datos bloqueada (`database is locked (5) (SQLITE_BUSY)`).
+2. Cuando el nodo de WhatsApp se ejecutaba durante un flujo, no lograba enviar mensajes e internamente terminaba ignorando los datos por fallar en localizar el `sidecar_port` (ejecutando en "mock mode").
+
+### Lo Que Hice
+
+#### 1. Activación de SQLite WAL Mode
+Modifiqué `src-tauri/sidecar/main.go` para añadir los pragmas recomendados de SQLite al instanciar `sqlstore`. 
+- `_pragma=busy_timeout(5000)`
+- `_pragma=journal_mode(WAL)`
+Esto permite lecturas y escrituras concurrentes correctas, eliminando el error `SQLITE_BUSY`.
+
+#### 2. Inyección dinámica del AppHandle en el ExecutionContext
+Modifiqué `src-tauri/src/core/context.rs` para que el `ExecutionContext` reciba e integre internamente el `AppHandle` de Tauri. Esto le otorga a cualquier plugin el poder de consultar el estado de la aplicación durante su ejecución.
+
+#### 3. Fetch dinámico del puerto en WhatsAppPlugin
+Actualicé `src-tauri/src/plugins/whatsapp/plugin.rs`. Ahora, cuando el nodo WhatsApp va a ejecutar una acción (enviar mensaje, obtener chats, etc.), en lugar de buscar un `sidecar_port` estático en el frontend, utiliza el `session_id` para extraer el puerto dinámico directamente desde el `WhatsAppManager` que vive en el `AppHandle`. Esto hace que el nodo finalmente conecte a la API Go y envíe mensajes de forma real con los datos interpolados.
+
+#### 4. Recompilación automática
+Recompilé los binarios (`whatsapp-sidecar-x86_64-apple-darwin` y el aarch64) inyectando todas las correcciones de estabilidad y pragmas SQLite.
