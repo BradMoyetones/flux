@@ -1,104 +1,186 @@
 import { useState, useCallback, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
-interface WhatsAppSessionInfo {
+// ──── Types ────
+
+export interface WhatsAppSessionInfo {
     id: string;
     port: number;
     connected: boolean;
     jid: string | null;
 }
 
+export interface WaContact {
+    jid: string;
+    name: string;
+    phone: string;
+}
+
+export interface WaChat {
+    jid: string;
+    name: string;
+}
+
 interface UseWhatsAppSessionReturn {
-    /** Lista de sesiones activas */
     sessions: WhatsAppSessionInfo[];
-    /** Estado de la sesión actual */
-    currentSession: WhatsAppSessionInfo | null;
-    /** Si está cargando */
     loading: boolean;
-    /** Error actual */
     error: string | null;
-    /** URL del endpoint QR (para EventSource SSE) */
+    /** Contactos por sessionId */
+    contacts: Record<string, WaContact[]>;
+    /** Chats por sessionId */
+    chats: Record<string, WaChat[]>;
+    /** QR URL para una sesión (para SSE) */
     qrUrl: string | null;
-    /** Iniciar una sesión */
-    startSession: (sessionId: string) => Promise<void>;
-    /** Detener una sesión */
+    /** Sesión que se está vinculando actualmente */
+    linkingSessionId: string | null;
+    startSession: (sessionId: string) => Promise<WhatsAppSessionInfo | null>;
     stopSession: (sessionId: string) => Promise<void>;
-    /** Refrescar la lista de sesiones */
     refreshSessions: () => Promise<void>;
-    /** Obtener estado de una sesión */
-    getStatus: (sessionId: string) => Promise<WhatsAppSessionInfo | null>;
+    getStatus: (sessionId: string) => Promise<{ connected: boolean; jid: string } | null>;
+    fetchContacts: (sessionId: string) => Promise<WaContact[]>;
+    fetchChats: (sessionId: string) => Promise<WaChat[]>;
+    setLinkingSessionId: (id: string | null) => void;
 }
 
 export function useWhatsAppSession(): UseWhatsAppSessionReturn {
     const [sessions, setSessions] = useState<WhatsAppSessionInfo[]>([]);
-    const [currentSession, setCurrentSession] = useState<WhatsAppSessionInfo | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [contacts, setContacts] = useState<Record<string, WaContact[]>>({});
+    const [chats, setChats] = useState<Record<string, WaChat[]>>({});
     const [qrUrl, setQrUrl] = useState<string | null>(null);
+    const [linkingSessionId, setLinkingSessionId] = useState<string | null>(null);
 
+    // ──── Refresh sessions ────
     const refreshSessions = useCallback(async () => {
         try {
             const result = await invoke<WhatsAppSessionInfo[]>('cmd_wa_list_sessions');
-            setSessions(result);
+            // Enrich with live status
+            const enriched: WhatsAppSessionInfo[] = [];
+            for (const s of result) {
+                try {
+                    const status = await invoke<{ connected: boolean; jid: string }>('cmd_wa_proxy_request', {
+                        sessionId: s.id, method: 'GET', path: '/status', body: null,
+                    });
+                    enriched.push({ ...s, connected: status.connected, jid: status.jid || null });
+                } catch {
+                    enriched.push(s);
+                }
+            }
+            setSessions(enriched);
         } catch (e) {
             console.error('Error listing WA sessions:', e);
         }
     }, []);
 
-    const startSession = useCallback(async (sessionId: string) => {
+    // ──── Start session ────
+    const startSession = useCallback(async (sessionId: string): Promise<WhatsAppSessionInfo | null> => {
         setLoading(true);
         setError(null);
-        setQrUrl(null);
         try {
             const result = await invoke<WhatsAppSessionInfo>('cmd_wa_start_session', { sessionId });
-            setCurrentSession(result);
-            // Obtener la URL del QR para SSE
             const url = await invoke<string>('cmd_wa_get_qr_url', { sessionId });
             setQrUrl(url);
+            setLinkingSessionId(sessionId);
             await refreshSessions();
+            return result;
         } catch (e: any) {
-            setError(typeof e === 'string' ? e : e.message || 'Error starting session');
+            const msg = typeof e === 'string' ? e : e.message || 'Error starting session';
+            setError(msg);
+            return null;
         } finally {
             setLoading(false);
         }
     }, [refreshSessions]);
 
+    // ──── Stop session ────
     const stopSession = useCallback(async (sessionId: string) => {
         try {
             await invoke('cmd_wa_stop_session', { sessionId });
-            if (currentSession?.id === sessionId) {
-                setCurrentSession(null);
-                setQrUrl(null);
-            }
+            setQrUrl(null);
+            if (linkingSessionId === sessionId) setLinkingSessionId(null);
             await refreshSessions();
         } catch (e: any) {
             setError(typeof e === 'string' ? e : e.message || 'Error stopping session');
         }
-    }, [currentSession, refreshSessions]);
+    }, [linkingSessionId, refreshSessions]);
 
-    const getStatus = useCallback(async (sessionId: string): Promise<WhatsAppSessionInfo | null> => {
+    // ──── Get status ────
+    const getStatus = useCallback(async (sessionId: string) => {
         try {
-            const result = await invoke<WhatsAppSessionInfo>('cmd_wa_get_status', { sessionId });
-            return result;
+            return await invoke<{ connected: boolean; jid: string }>('cmd_wa_proxy_request', {
+                sessionId, method: 'GET', path: '/status', body: null,
+            });
         } catch {
             return null;
         }
     }, []);
 
-    // Cargar sesiones al montar
+    // ──── Fetch contacts ────
+    const fetchContacts = useCallback(async (sessionId: string): Promise<WaContact[]> => {
+        try {
+            const raw = await invoke<Record<string, { PushName?: string; FullName?: string; FirstName?: string; BusinessName?: string }>>('cmd_wa_proxy_request', {
+                sessionId, method: 'GET', path: '/contacts', body: null,
+            });
+
+            // whatsmeow returns a map of JID -> ContactInfo
+            const parsed: WaContact[] = Object.entries(raw).map(([jid, info]) => {
+                const name = info.PushName || info.FullName || info.FirstName || info.BusinessName || '';
+                // Extract phone from JID: "573001234567@s.whatsapp.net" -> "+573001234567"
+                const phone = jid.includes('@') ? `+${jid.split('@')[0]}` : jid;
+                return { jid, name, phone };
+            }).filter(c => c.name && !c.jid.includes('g.us')); // Filter out groups and empty names
+
+            // Sort by name
+            parsed.sort((a, b) => a.name.localeCompare(b.name));
+
+            setContacts(prev => ({ ...prev, [sessionId]: parsed }));
+            return parsed;
+        } catch (e) {
+            console.error('Error fetching contacts:', e);
+            return [];
+        }
+    }, []);
+
+    // ──── Fetch chats ────
+    const fetchChats = useCallback(async (sessionId: string): Promise<WaChat[]> => {
+        try {
+            const raw = await invoke<Array<{ jid: string; name?: string }>>('cmd_wa_proxy_request', {
+                sessionId, method: 'GET', path: '/chats', body: null,
+            });
+
+            const parsed: WaChat[] = (Array.isArray(raw) ? raw : []).map(c => ({
+                jid: c.jid || '',
+                name: c.name || c.jid || '',
+            }));
+
+            setChats(prev => ({ ...prev, [sessionId]: parsed }));
+            return parsed;
+        } catch (e) {
+            console.error('Error fetching chats:', e);
+            return [];
+        }
+    }, []);
+
+    // ──── Auto-refresh on mount ────
     useEffect(() => {
         refreshSessions();
     }, [refreshSessions]);
 
     return {
         sessions,
-        currentSession,
         loading,
         error,
+        contacts,
+        chats,
         qrUrl,
+        linkingSessionId,
         startSession,
         stopSession,
         refreshSessions,
         getStatus,
+        fetchContacts,
+        fetchChats,
+        setLinkingSessionId,
     };
 }

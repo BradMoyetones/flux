@@ -17,11 +17,14 @@ import { FlowSidebar } from '../components/sidebar';
 import { NodeConfigPanel } from '../components/node-config-panel';
 import { Button } from '@/ui/components/ui/button';
 import { invoke } from '@tauri-apps/api/core';
+import { useWhatsAppSession } from '../../plugins/whatsapp/use-whatsapp-session';
+import { WaSessionDialog } from '../../plugins/whatsapp/wa-session-dialog';
 
 export default function FlowCanvas() {
     const { pathId } = useParams();
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const { screenToFlowPosition } = useReactFlow();
+    const wa = useWhatsAppSession();
 
     const {
         nodes,
@@ -169,6 +172,18 @@ export default function FlowCanvas() {
                     <ZoomSlider position='bottom-left' />
 
                     <Panel position="top-right" className="flex gap-2 bg-card p-2 rounded-xl shadow-lg border">
+                        <WaSessionDialog
+                            sessions={wa.sessions}
+                            loading={wa.loading}
+                            error={wa.error}
+                            qrUrl={wa.qrUrl}
+                            linkingSessionId={wa.linkingSessionId}
+                            onStartSession={wa.startSession}
+                            onStopSession={wa.stopSession}
+                            onRefresh={wa.refreshSessions}
+                            onSetLinking={wa.setLinkingSessionId}
+                        />
+
                         <Button
                             onClick={onSave}
                             variant='outline'

@@ -9,8 +9,11 @@ import { Textarea } from '@/ui/components/ui/textarea';
 import { Label } from '@/ui/components/ui/label';
 import { Badge } from '@/ui/components/ui/badge';
 import { ScrollArea } from '@/ui/components/ui/scroll-area';
-import { X, Settings2, Globe, MessageSquare, Puzzle, type LucideIcon } from 'lucide-react';
+import { X, Settings2, Globe, MessageSquare, Puzzle, Settings, type LucideIcon } from 'lucide-react';
 import { KeyValueBuilder } from './key-value-builder';
+import { useWhatsAppSession } from '../../plugins/whatsapp/use-whatsapp-session';
+import { WaSessionDialog } from '../../plugins/whatsapp/wa-session-dialog';
+import { useState, useEffect, useMemo } from 'react';
 
 const ICON_MAP: Record<string, LucideIcon> = {
     Globe,
@@ -291,29 +294,96 @@ function WhatsAppConfigFields({ config, update }: {
     const action = config.action || 'send_message';
     const sessionId = config.sessionId || 'default';
 
+    const wa = useWhatsAppSession();
+    const [contactSearch, setContactSearch] = useState('');
+    const [showContactList, setShowContactList] = useState(false);
+
+    // Load contacts when session changes and is connected
+    useEffect(() => {
+        const session = wa.sessions.find(s => s.id === sessionId);
+        if (session?.connected && !wa.contacts[sessionId]) {
+            wa.fetchContacts(sessionId);
+        }
+    }, [sessionId, wa.sessions]);
+
+    const sessionContacts = wa.contacts[sessionId] || [];
+    const filteredContacts = useMemo(() => {
+        if (!contactSearch) return sessionContacts.slice(0, 50);
+        const q = contactSearch.toLowerCase();
+        return sessionContacts.filter(c =>
+            c.name.toLowerCase().includes(q) || c.phone.includes(q)
+        ).slice(0, 50);
+    }, [sessionContacts, contactSearch]);
+
+    const currentSession = wa.sessions.find(s => s.id === sessionId);
+    const isConnected = currentSession?.connected ?? false;
+
     return (
         <div className="flex flex-col gap-3">
-            {/* Sesión */}
+            {/* ── Session Selector ── */}
             <FieldGroup label="Sesión WhatsApp">
-                <Input
-                    value={sessionId}
-                    onChange={(e) => update('sessionId', e.target.value)}
-                    placeholder="default"
-                    className="h-8 text-xs font-mono"
-                />
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Identificador de sesión. Múltiples nodos con el mismo ID comparten la misma conexión.
-                </p>
-            </FieldGroup>
+                <div className="flex gap-1.5">
+                    <Select value={sessionId} onValueChange={(v) => update('sessionId', v)}>
+                        <SelectTrigger className="h-8 text-xs flex-1 font-mono">
+                            <SelectValue placeholder="Seleccionar sesión" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {wa.sessions.length === 0 ? (
+                                <SelectItem value="default" className="text-xs">default</SelectItem>
+                            ) : (
+                                wa.sessions.map(s => (
+                                    <SelectItem key={s.id} value={s.id} className="text-xs">
+                                        <span className="flex items-center gap-1.5">
+                                            <span className={`w-1.5 h-1.5 rounded-full inline-block ${
+                                                s.connected ? 'bg-green-500' : 'bg-yellow-500/60'
+                                            }`} />
+                                            {s.id}
+                                        </span>
+                                    </SelectItem>
+                                ))
+                            )}
+                        </SelectContent>
+                    </Select>
 
-            <div className="p-2 rounded-md border border-dashed border-green-500/30 bg-green-500/5">
-                <p className="text-[10px] text-muted-foreground">
-                    ⚡ Para vincular WhatsApp, inicia la sesión desde el <strong>menú de sesiones</strong> en la toolbar del canvas. El QR aparecerá ahí.
-                </p>
-            </div>
+                    <WaSessionDialog
+                        sessions={wa.sessions}
+                        loading={wa.loading}
+                        error={wa.error}
+                        qrUrl={wa.qrUrl}
+                        linkingSessionId={wa.linkingSessionId}
+                        onStartSession={wa.startSession}
+                        onStopSession={wa.stopSession}
+                        onRefresh={wa.refreshSessions}
+                        onSetLinking={wa.setLinkingSessionId}
+                        trigger={
+                            <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" title="Gestionar sesiones">
+                                <Settings className="w-3.5 h-3.5" />
+                            </Button>
+                        }
+                    />
+                </div>
+
+                {/* Status badge */}
+                {isConnected ? (
+                    <div className="flex items-center gap-1.5 mt-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.5)]" />
+                        <span className="text-[10px] text-green-400">Conectado</span>
+                        {currentSession?.jid && (
+                            <span className="text-[10px] text-muted-foreground font-mono ml-1">
+                                {currentSession.jid}
+                            </span>
+                        )}
+                    </div>
+                ) : (
+                    <p className="text-[10px] text-yellow-500 mt-1">
+                        Sesión no conectada — abre ⚙️ para vincular con QR
+                    </p>
+                )}
+            </FieldGroup>
 
             <Separator />
 
+            {/* ── Action ── */}
             <FieldGroup label="Acción">
                 <Select value={action} onValueChange={(v) => update('action', v)}>
                     <SelectTrigger className="h-8 text-xs">
@@ -331,20 +401,61 @@ function WhatsAppConfigFields({ config, update }: {
                 </Select>
             </FieldGroup>
 
+            {/* ── Phone Number with Contact Picker ── */}
             {['send_message', 'send_media', 'get_profile_picture'].includes(action) && (
                 <FieldGroup label="Número de Teléfono">
-                    <Input
-                        value={config.phoneNumber || ''}
-                        onChange={(e) => update('phoneNumber', e.target.value)}
-                        placeholder="+573001234567"
-                        className="h-8 text-xs"
-                    />
+                    <div className="relative">
+                        <Input
+                            value={config.phoneNumber || ''}
+                            onChange={(e) => {
+                                update('phoneNumber', e.target.value);
+                                setContactSearch(e.target.value);
+                            }}
+                            onFocus={() => setShowContactList(true)}
+                            onBlur={() => setTimeout(() => setShowContactList(false), 200)}
+                            placeholder={isConnected ? "Buscar contacto o escribir número..." : "+573001234567"}
+                            className="h-8 text-xs"
+                        />
+
+                        {/* Contact dropdown */}
+                        {showContactList && isConnected && filteredContacts.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-md border bg-popover shadow-lg max-h-[180px] overflow-y-auto">
+                                {filteredContacts.map(contact => (
+                                    <button
+                                        key={contact.jid}
+                                        type="button"
+                                        className="w-full flex items-center gap-2 px-2.5 py-1.5 hover:bg-muted/80 text-left transition-colors"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            update('phoneNumber', contact.phone);
+                                            setContactSearch('');
+                                            setShowContactList(false);
+                                        }}
+                                    >
+                                        <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
+                                            <span className="text-[10px] text-green-400 font-bold">
+                                                {contact.name.charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="text-xs truncate">{contact.name}</div>
+                                            <div className="text-[10px] text-muted-foreground font-mono">{contact.phone}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Soporta interpolación: {'{{nodo.data.body.phone}}'}
+                        {isConnected
+                            ? `${sessionContacts.length} contactos disponibles. También soporta interpolación: {{nodo.data.phone}}`
+                            : 'Soporta interpolación: {{nodo.data.body.phone}}'
+                        }
                     </p>
                 </FieldGroup>
             )}
 
+            {/* ── Message ── */}
             {action === 'send_message' && (
                 <FieldGroup label="Mensaje">
                     <Textarea
@@ -359,6 +470,7 @@ function WhatsAppConfigFields({ config, update }: {
                 </FieldGroup>
             )}
 
+            {/* ── Media ── */}
             {action === 'send_media' && (
                 <>
                     <FieldGroup label="Ruta del Archivo">
@@ -380,17 +492,22 @@ function WhatsAppConfigFields({ config, update }: {
                 </>
             )}
 
+            {/* ── Chat ID ── */}
             {action === 'get_messages' && (
                 <FieldGroup label="Chat ID">
                     <Input
                         value={config.chatId || ''}
                         onChange={(e) => update('chatId', e.target.value)}
-                        placeholder="ID del chat"
-                        className="h-8 text-xs"
+                        placeholder={isConnected ? "Seleccionar de contactos arriba o escribir JID" : "ID del chat"}
+                        className="h-8 text-xs font-mono"
                     />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Formato: <code>573001234567@s.whatsapp.net</code>
+                    </p>
                 </FieldGroup>
             )}
 
+            {/* ── Group ID ── */}
             {action === 'get_group_info' && (
                 <FieldGroup label="Group ID">
                     <Input
@@ -402,6 +519,7 @@ function WhatsAppConfigFields({ config, update }: {
                 </FieldGroup>
             )}
 
+            {/* ── Limit ── */}
             {['get_messages', 'get_chats'].includes(action) && (
                 <FieldGroup label="Límite de resultados">
                     <Input

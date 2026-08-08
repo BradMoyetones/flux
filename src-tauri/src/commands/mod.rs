@@ -23,5 +23,6 @@ pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
         whatsapp::cmd_wa_list_sessions,
         whatsapp::cmd_wa_get_status,
         whatsapp::cmd_wa_get_qr_url,
+        whatsapp::cmd_wa_proxy_request,
     ]
 }

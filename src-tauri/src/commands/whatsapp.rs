@@ -45,3 +45,14 @@ pub async fn cmd_wa_get_qr_url(
     let port = state.get_session_port(&session_id).await?;
     Ok(format!("http://127.0.0.1:{}/qr", port))
 }
+
+#[command]
+pub async fn cmd_wa_proxy_request(
+    state: State<'_, Arc<WhatsAppManager>>,
+    session_id: String,
+    method: String,
+    path: String,
+    body: Option<Value>,
+) -> Result<Value, String> {
+    state.send_request(&session_id, &method, &path, body.as_ref()).await
+}

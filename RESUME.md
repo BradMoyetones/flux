@@ -395,3 +395,78 @@ pnpm tauri dev
 ```
 
 Al arrastrar un nodo WhatsApp al canvas y configurar una sesión, el backend spawns el sidecar Go en un puerto aleatorio. El QR aparece via SSE en la UI para vincular tu WhatsApp.
+
+---
+
+## Fase 7 — Bloque 2.5: WhatsApp UX Completa (QR + Contactos + Selectors)
+
+### El Problema
+El Bloque 2 dejó la infraestructura lista (Go sidecar, Rust manager, IPC commands) pero la UX del config panel era un desastre:
+- Session ID era un input de texto manual donde tenías que escribir el nombre
+- No había forma de vincular WhatsApp ni ver el QR desde la UI
+- El hook `useWhatsAppSession` existía pero nadie lo usaba
+- Teléfonos había que escribirlos a mano sin poder seleccionar de contactos
+- Chat IDs igual, a ciegas
+
+### Lo Que Hice
+
+#### 1. Instalé `qrcode.react` para renderizar QR codes
+```bash
+pnpm add qrcode.react
+```
+
+#### 2. Nuevo IPC genérico: `cmd_wa_proxy_request`
+Comando Rust que permite al frontend hacer cualquier request al sidecar sin necesitar un comando dedicado por endpoint. Acepta `sessionId`, `method`, `path` y `body` opcionales.
+
+#### 3. Reescribí el hook `useWhatsAppSession` completo
+Ahora incluye:
+- `fetchContacts(sessionId)` → carga contactos de la sesión via proxy a `/contacts`
+- `fetchChats(sessionId)` → carga chats via proxy a `/chats`
+- Enrichment en vivo del estado de las sesiones (llama `/status` por cada una)
+- `linkingSessionId` para trackear cuál sesión está en proceso de vinculación QR
+- Estado completo: `contacts`, `chats`, `qrUrl`, `sessions`, `loading`, `error`
+
+#### 4. Creé el componente `WaSessionDialog`
+Archivo: `src/modules/flows/plugins/whatsapp/wa-session-dialog.tsx`
+
+Un Dialog completo con:
+- **Lista de sesiones** con dots de estado (🟢 conectado / 🟡 sin vincular)
+- **Input + botón "Nueva"** para crear sesiones
+- **QR Code** renderizado con `QRCodeSVG` de qrcode.react
+- **SSE listener** (EventSource) que escucha `http://127.0.0.1:{port}/qr` en tiempo real
+- Cuando el sidecar emite `CONNECTED`, el QR desaparece y el estado cambia a ✅
+- **Botones de Power/PowerOff** por sesión para vincular o desconectar
+- **Badge con JID** cuando la sesión está conectada
+
+#### 5. Reescribí `WhatsAppConfigFields` en el config panel
+- **Session → `<Select>`** dropdown con las sesiones activas + botón ⚙️ que abre el dialog
+- **Status badge** debajo del selector: 🟢 Conectado + JID, o ⚠️ "Sesión no conectada"
+- **Teléfono → Contact Picker** tipo combobox:
+  - Si hay sesión conectada, al enfocar el input aparece un dropdown con los contactos reales
+  - Cada contacto muestra avatar (inicial), nombre y teléfono
+  - Filtra en tiempo real mientras escribes
+  - Si no hay sesión, funciona como input normal con placeholder de interpolación
+- **Chat ID** con hint de formato JID
+- El resto (Acción, Mensaje, Media, Límites) se mantuvo igual
+
+#### 6. Integré el botón WhatsApp en la toolbar del canvas
+En `flow-canvas.tsx`, el botón "WhatsApp" aparece en el Panel top-right junto a Save y Execute.
+Muestra un badge verde con el número de sesiones activas.
+
+### Archivos Creados
+| Archivo | Qué hace |
+|---|---|
+| `src/modules/flows/plugins/whatsapp/wa-session-dialog.tsx` | Dialog QR + gestión de sesiones |
+
+### Archivos Modificados
+| Archivo | Cambio |
+|---|---|
+| `src/modules/flows/plugins/whatsapp/use-whatsapp-session.ts` | Reescrito completo con contacts, chats, proxy |
+| `src/modules/flows/ui/components/node-config-panel.tsx` | WhatsAppConfigFields con selectors + contact picker |
+| `src/modules/flows/ui/screens/flow-canvas.tsx` | Botón WA + hook en toolbar |
+| `src-tauri/src/commands/whatsapp.rs` | +`cmd_wa_proxy_request` genérico |
+| `src-tauri/src/commands/mod.rs` | Registrado el nuevo comando |
+
+### Compilación
+- **Rust** (`cargo check`): ✅ Compila limpio
+- **TypeScript** (`tsc --noEmit`): ✅ 0 errores
