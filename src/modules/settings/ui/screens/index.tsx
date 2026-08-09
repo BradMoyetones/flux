@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { Input } from "@/ui/components/ui/input"
 import {
     Bell,
@@ -14,7 +14,6 @@ import {
 } from "lucide-react"
 
 import {
-    mockAppearance,
     mockAutomation,
     mockGlobalVars,
     mockNotifications,
@@ -23,7 +22,6 @@ import {
     mockWorkspaces,
 } from "../../lib/settings-data"
 import type {
-    AppearanceConfig,
     AutomationDefaults,
     GlobalVariable,
     NotificationConfig,
@@ -83,17 +81,11 @@ export default function SettingsView() {
 
     // Estado (mock) — así se vería la config persistida por la app
     const [profile, setProfile] = useState<UserProfile>(mockProfile)
-    const [appearance, setAppearance] = useState<AppearanceConfig>(mockAppearance)
     const [workspaces, setWorkspaces] = useState<WorkspaceConfig[]>(mockWorkspaces)
     const [sessions, setSessions] = useState<WaSessionConfig[]>(mockSessions)
     const [automation, setAutomation] = useState<AutomationDefaults>(mockAutomation)
     const [vars, setVars] = useState<GlobalVariable[]>(mockGlobalVars)
     const [notifications, setNotifications] = useState<NotificationConfig>(mockNotifications)
-
-    // Aplica el acento de marca a toda la app
-    useEffect(() => {
-        document.documentElement.dataset.accent = appearance.accent
-    }, [appearance.accent])
 
     const filteredNav = useMemo(() => {
         const q = query.trim().toLowerCase()
@@ -152,8 +144,8 @@ export default function SettingsView() {
                                                     className={cn(
                                                         "flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-left text-sm transition-colors",
                                                         isActive
-                                                            ? "bg-(--primary)/12 font-medium text-(--primary)"
-                                                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                                                            ? "bg-primary/12 font-medium text-primary border border-primary/30"
+                                                            : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent",
                                                     )}
                                                 >
                                                     <Icon className="size-4 shrink-0" />
@@ -193,7 +185,7 @@ export default function SettingsView() {
                             <GeneralSection profile={profile} onChange={(p) => setProfile((s) => ({ ...s, ...p }))} />
                         )}
                         {active === "appearance" && (
-                            <AppearanceSection appearance={appearance} onChange={(p) => setAppearance((s) => ({ ...s, ...p }))} />
+                            <AppearanceSection />
                         )}
                         {active === "workspaces" && (
                             <WorkspacesSection

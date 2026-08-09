@@ -7,6 +7,7 @@ import router from './shared/router';
 import { Toaster } from './ui/components/ui/sonner';
 import { useUpdater } from './ui/hooks/use-updater';
 import { TooltipProvider } from './ui/components/ui/tooltip';
+import { ColorThemeProvider } from './shared/contexts/color-theme-provider';
 
 function UpdaterComponent() {
     const { checkForUpdates } = useUpdater();
@@ -35,14 +36,16 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
             enableSystem
             disableTransitionOnChange
         >
-            <TooltipProvider delayDuration={0}>
-                <RouterProvider router={router} />
-                <Toaster />
+            <ColorThemeProvider>
+                <TooltipProvider delayDuration={0}>
+                    <RouterProvider router={router} />
+                    <Toaster />
 
-                {/* Componentes de utilidad en segundo plano */}
-                <UpdaterComponent />
-                <FloatVersionComponent />
-            </TooltipProvider>
+                    {/* Componentes de utilidad en segundo plano */}
+                    <UpdaterComponent />
+                    <FloatVersionComponent />
+                </TooltipProvider>
+            </ColorThemeProvider>
         </ThemeProvider>
     </React.StrictMode>
 );

@@ -122,14 +122,14 @@ export function Select({
 
 /* ------------------------------ SegmentedControl --------------------------- */
 
-export function SegmentedControl<T extends string>({
+export function SegmentedControl<T extends string | undefined>({
     value,
     onChange,
     options,
     className,
 }: {
     value: T
-    onChange: (v: T) => void
+    onChange: (v: any) => void
     options: { value: T; label: string; icon?: React.ReactNode }[]
     className?: string
 }) {

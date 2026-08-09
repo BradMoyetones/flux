@@ -1,12 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, Workflow, FolderPlus, FolderOpen, Folder, Trash2, FolderX, RefreshCw } from 'lucide-react';
+import { Plus, Workflow, FolderPlus, FolderOpen, Folder, Trash2, FolderX, RefreshCw, ArrowRight } from 'lucide-react';
 import { Button } from '@/ui/components/ui/button';
 import { useTabs } from '@/shared/contexts/tabs-context';
 import { useNavigate } from 'react-router';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { CreateFlowDialog } from '../components/create-flow-dialog';
-import { cn } from '@/shared/utils/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/components/ui/tooltip';
+import { Card, CardAction, CardContent, CardFooter, CardHeader } from '@/ui/components/ui/card';
 
 interface FluxEntry {
     name: string;
@@ -17,18 +18,18 @@ interface FluxEntry {
 export function HomeView() {
     const { openTab } = useTabs();
     const navigate = useNavigate();
-    
+
     const [workspaces, setWorkspaces] = useState<string[]>([]);
     const [workflows, setWorkflows] = useState<FluxEntry[]>([]);
-    
+
     const [dialogOpen, setDialogOpen] = useState(false);
     const [targetWorkspace, setTargetWorkspace] = useState<string | undefined>(undefined);
-    
+
     const loadData = async () => {
         try {
             const wks: string[] = await invoke('cmd_get_workspaces');
             setWorkspaces(wks);
-            
+
             const flows: FluxEntry[] = await invoke('cmd_scan_workflows');
             setWorkflows(flows);
         } catch (error) {
@@ -52,7 +53,7 @@ export function HomeView() {
             multiple: false,
             title: 'Seleccionar Carpeta de Workspace'
         });
-        
+
         if (selectedPath && typeof selectedPath === 'string') {
             // cmd_add_workspace ahora escanea e indexa automáticamente
             const updatedIndex: FluxEntry[] = await invoke('cmd_add_workspace', { path: selectedPath });
@@ -114,16 +115,23 @@ export function HomeView() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={handleResync} title="Resincronizar índice">
-                            <RefreshCw className="w-4 h-4" />
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={handleResync}>
+                                    <RefreshCw />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Resincronizar índice</p>
+                            </TooltipContent>
+                        </Tooltip>
                         <Button variant="outline" onClick={handleAddWorkspace}>
-                            <FolderPlus className="w-4 h-4 mr-2" />
+                            <FolderPlus />
                             Vincular Workspace
                         </Button>
                         {workspaces.length > 0 && (
                             <Button onClick={() => openCreateDialog()}>
-                                <Plus className="w-4 h-4 mr-2" />
+                                <Plus />
                                 Nuevo flujo
                             </Button>
                         )}
@@ -137,7 +145,7 @@ export function HomeView() {
                             <h3 className="text-lg font-medium">No tienes workspaces vinculados</h3>
                             <p className="text-sm text-muted-foreground mb-4">Un workspace es una carpeta de tu ordenador donde se guardarán los archivos .flux</p>
                             <Button onClick={handleAddWorkspace}>
-                                <FolderPlus className="w-4 h-4 mr-2" />
+                                <FolderPlus />
                                 Seleccionar carpeta
                             </Button>
                         </div>
@@ -152,19 +160,24 @@ export function HomeView() {
                                         <span className="text-[10px] text-muted-foreground truncate max-w-xs hidden lg:block">({workspace})</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Button variant="secondary" size="sm" onClick={() => openCreateDialog(workspace)}>
-                                            <Plus className="w-4 h-4 mr-2" />
+                                        <Button variant="secondary" onClick={() => openCreateDialog(workspace)}>
+                                            <Plus />
                                             Añadir workflow
                                         </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                            title="Desvincular workspace"
-                                            onClick={() => handleRemoveWorkspace(workspace)}
-                                        >
-                                            <FolderX className="w-4 h-4" />
-                                        </Button>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="icon"
+                                                    onClick={() => handleRemoveWorkspace(workspace)}
+                                                >
+                                                    <FolderX />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Desvincular workspace</p>
+                                            </TooltipContent>
+                                        </Tooltip>
                                     </div>
                                 </div>
 
@@ -180,35 +193,47 @@ export function HomeView() {
                                                 key={flow.path}
                                                 type="button"
                                                 onClick={() => handleOpenTab(flow.path)}
-                                                className="group flex flex-col rounded-xl border border-border bg-card p-5 text-left shadow-sm transition cursor-pointer hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md relative"
+                                                className="group"
                                             >
-                                                <div className="flex items-start justify-between">
-                                                    <div className="grid size-11 place-items-center rounded-lg bg-muted text-primary">
-                                                        <Workflow className="size-5" />
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <StatusBadge active={true} />
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"
-                                                            title="Eliminar workflow"
-                                                            onClick={(e) => handleDeleteWorkflow(e, flow.path)}
-                                                        >
-                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                <Card className='group-hover:scale-103 transition-transform'>
+                                                    <CardHeader>
+                                                        <div className="flex items-start justify-between w-full">
+                                                            <div className="grid size-11 place-items-center rounded-lg bg-muted text-primary border">
+                                                                <Workflow className="size-5" />
+                                                            </div>
+                                                            <CardAction>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Button
+                                                                            variant="destructive"
+                                                                            size="icon"
+                                                                            className="opacity-0 group-hover:opacity-100"
+                                                                            onClick={(e) => handleDeleteWorkflow(e, flow.path)}
+                                                                        >
+                                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p>Eliminar</p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </CardAction>
+                                                        </div>
+                                                    </CardHeader>
+                                                    <CardContent>
+                                                        <div className="flex flex-col items-start gap-1">
+                                                            <h3 title={flow.name} className="font-medium truncate max-w-full">{flow.name}</h3>
+                                                            <p title={flow.path} className="text-xs text-muted-foreground truncate opacity-75 text-wrap text-left">{flow.path}</p>
+                                                        </div>
+                                                    </CardContent>
+                                                    <CardFooter className="flex items-center justify-between">
+                                                        <span className="font-mono text-xs text-muted-foreground">.flux</span>
+                                                        <Button variant={"link"} size={"xs"} className="opacity-0 group-hover:opacity-100">
+                                                            Abrir en el editor <ArrowRight />
                                                         </Button>
-                                                    </div>
-                                                </div>
+                                                    </CardFooter>
+                                                </Card>
 
-                                                <h3 className="mt-4 font-medium">{flow.name}</h3>
-                                                <p className="mt-1 text-xs text-muted-foreground truncate opacity-75">{flow.path}</p>
-
-                                                <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
-                                                    <span className="font-mono">.flux</span>
-                                                    <span className="text-primary opacity-0 transition group-hover:opacity-100">
-                                                        Abrir en el editor →
-                                                    </span>
-                                                </div>
                                             </button>
                                         ))}
                                     </div>
@@ -219,8 +244,8 @@ export function HomeView() {
                 </section>
             </div>
 
-            <CreateFlowDialog 
-                open={dialogOpen} 
+            <CreateFlowDialog
+                open={dialogOpen}
                 onOpenChange={setDialogOpen}
                 workspaces={workspaces}
                 defaultWorkspace={targetWorkspace}
@@ -231,19 +256,5 @@ export function HomeView() {
                 onAddWorkspace={handleAddWorkspace}
             />
         </div>
-    );
-}
-
-function StatusBadge({ active }: { active: boolean }) {
-    return (
-        <span
-            className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium',
-                active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground'
-            )}
-        >
-            <span className={cn('size-1.5 rounded-full', active ? 'bg-emerald-400' : 'bg-muted-foreground')} />
-            Listo
-        </span>
     );
 }

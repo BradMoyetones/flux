@@ -191,7 +191,7 @@ export default function FlowCanvas() {
                             fitView
                         >
                             <Panel position="top-left">
-                                <SidebarTrigger />
+                                <SidebarTrigger variant={"outline"} className="shadow-lg" />
                             </Panel>
 
                             <Background
