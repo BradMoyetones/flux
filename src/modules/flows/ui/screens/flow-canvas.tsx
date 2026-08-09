@@ -29,7 +29,7 @@ export default function FlowCanvas() {
     const { pathId } = useParams();
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [inspectorOpen, setInspectorOpen] = useState(false);
-    const { screenToFlowPosition } = useReactFlow();
+    const { screenToFlowPosition, fitView } = useReactFlow();
     const wa = useWhatsAppSession();
 
     const {
@@ -49,7 +49,9 @@ export default function FlowCanvas() {
     useEffect(() => {
         if (pathId) {
             const decodedPath = decodeURIComponent(pathId);
-            loadWorkflow(decodedPath).catch(console.error);
+            loadWorkflow(decodedPath).then(() => {
+                fitView({ duration: 300 });
+            }).catch(console.error);
         }
     }, [pathId, loadWorkflow]);
 
@@ -169,7 +171,7 @@ export default function FlowCanvas() {
     }, [nodes, setNodes]);
 
     return (
-        <SidebarProvider className='min-h-full!'>
+        <SidebarProvider className='min-h-full! h-full'>
             <FlowSidebar />
             <div className="flex-1 relative flex flex-col">
                 {/* @ts-ignore: Prop direction is valid but TS definition might be missing it */}

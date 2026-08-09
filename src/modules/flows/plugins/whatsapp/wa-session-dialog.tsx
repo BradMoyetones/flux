@@ -257,7 +257,6 @@ export function WaSessionDialog({
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-6 w-6"
                                                             onClick={() => handleLink(session.id)}
                                                             disabled={loading}
                                                         >
