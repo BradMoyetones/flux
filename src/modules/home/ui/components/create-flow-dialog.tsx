@@ -8,24 +8,21 @@ import SelectWorkspaceModal from "./select-workspace";
 import { Folder } from "lucide-react";
 import { Workspace } from "@/types/data";
 import { workspaceName } from "../../lib/format";
+import { useHomeStore } from "../../stores/home-store";
+import { useTabs } from '@/shared/contexts/tabs-context';
+import { useNavigate } from 'react-router';
 
-interface CreateFlowDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    workspaces: Workspace[];
-    defaultWorkspace?: Workspace;
-    onCreated: (absolutePath: string) => void;
-    onAddWorkspace: () => Promise<Workspace | null>;
-}
+export function CreateFlowDialog() {
+    const open = useHomeStore((state) => state.dialogOpen);
+    const onOpenChange = useHomeStore((state) => state.setDialogOpen);
+    const workspaces = useHomeStore((state) => state.workspaces);
+    const defaultWorkspace = useHomeStore((state) => state.targetWorkspace);
+    const onAddWorkspace = useHomeStore((state) => state.addWorkspace);
+    const loadData = useHomeStore((state) => state.loadData);
 
-export function CreateFlowDialog({
-    open,
-    onOpenChange,
-    workspaces,
-    defaultWorkspace,
-    onCreated,
-    onAddWorkspace,
-}: CreateFlowDialogProps) {
+    const { openTab } = useTabs();
+    const navigate = useNavigate();
+
     const [name, setName] = useState("");
     const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
     const [loading, setLoading] = useState(false);
@@ -85,7 +82,12 @@ export function CreateFlowDialog({
                 workspace: selectedWorkspace,
             });
 
-            onCreated(fullPath);
+            loadData();
+            
+            const routePath = `/flows/${encodeURIComponent(fullPath)}`;
+            const openedPath = openTab(routePath);
+            navigate(openedPath);
+            
             onOpenChange(false);
         } catch (err: any) {
             console.error("Failed to create workflow:", err);

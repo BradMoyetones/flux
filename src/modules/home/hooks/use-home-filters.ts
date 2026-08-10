@@ -1,17 +1,22 @@
 'use client';
 
-import { FluxEntry, Workspace } from '@/types/data';
-import { useCallback, useDeferredValue, useMemo, useState } from 'react';
+import { FluxEntry } from '@/types/data';
+import { useDeferredValue, useMemo } from 'react';
+import { useHomeStore, ViewMode, SortMode } from '../stores/home-store';
 
-export type ViewMode = 'grid' | 'list';
-export type SortMode = 'recent' | 'name';
+export type { ViewMode, SortMode };
 
 export function useHomeFilters() {
-    const [selected, setSelected] = useState<Workspace | null>(null);
-    const [query, setQuery] = useState('');
-    const [view, setView] = useState<ViewMode>('grid');
-    const [sort, setSort] = useState<SortMode>('recent');
-    const [workflows, setWorkflows] = useState<FluxEntry[]>([]);
+    const selected = useHomeStore((state) => state.selected);
+    const query = useHomeStore((state) => state.query);
+    const view = useHomeStore((state) => state.view);
+    const sort = useHomeStore((state) => state.sort);
+    const workflows = useHomeStore((state) => state.workflows);
+    
+    const setQuery = useHomeStore((state) => state.setQuery);
+    const setView = useHomeStore((state) => state.setView);
+    const setSort = useHomeStore((state) => state.setSort);
+    const selectWorkspace = useHomeStore((state) => state.selectWorkspace);
 
     // Defer filtering so typing stays responsive with large collections.
     const deferredQuery = useDeferredValue(query);
@@ -32,9 +37,6 @@ export function useHomeFilters() {
         if (sort === 'name') {
             result.sort((a, b) => a.name.localeCompare(b.name, 'es'));
         } 
-        // else {
-        //     result.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-        // }
         return result;
     }, [deferredQuery, selected, sort, workflows]);
 
@@ -50,11 +52,6 @@ export function useHomeFilters() {
         return Array.from(map.entries());
     }, [filtered, selected]);
 
-    const selectWorkspace = useCallback((workspace: Workspace | null) => {
-        setSelected(workspace);
-        setQuery('');
-    }, []);
-
     return {
         selected,
         query,
@@ -68,6 +65,5 @@ export function useHomeFilters() {
         setView,
         setSort,
         selectWorkspace,
-        setWorkflows,
     };
 }

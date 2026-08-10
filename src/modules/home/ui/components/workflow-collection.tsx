@@ -5,16 +5,16 @@ import { workspaceName } from '@/modules/home/lib/format';
 import { WorkflowCard } from './workflow-card';
 import { WorkflowRow } from './workflow-row';
 import { FluxEntry } from '@/types/data';
-import type { ViewMode } from '@/modules/home/hooks/use-home-filters';
+import { useHomeStore } from '../../stores/home-store';
 
 /** Renders a set of workflows in either grid or list mode. */
 export const WorkflowCollection = memo(function WorkflowCollection({
     flows,
-    view,
 }: {
     flows: FluxEntry[];
-    view: ViewMode;
 }) {
+    const view = useHomeStore((state) => state.view);
+
     if (view === 'grid') {
         return (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-2.5">
@@ -36,10 +36,8 @@ export const WorkflowCollection = memo(function WorkflowCollection({
 /** Grouped-by-workspace sections used in the "Todos los flujos" view. */
 export const WorkflowGroups = memo(function WorkflowGroups({
     groups,
-    view,
 }: {
     groups: [string, FluxEntry[]][];
-    view: ViewMode;
 }) {
     return (
         <div className="flex flex-col gap-6">
@@ -51,7 +49,7 @@ export const WorkflowGroups = memo(function WorkflowGroups({
                         </h2>
                         <span className="text-[11px] tabular-nums text-muted-foreground/60">{flows.length}</span>
                     </div>
-                    <WorkflowCollection flows={flows} view={view} />
+                    <WorkflowCollection flows={flows} />
                 </section>
             ))}
         </div>

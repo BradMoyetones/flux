@@ -4,15 +4,25 @@ import { memo } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/ui/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/components/ui/tooltip';
-
-interface HomeHeaderProps {
-    title: string;
-    subtitle: string;
-    onNewFlow: () => void;
-}
+import { useHomeStore } from '../../stores/home-store';
+import { useHomeFilters } from '../../hooks/use-home-filters';
+import { workspaceName } from '../../lib/format';
 
 /** Compact titlebar-style header, in the spirit of a native desktop window. */
-export const HomeHeader = memo(function HomeHeader({ title, subtitle, onNewFlow }: HomeHeaderProps) {
+export const HomeHeader = memo(function HomeHeader() {
+    const workspaces = useHomeStore((state) => state.workspaces);
+    const workflows = useHomeStore((state) => state.workflows);
+    const openCreateDialog = useHomeStore((state) => state.openCreateDialog);
+    const resyncWorkspaces = useHomeStore((state) => state.resyncWorkspaces);
+    
+    const { selected, filtered } = useHomeFilters();
+    
+    const title = selected === null ? 'Todos los flujos' : workspaceName(selected);
+    const subtitle =
+        selected === null
+            ? `${workflows.length} flujos · ${workspaces.length} workspaces`
+            : `${filtered.length} ${filtered.length === 1 ? 'flujo' : 'flujos'}`;
+
     return (
         <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-border/60 px-4">
             <div className="flex min-w-0 items-baseline gap-2.5">
@@ -24,13 +34,13 @@ export const HomeHeader = memo(function HomeHeader({ title, subtitle, onNewFlow 
             <div className="flex shrink-0 items-center gap-1">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon-sm">
+                        <Button variant="ghost" size="icon-sm" onClick={resyncWorkspaces}>
                             <RefreshCw />
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>Refresh</TooltipContent>
                 </Tooltip>
-                <Button size="sm" onClick={onNewFlow}>
+                <Button size="sm" onClick={() => openCreateDialog(selected ?? undefined)}>
                     <Plus />
                     Nuevo flujo
                 </Button>

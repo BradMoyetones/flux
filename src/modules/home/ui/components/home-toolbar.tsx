@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, type RefObject } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { ArrowUpDown, Check, LayoutGrid, List, Search, X } from 'lucide-react';
 import { Button } from '@/ui/components/ui/button';
 import {
@@ -13,27 +13,32 @@ import {
 import { Input } from '@/ui/components/ui/input';
 import { Kbd } from '@/ui/components/ui/kbd';
 import { Tabs, TabsList, TabsTrigger } from '@/ui/components/ui/tabs';
-import { SortMode, ViewMode } from '../../hooks/use-home-filters';
+import { useHomeStore, ViewMode } from '../../stores/home-store';
 
-interface HomeToolbarProps {
-    query: string;
-    onQueryChange: (q: string) => void;
-    searchRef: RefObject<HTMLInputElement | null>;
-    sort: SortMode;
-    onSortChange: (s: SortMode) => void;
-    view: ViewMode;
-    onViewChange: (v: ViewMode) => void;
-}
+export const HomeToolbar = memo(function HomeToolbar() {
+    const query = useHomeStore((state) => state.query);
+    const setQuery = useHomeStore((state) => state.setQuery);
+    const sort = useHomeStore((state) => state.sort);
+    const setSort = useHomeStore((state) => state.setSort);
+    const view = useHomeStore((state) => state.view);
+    const setView = useHomeStore((state) => state.setView);
+    
+    const searchRef = useRef<HTMLInputElement>(null);
 
-export const HomeToolbar = memo(function HomeToolbar({
-    query,
-    onQueryChange,
-    searchRef,
-    sort,
-    onSortChange,
-    view,
-    onViewChange,
-}: HomeToolbarProps) {
+    // Keyboard: "/" or Cmd/Ctrl+K focuses search.
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement;
+            const typing = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA';
+            if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key === 'k')) {
+                e.preventDefault();
+                searchRef.current?.focus();
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
+
     return (
         <div className="flex shrink-0 items-center gap-2 border-b border-border/60 px-4 py-2">
             <div className="relative w-full max-w-72">
@@ -42,20 +47,22 @@ export const HomeToolbar = memo(function HomeToolbar({
                     ref={searchRef}
                     type="text"
                     value={query}
-                    onChange={(e) => onQueryChange(e.target.value)}
+                    onChange={(e) => setQuery(e.target.value)}
                     placeholder="Buscar flujos…"
                     aria-label="Buscar flujo"
-                    className="h-7 rounded-md bg-muted/50 pr-12 pl-8 text-[13px] shadow-none"
+                    className="pr-8 pl-8"
                 />
                 {query ? (
-                    <button
+                    <Button
                         type="button"
-                        onClick={() => onQueryChange('')}
+                        variant={"ghost"}
+                        size={"icon-xs"}
+                        onClick={() => setQuery('')}
                         aria-label="Limpiar búsqueda"
-                        className="absolute top-1/2 right-2 grid size-4.5 -translate-y-1/2 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                        className="absolute top-1 right-1"
                     >
                         <X className="size-3" />
-                    </button>
+                    </Button>
                 ) : (
                     <Kbd className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2">/</Kbd>
                 )}
@@ -72,11 +79,11 @@ export const HomeToolbar = memo(function HomeToolbar({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-40">
                     <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={() => onSortChange('recent')}>
+                        <DropdownMenuItem onClick={() => setSort('recent')}>
                             Recientes
                             {sort === 'recent' && <Check className="ml-auto" />}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onSortChange('name')}>
+                        <DropdownMenuItem onClick={() => setSort('name')}>
                             Nombre
                             {sort === 'name' && <Check className="ml-auto" />}
                         </DropdownMenuItem>
@@ -84,7 +91,7 @@ export const HomeToolbar = memo(function HomeToolbar({
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <Tabs value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
+            <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
                 <TabsList className="rounded-md">
                     <TabsTrigger value="grid" aria-label="Vista de cuadrícula" className="px-2">
                         <LayoutGrid />

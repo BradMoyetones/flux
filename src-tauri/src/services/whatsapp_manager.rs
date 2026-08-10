@@ -1,11 +1,10 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 use tokio::sync::Mutex;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde::{Serialize};
+use serde_json::{Value};
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]

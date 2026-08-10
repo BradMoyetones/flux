@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use walkdir::WalkDir;
+use ignore::WalkBuilder;
 
 /// Escanea los workspaces y devuelve SOLO las rutas absolutas de los archivos .flux.
 /// No lee ningún archivo. Es pura iteración del filesystem, igual que un ls recursivo.
@@ -7,21 +7,24 @@ pub fn scan_flux_paths(workspaces: &[String]) -> Vec<FluxEntry> {
     let mut entries = Vec::new();
 
     for workspace in workspaces {
-        for entry in WalkDir::new(workspace).into_iter().filter_map(|e| e.ok()) {
-            let path = entry.path();
-            if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("flux") {
-                let name = path
-                    .file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("sin-nombre")
-                    .to_string();
+        let walker = WalkBuilder::new(workspace).build();
 
-                entries.push(FluxEntry {
-                    name,
-                    path: path.to_string_lossy().to_string(),
-                    workspace: workspace.clone(),
-                });
-            }
+        for entry in walker.filter_map(Result::ok) {
+                let path = entry.path();
+
+                if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("flux") {
+                    let name = path
+                        .file_stem()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("sin-nombre")
+                        .to_string();
+
+                    entries.push(FluxEntry {
+                        name,
+                        path: path.to_string_lossy().to_string(),
+                        workspace: workspace.clone(),
+                    });
+                }
         }
     }
 

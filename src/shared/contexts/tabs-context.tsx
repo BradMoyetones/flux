@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { HOME_PATH, getRoute, routes } from '@/shared/router/tab-routes';
 
@@ -32,8 +31,6 @@ interface OpenTabOptions {
 interface TabsState {
     tabs: OpenTab[];
     activeId: string;
-    /** Flipped to `true` once persisted state has been read on the client. */
-    hasHydrated: boolean;
 
     /** Open a route in a tab and return its path. See {@link OpenTabOptions} for de-duplication. */
     openTab: (path: string, options?: OpenTabOptions) => string;
@@ -41,10 +38,9 @@ interface TabsState {
     activateTab: (id: string) => void;
     /** Close a tab by id and return the new active path to navigate to, if changed. */
     closeTab: (id: string) => string | undefined;
-    setHasHydrated: (value: boolean) => void;
 }
 
-const STORAGE_KEY = 'flowdesk.tabs.v1';
+// const STORAGE_KEY = 'flowdesk.tabs.v1';
 
 function createId() {
     return Math.random().toString(36).slice(2, 10);
@@ -86,10 +82,8 @@ function sanitize(tabs: OpenTab[], activeId: string) {
  *    a restored session.
  */
 export const useTabsStore = create<TabsState>()(
-    persist(
         (set, get) => ({
             ...defaultTabs(),
-            hasHydrated: false,
 
             openTab: (path, options) => {
                 const route = getRoute(path);
@@ -136,25 +130,6 @@ export const useTabsStore = create<TabsState>()(
                 set({ tabs: next, activeId: nextActive });
                 return nextPath;
             },
-
-            setHasHydrated: (value) => set({ hasHydrated: value }),
-        }),
-        {
-            name: STORAGE_KEY,
-            storage: createJSONStorage(() => localStorage),
-            partialize: (state) => ({ tabs: state.tabs, activeId: state.activeId }),
-            skipHydration: true,
-            merge: (persisted, current) => {
-                const incoming = persisted as Partial<Pick<TabsState, 'tabs' | 'activeId'>> | null;
-                if (!incoming?.tabs?.length) return current;
-                return {
-                    ...current,
-                    ...sanitize(incoming.tabs, incoming.activeId ?? current.activeId),
-                };
-            },
-            onRehydrateStorage: () => (state) => {
-                state?.setHasHydrated(true);
-            },
         }
     )
 );
@@ -171,13 +146,12 @@ export function useActivePath(): string {
 export function useTabs() {
     const tabs = useTabsStore((state) => state.tabs);
     const activeId = useTabsStore((state) => state.activeId);
-    const hasHydrated = useTabsStore((state) => state.hasHydrated);
     const openTab = useTabsStore((state) => state.openTab);
     const activateTab = useTabsStore((state) => state.activateTab);
     const closeTab = useTabsStore((state) => state.closeTab);
     const activePath = useActivePath();
 
-    return { tabs, activeId, activePath, hasHydrated, openTab, activateTab, closeTab };
+    return { tabs, activeId, activePath, openTab, activateTab, closeTab };
 }
 
 /**
@@ -186,10 +160,6 @@ export function useTabs() {
  * though Zustand itself needs no React context.
  */
 export function TabsProvider({ children }: { children: ReactNode }) {
-    useEffect(() => {
-        void useTabsStore.persist.rehydrate();
-    }, []);
-
     return <>{children}</>;
 }
 
