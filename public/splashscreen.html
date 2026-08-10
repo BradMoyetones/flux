@@ -5,31 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Starting Flux...</title>
   <link rel="stylesheet" href="/splash.css">
-  <style>
-    /* Prevent text selection and drag */
-    body {
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-app-region: drag;
-    }
-    /* Let only the spinner area be non-draggable to avoid dragging issues */
-    .no-drag {
-      -webkit-app-region: no-drag;
-    }
-  </style>
 </head>
-<body style="background-color: #09090b; color: #fafafa;" class="bg-background text-foreground h-screen w-screen overflow-hidden flex flex-col items-center justify-center p-8 rounded-xl border border-border shadow-2xl antialiased bg-zinc-950 text-zinc-50">
+<body data-tauri-drag-region class="select-none cursor-default bg-background/80 text-foreground h-screen w-screen overflow-hidden flex flex-col items-center justify-center p-8 rounded-xl border border-border shadow-2xl antialiased">
+    <script>
+      // On Windows, decorations: false removes the native window border and shadow.
+      // To show the CSS rounded corners and shadow, we need to shrink the body slightly.
+      // macOS handles this natively via tauri.macos.conf.json
+      if (navigator.userAgent.includes("Windows")) {
+        document.body.classList.remove('h-screen', 'w-screen');
+        document.body.style.width = 'calc(100vw - 20px)';
+        document.body.style.height = 'calc(100vh - 20px)';
+        document.body.style.margin = '10px';
+      }
+    </script>
     <!-- Icon/Logo -->
-    <div class="mb-6 bg-primary/20 p-4 rounded-2xl flex items-center justify-center">
-        <svg class="w-12 h-12 text-primary animate-pulse text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div data-tauri-drag-region class="mb-6 bg-primary/20 p-4 rounded-2xl flex items-center justify-center">
+        <svg data-tauri-drag-region class="w-12 h-12 text-primary animate-pulse text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
         </svg>
     </div>
     
-    <h1 class="text-3xl font-bold tracking-tight mb-2">Flux</h1>
-    <p class="text-sm text-zinc-400 mb-8">Preparando motor de flujos...</p>
+    <h1 data-tauri-drag-region class="text-3xl font-bold tracking-tight mb-2">Flux</h1>
+    <p data-tauri-drag-region class="text-sm text-zinc-400 mb-8">Preparando motor de flujos...</p>
 
     <!-- Spinner -->
-    <div class="w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin no-drag"></div>
+    <div data-tauri-drag-region class="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
 </body>
 </html>

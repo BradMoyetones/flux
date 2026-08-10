@@ -1847,12 +1847,6 @@
       border-color: color-mix(in oklab, var(--color-green-500) 30%, transparent);
     }
   }
-  .border-indigo-500\/30 {
-    border-color: color-mix(in srgb, oklch(58.5% 0.233 277.117) 30%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-indigo-500) 30%, transparent);
-    }
-  }
   .border-input {
     border-color: var(--input);
   }
@@ -1919,8 +1913,8 @@
   .border-transparent {
     border-color: transparent;
   }
-  .border-t-indigo-500 {
-    border-top-color: var(--color-indigo-500);
+  .border-t-primary {
+    border-top-color: var(--primary);
   }
   .\!bg-teal-500 {
     background-color: var(--color-teal-500) !important;
@@ -1983,6 +1977,12 @@
     background-color: var(--background);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--background) 0%, transparent);
+    }
+  }
+  .bg-background\/10 {
+    background-color: var(--background);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--background) 10%, transparent);
     }
   }
   .bg-background\/50 {
