@@ -2,12 +2,16 @@ pub mod window;
 pub mod workflows;
 pub mod execution;
 pub mod whatsapp;
+pub mod profile;
 
 pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
     tauri::generate_handler![
         window::minimize_window,
         window::close_window,
+        window::close_splashscreen,
         window::toggle_fullscreen,
+        window::set_run_in_background,
+        profile::process_and_save_avatar,
         workflows::cmd_get_workspaces,
         workflows::cmd_add_workspace,
         workflows::cmd_remove_workspace,

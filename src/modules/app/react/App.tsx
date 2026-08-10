@@ -1,6 +1,7 @@
 import { TabsProvider } from '@/shared/contexts/tabs-context';
 import { Titlebar } from '@/ui/components/layout/titlebar';
 import { Workspace } from '@/ui/components/layout/workspace';
+import { OnboardingView } from '@/modules/onboarding/OnboardingView';
 import './App.css';
 
 function App() {
@@ -12,6 +13,8 @@ function App() {
                     <Workspace />
                 </main>
             </TabsProvider>
+            
+            <OnboardingView />
         </div>
     );
 }

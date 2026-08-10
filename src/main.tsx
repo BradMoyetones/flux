@@ -3,17 +3,23 @@ import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from '@/ui/components/layout/theme-provider';
 import './ui/styles/index.css';
 import { RouterProvider } from 'react-router';
+import { invoke } from '@tauri-apps/api/core';
 import router from './shared/router';
 import { Toaster } from './ui/components/ui/sonner';
 import { useUpdater } from './ui/hooks/use-updater';
 import { TooltipProvider } from './ui/components/ui/tooltip';
 import { ColorThemeProvider } from './shared/contexts/color-theme-provider';
 
+import { useUserStore } from './shared/stores/user-store';
+
 function UpdaterComponent() {
     const { checkForUpdates } = useUpdater();
 
     useEffect(() => {
-        checkForUpdates();
+        // Ejecutar revisión de actualizaciones antes de cerrar el splash
+        checkForUpdates().finally(() => {
+            invoke('close_splashscreen').catch(console.error);
+        });
     }, []);
 
     return null;
@@ -28,24 +34,35 @@ function FloatVersionComponent() {
     );
 }
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-    <React.StrictMode>
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-        >
-            <ColorThemeProvider>
-                <TooltipProvider delayDuration={0}>
-                    <RouterProvider router={router} />
-                    <Toaster />
+async function initApp() {
+    try {
+        // Inicializar el store de Zustand desde tauri-plugin-store
+        await useUserStore.getState().initStore();
+    } catch (error) {
+        console.error("Error al inicializar el store:", error);
+    }
 
-                    {/* Componentes de utilidad en segundo plano */}
-                    <UpdaterComponent />
-                    <FloatVersionComponent />
-                </TooltipProvider>
-            </ColorThemeProvider>
-        </ThemeProvider>
-    </React.StrictMode>
-);
+    ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+        <React.StrictMode>
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+            >
+                <ColorThemeProvider>
+                    <TooltipProvider delayDuration={0}>
+                        <RouterProvider router={router} />
+                        <Toaster />
+
+                        {/* Componentes de utilidad en segundo plano */}
+                        <UpdaterComponent />
+                        <FloatVersionComponent />
+                    </TooltipProvider>
+                </ColorThemeProvider>
+            </ThemeProvider>
+        </React.StrictMode>
+    );
+}
+
+initApp();
