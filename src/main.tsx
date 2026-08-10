@@ -17,9 +17,9 @@ function UpdaterComponent() {
 
     useEffect(() => {
         // Ejecutar revisión de actualizaciones antes de cerrar el splash
-        // checkForUpdates().finally(() => {
-        //     invoke('close_splashscreen').catch(console.error);
-        // });
+        checkForUpdates().finally(() => {
+            invoke('close_splashscreen').catch(console.error);
+        });
     }, []);
 
     return null;
