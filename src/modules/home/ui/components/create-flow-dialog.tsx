@@ -6,14 +6,16 @@ import { invoke } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
 import SelectWorkspaceModal from "./select-workspace";
 import { Folder } from "lucide-react";
+import { Workspace } from "@/types/data";
+import { workspaceName } from "../../lib/format";
 
 interface CreateFlowDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    workspaces: string[];
-    defaultWorkspace?: string;
+    workspaces: Workspace[];
+    defaultWorkspace?: Workspace;
     onCreated: (absolutePath: string) => void;
-    onAddWorkspace: () => Promise<string | null>;
+    onAddWorkspace: () => Promise<Workspace | null>;
 }
 
 export function CreateFlowDialog({
@@ -25,7 +27,7 @@ export function CreateFlowDialog({
     onAddWorkspace,
 }: CreateFlowDialogProps) {
     const [name, setName] = useState("");
-    const [selectedWorkspace, setSelectedWorkspace] = useState<string>("");
+    const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -93,17 +95,17 @@ export function CreateFlowDialog({
         }
     };
 
-    const handleWorkspaceChange = async (value: string) => {
-        if (value === "new_workspace") {
+    const handleWorkspaceChange = async (workspace: Workspace) => {
+        if (workspace === "new_workspace") {
             const newPath = await onAddWorkspace();
             if (newPath) {
                 setSelectedWorkspace(newPath);
             } else {
                 // reverted to default if canceled
-                setSelectedWorkspace(defaultWorkspace || workspaces[0] || "");
+                setSelectedWorkspace(defaultWorkspace || workspaces[0] || null);
             }
         } else {
-            setSelectedWorkspace(value);
+            setSelectedWorkspace(workspace);
         }
     };
 
@@ -131,7 +133,7 @@ export function CreateFlowDialog({
                             <label className="text-sm font-medium">Workspace Destino</label>
                             <Button onClick={() => setSelectWorkspaceOpen(true)} variant="outline" className="justify-start overflow-hidden">
                                 <Folder />
-                                {selectedWorkspace.split(/[/\\]/).pop()} <span className="text-xs text-muted-foreground ml-2 truncate!">({selectedWorkspace})</span>
+                                {workspaceName(selectedWorkspace ?? "Seleccionar Workspace") } <span className="text-xs text-muted-foreground ml-2 truncate!">({selectedWorkspace})</span>
                             </Button>
                         </div>
                         {error && <p className="text-sm text-red-500">{error}</p>}
@@ -151,7 +153,7 @@ export function CreateFlowDialog({
                 onOpenChange={setSelectWorkspaceOpen}
                 onSelect={handleWorkspaceChange}
                 workspaces={workspaces}
-                defaultWorkspace={selectedWorkspace}
+                defaultWorkspace={selectedWorkspace || undefined}
             />
         </>
     );

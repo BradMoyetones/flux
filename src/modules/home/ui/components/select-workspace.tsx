@@ -1,5 +1,6 @@
 "use client"
 
+import { Workspace } from "@/types/data";
 import {
     Command,
     CommandDialog,
@@ -16,13 +17,14 @@ import {
     Folder,
     FolderPlus,
 } from "lucide-react"
+import { workspaceName } from "../../lib/format";
 
 interface SelectWorkspaceModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    workspaces: string[];
-    defaultWorkspace?: string;
-    onSelect: (workspace: string) => void;
+    workspaces: Workspace[];
+    defaultWorkspace?: Workspace;
+    onSelect: (workspace: Workspace) => void;
 }
 export default function SelectWorkspaceModal({ open, onOpenChange, workspaces, defaultWorkspace, onSelect }: SelectWorkspaceModalProps) {
 
@@ -52,7 +54,7 @@ export default function SelectWorkspaceModal({ open, onOpenChange, workspaces, d
                             >
                                 <Folder />
                                 <div className="flex flex-col">
-                                    <span>{workspace.split(/[\\/]/).pop()}</span>
+                                    <span>{workspaceName(workspace)}</span>
                                     <span className="text-xs text-muted-foreground">{workspace}</span>
                                 </div>
                                 <CommandShortcut>
