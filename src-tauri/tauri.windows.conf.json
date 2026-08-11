@@ -26,7 +26,8 @@
                 "minimizable": false,
                 "decorations": false,
                 "transparent": true,
-                "alwaysOnTop": true
+                "alwaysOnTop": true,
+                "hiddenTitle": true
             }
         ]
     }

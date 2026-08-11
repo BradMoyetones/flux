@@ -20,27 +20,25 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .setup(|app| {
-            // Obtenemos la ventana nativa de Tauri v2
-            let window = app.get_webview_window("main").unwrap();
-
-            // Aplicamos Vibrancy real de macOS usando los métodos del trait
-            #[cfg(target_os = "macos")]
-            apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None)
-                .expect("No se pudo aplicar el Vibrancy en macOS");
-
-            #[cfg(target_os = "windows")]
-            apply_acrylic(&window, Some((0, 0, 0, 0)))
-                .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
-
-            Ok(())
-        })
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_shell::init())
         .manage(std::sync::Arc::new(services::whatsapp_manager::WhatsAppManager::new()))
         .manage(commands::window::RunInBackgroundState(std::sync::Mutex::new(true)))
         .setup(|app| {
+            // Obtenemos la ventana nativa de Tauri v2 - Se pasa aqui porque no puden haber 2 setup
+            for (_label, window) in app.webview_windows() {
+                // Aplicamos Vibrancy real de macOS usando los métodos del trait
+                #[cfg(target_os = "macos")]
+                apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None)
+                    .expect("No se pudo aplicar el Vibrancy en macOS");
+    
+                #[cfg(target_os = "windows")]
+                apply_acrylic(&window, Some((0, 0, 0, 0)))
+                    .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+            };
+
+
             let show_i = MenuItem::with_id(app, "show", "Show Flux", true, None::<&str>).unwrap();
             let hide_i = MenuItem::with_id(app, "hide", "Hide Flux", true, None::<&str>).unwrap();
             let sep_i = PredefinedMenuItem::separator(app).unwrap();
