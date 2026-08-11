@@ -1,12 +1,13 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { Field, SectionCard, SettingRow, Switch, TextArea, TextInput } from "@/modules/settings/ui/components/controls"
+import { useState } from "react"
+import { Field, SectionCard, SettingRow, Switch, TextInput } from "@/modules/settings/ui/components/controls"
 import { Button } from "@/ui/components/ui/button"
-import { Camera, RotateCcw, Sparkles } from "lucide-react"
+import { Camera, RotateCcw, Save, Sparkles } from "lucide-react"
 import { useUserStore } from "@/shared/stores/user-store"
 import { open } from "@tauri-apps/plugin-dialog"
 import { convertFileSrc, invoke } from "@tauri-apps/api/core"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/components/ui/tooltip"
 
 export function GeneralSection() {
     const { userName, avatarPath, isFirstTime, setIsFirstTime, setAvatarPath, setUserName } = useUserStore();
@@ -24,7 +25,7 @@ export function GeneralSection() {
             if (selected) {
                 const path = typeof selected === 'string' ? selected : (selected as any).path;
                 if (!path) return;
-                
+
                 const newPath = await invoke<string>('process_and_save_avatar', { filePath: path });
                 setAvatarPath(newPath);
             }
@@ -74,19 +75,39 @@ export function GeneralSection() {
                                 <Camera className="size-3.5" />
                             </button>
                         </div>
-                        <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                         <span className="text-[11px] text-muted-foreground">PNG · JPG</span>
                     </div>
 
                     {/* Campos */}
                     <div className="grid flex-1 gap-4 sm:grid-cols-2">
                         <Field label="¿Cómo quieres que te llamemos?" htmlFor="displayName" className="sm:col-span-2">
-                            <TextInput
-                                id="displayName"
-                                value={name}
-                                placeholder="p. ej. Brad"
-                                onChange={(e) => setName(e.target.value)}
-                            />
+                            <div className="relative">
+                                <TextInput
+                                    id="displayName"
+                                    value={name}
+                                    placeholder="p. ej. Brad"
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                                {name !== userName && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                className="absolute right-1 top-1"
+                                                variant="outline"
+                                                size="icon-sm"
+                                                onClick={() => {
+                                                    setUserName(name);
+                                                }}
+                                            >
+                                                <Save />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Guardar</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )}
+                            </div>
                         </Field>
                     </div>
                 </div>
