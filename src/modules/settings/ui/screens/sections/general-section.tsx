@@ -1,24 +1,37 @@
 "use client"
 
-import { useRef } from "react"
-import type { UserProfile } from "@/modules/settings/lib/settings-types"
+import { useRef, useState } from "react"
 import { Field, SectionCard, SettingRow, Switch, TextArea, TextInput } from "@/modules/settings/ui/components/controls"
 import { Button } from "@/ui/components/ui/button"
 import { Camera, RotateCcw, Sparkles } from "lucide-react"
+import { useUserStore } from "@/shared/stores/user-store"
+import { open } from "@tauri-apps/plugin-dialog"
+import { convertFileSrc, invoke } from "@tauri-apps/api/core"
 
-export function GeneralSection({
-    profile,
-    onChange,
-}: {
-    profile: UserProfile
-    onChange: (patch: Partial<UserProfile>) => void
-}) {
-    const fileRef = useRef<HTMLInputElement>(null)
+export function GeneralSection() {
+    const { userName, avatarPath, isFirstTime, setIsFirstTime, setAvatarPath, setUserName } = useUserStore();
+    const [name, setName] = useState(userName)
 
-    function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (file) onChange({ avatarUrl: URL.createObjectURL(file) })
-    }
+    const handleAvatarUpload = async () => {
+        try {
+            const selected = await open({
+                multiple: false,
+                filters: [{
+                    name: 'Image',
+                    extensions: ['png', 'jpeg', 'jpg', 'gif', 'webp']
+                }]
+            });
+            if (selected) {
+                const path = typeof selected === 'string' ? selected : (selected as any).path;
+                if (!path) return;
+                
+                const newPath = await invoke<string>('process_and_save_avatar', { filePath: path });
+                setAvatarPath(newPath);
+            }
+        } catch (e) {
+            console.error('Failed to upload avatar:', e);
+        }
+    };
 
     return (
         <div className="space-y-5">
@@ -30,7 +43,7 @@ export function GeneralSection({
                     </div>
                     <div className="space-y-0.5">
                         <p className="text-sm font-semibold text-foreground">
-                            ¡Hola de nuevo, {profile.displayName || "usuario"}!
+                            ¡Hola de nuevo, {userName}!
                         </p>
                         <p className="text-xs text-muted-foreground leading-relaxed">
                             Personaliza cómo quieres que la app te salude y se dirija a ti. Estos datos se
@@ -46,7 +59,7 @@ export function GeneralSection({
                     <div className="flex flex-col items-center gap-2">
                         <div className="relative">
                             <img
-                                src={profile.avatarUrl || "/avatar-default.png"}
+                                src={convertFileSrc(avatarPath)}
                                 alt="Foto de perfil"
                                 width={88}
                                 height={88}
@@ -54,14 +67,14 @@ export function GeneralSection({
                             />
                             <button
                                 type="button"
-                                onClick={() => fileRef.current?.click()}
+                                onClick={handleAvatarUpload}
                                 className="absolute -bottom-1.5 -right-1.5 flex size-7 items-center justify-center rounded-lg border border-border bg-background text-foreground shadow-sm transition-colors hover:bg-muted"
                                 aria-label="Cambiar foto"
                             >
                                 <Camera className="size-3.5" />
                             </button>
                         </div>
-                        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+                        <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                         <span className="text-[11px] text-muted-foreground">PNG · JPG</span>
                     </div>
 
@@ -70,31 +83,9 @@ export function GeneralSection({
                         <Field label="¿Cómo quieres que te llamemos?" htmlFor="displayName" className="sm:col-span-2">
                             <TextInput
                                 id="displayName"
-                                value={profile.displayName}
+                                value={name}
                                 placeholder="p. ej. Brad"
-                                onChange={(e) => onChange({ displayName: e.target.value })}
-                            />
-                        </Field>
-                        <Field label="Usuario" htmlFor="handle">
-                            <TextInput
-                                id="handle"
-                                value={profile.handle}
-                                onChange={(e) => onChange({ handle: e.target.value })}
-                            />
-                        </Field>
-                        <Field label="Correo" htmlFor="email">
-                            <TextInput
-                                id="email"
-                                type="email"
-                                value={profile.email}
-                                onChange={(e) => onChange({ email: e.target.value })}
-                            />
-                        </Field>
-                        <Field label="Sobre ti" htmlFor="bio" className="sm:col-span-2" hint="Se muestra en tu tarjeta de perfil.">
-                            <TextArea
-                                id="bio"
-                                value={profile.bio}
-                                onChange={(e) => onChange({ bio: e.target.value })}
+                                onChange={(e) => setName(e.target.value)}
                             />
                         </Field>
                     </div>
@@ -108,8 +99,8 @@ export function GeneralSection({
                         description="Marca si ya pasaste por la bienvenida inicial."
                     >
                         <Switch
-                            checked={profile.onboardingCompleted}
-                            onCheckedChange={(v) => onChange({ onboardingCompleted: v })}
+                            checked={!isFirstTime}
+                            onCheckedChange={() => setIsFirstTime(!isFirstTime)}
                         />
                     </SettingRow>
                     <SettingRow
@@ -119,7 +110,7 @@ export function GeneralSection({
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onChange({ onboardingCompleted: false })}
+                            onClick={() => setIsFirstTime(true)}
                         >
                             <RotateCcw className="size-3.5" />
                             Reiniciar

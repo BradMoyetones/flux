@@ -3,12 +3,17 @@ import { Button } from '@/ui/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { createBrowserRouter, Link } from 'react-router';
 import { toRouteObjects } from './tab-routes';
+import { OnboardingView } from '@/modules/onboarding/OnboardingView';
 
 const router = createBrowserRouter([
     {
         path: '/',
         element: <App />,
         children: toRouteObjects() as any, // Cast if necessary depending on type compatibility
+    },
+    {
+        path: '/onboarding',
+        element: <OnboardingView />,
     },
     {
         path: '/flow/new',

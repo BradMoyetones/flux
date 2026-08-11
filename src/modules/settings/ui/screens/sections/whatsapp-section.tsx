@@ -1,9 +1,10 @@
 "use client"
 
-import type { WaSessionConfig, WorkspaceConfig } from "@/modules/settings/lib/settings-types"
-import { Badge, SectionCard, Select, Switch } from "@/modules/settings/ui/components/controls"
+import { useWhatsAppSession } from "@/modules/flows/plugins/whatsapp/use-whatsapp-session"
+import { Badge, SectionCard } from "@/modules/settings/ui/components/controls"
 import { cn } from "@/shared/utils/utils"
 import { Button } from "@/ui/components/ui/button"
+import { Switch } from "@/ui/components/ui/switch"
 import {
     MessageCircle,
     Plug,
@@ -15,25 +16,9 @@ import {
     Send,
 } from "lucide-react"
 
-export function WhatsAppSection({
-    sessions,
-    workspaces,
-    onUpdate,
-    onDelete,
-}: {
-    sessions: WaSessionConfig[]
-    workspaces: WorkspaceConfig[]
-    onUpdate: (id: string, patch: Partial<WaSessionConfig>) => void
-    onDelete: (id: string) => void
-}) {
+export function WhatsAppSection() {
+    const {sessions, startSession, stopSession, deleteSession} = useWhatsAppSession()
     const connected = sessions.filter((s) => s.connected).length
-    const allNodes = workspaces.flatMap((ws) =>
-        ws.workflows.flatMap((wf) =>
-            wf.nodes
-                .filter((n) => n.type === "whatsapp")
-                .map((n) => ({ value: `${wf.id}:${n.id}`, label: `${wf.name} · ${n.label}` })),
-        ),
-    )
 
     return (
         <div className="space-y-5">
@@ -50,7 +35,7 @@ export function WhatsAppSection({
                     </div>
                 </div>
                 <Button size="sm">
-                    <Plug className="size-3.5" />
+                    <Plug />
                     Nueva sesión
                 </Button>
             </div>
@@ -69,71 +54,52 @@ export function WhatsAppSection({
                                 />
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <h3 className="text-sm font-semibold text-foreground">{s.label}</h3>
+                                        <h3 className="text-sm font-semibold text-foreground">{s.id ?? "Sin vincular"}</h3>
                                         <Badge tone={s.connected ? "success" : "neutral"}>
                                             {s.connected ? "Conectada" : "Desconectada"}
                                         </Badge>
-                                        {s.reusable && <Badge tone="primary">Reutilizable</Badge>}
+                                        <Badge tone="primary">Reutilizable</Badge>
                                     </div>
                                     <p className="font-mono text-[11px] text-muted-foreground">
-                                        {s.id} · :{s.port}
+                                        {s.jid ?? "--"} · :{s.port}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        {s.phone ?? "Sin vincular"} · {s.lastActivity ?? "sin actividad"}
+                                        {s.jid?.split(":")[0] ?? "--"} · {"sin actividad"}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-1.5">
                                 {s.connected ? (
-                                    <Button variant="outline" size="sm" onClick={() => onUpdate(s.id, { connected: false })}>
-                                        <Power className="size-3.5" />
+                                    <Button variant="outline" size="sm" onClick={() => stopSession(s.id)}>
+                                        <Power />
                                         Detener
                                     </Button>
                                 ) : (
-                                    <Button variant="outline" size="sm" onClick={() => onUpdate(s.id, { connected: true })}>
-                                        <QrCode className="size-3.5" />
+                                    <Button variant="outline" size="sm" onClick={() => startSession(s.id)}>
+                                        <QrCode />
                                         Vincular
                                     </Button>
                                 )}
-                                <Button variant="destructive" size="icon-sm" aria-label="Eliminar sesión" onClick={() => onDelete(s.id)}>
-                                    <Trash2 className="size-3.5" />
+                                <Button variant="destructive" size="icon-sm" aria-label="Eliminar sesión" onClick={() => deleteSession(s.id)}>
+                                    <Trash2 />
                                 </Button>
                             </div>
                         </div>
 
                         {/* Stats */}
                         <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3">
-                            <MiniStat icon={Send} label="Enviados" value={s.messagesSent.toLocaleString("es")} />
-                            <MiniStat icon={Users} label="Contactos" value={String(s.contactsCount)} />
-                            <MiniStat icon={MessagesSquare} label="Chats" value={String(s.chatsCount)} />
+                            <MiniStat icon={Send} label="Enviados" value={String(0)} />
+                            <MiniStat icon={Users} label="Contactos" value={String(0)} />
+                            <MiniStat icon={MessagesSquare} label="Chats" value={String(0)} />
                         </div>
 
                         {/* Reciclaje / binding */}
                         <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-border pt-3">
                             <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Switch checked={s.reusable} onCheckedChange={(v) => onUpdate(s.id, { reusable: v })} />
+                                <Switch checked={true} disabled />
                                 Reciclar conexión entre nodos
                             </label>
-                            <div className="ml-auto flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">Nodo asignado</span>
-                                <div className="w-56">
-                                    <Select
-                                        value={s.boundWorkflowId ? `${s.boundWorkflowId}:${s.boundNodeId}` : ""}
-                                        onChange={(e) => {
-                                            const [wf, node] = e.target.value.split(":")
-                                            onUpdate(s.id, { boundWorkflowId: wf || null, boundNodeId: node || null })
-                                        }}
-                                    >
-                                        <option value="">Sin asignar</option>
-                                        {allNodes.map((n) => (
-                                            <option key={n.value} value={n.value}>
-                                                {n.label}
-                                            </option>
-                                        ))}
-                                    </Select>
-                                </div>
-                            </div>
                         </div>
                     </article>
                 ))}

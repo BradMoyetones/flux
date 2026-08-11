@@ -1,10 +1,15 @@
 import { TabsProvider } from '@/shared/contexts/tabs-context';
 import { Titlebar } from '@/ui/components/layout/titlebar';
 import { Workspace } from '@/ui/components/layout/workspace';
-import { OnboardingView } from '@/modules/onboarding/OnboardingView';
+import { useUserStore } from '@/shared/stores/user-store';
+import { Navigate } from 'react-router';
 import './App.css';
 
 function App() {
+    const { isFirstTime } = useUserStore();
+    
+    if(isFirstTime) return <Navigate to="/onboarding" />
+    
     return (
         <div className="app-shell select-none cursor-default">
             <TabsProvider>
@@ -13,8 +18,6 @@ function App() {
                     <Workspace />
                 </main>
             </TabsProvider>
-            
-            <OnboardingView />
         </div>
     );
 }

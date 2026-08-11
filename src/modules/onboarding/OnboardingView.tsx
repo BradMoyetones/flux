@@ -8,6 +8,7 @@ import { Input } from '@/ui/components/ui/input';
 import { Label } from '@/ui/components/ui/label';
 import { Switch } from '@/ui/components/ui/switch';
 import { Upload, Check, Moon, Sun, Monitor } from 'lucide-react';
+import { Navigate } from 'react-router';
 
 export function OnboardingView() {
     const { isFirstTime, setIsFirstTime, userName, setUserName, avatarPath, setAvatarPath, runInBackground, setRunInBackground } = useUserStore();
@@ -16,7 +17,7 @@ export function OnboardingView() {
     const [step, setStep] = useState(1);
     const [localName, setLocalName] = useState(userName || '');
 
-    if (!isFirstTime) return null;
+    if (!isFirstTime) return <Navigate to="/" />;
 
     const handleAvatarUpload = async () => {
         try {
@@ -45,15 +46,18 @@ export function OnboardingView() {
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-8 select-none">
+        <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-8 select-none cursor-default">
+            <header data-tauri-drag-region className='h-10 fixed top-0 w-full z-50' />
             <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in duration-500">
                 {step === 1 && (
                     <div className="text-center space-y-6">
-                        <div className="mx-auto w-20 h-20 bg-primary/10 flex items-center justify-center rounded-2xl mb-8">
-                            <svg className="w-10 h-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                            </svg>
-                        </div>
+                        <img 
+                            src="/app-icon.svg" 
+                            alt="" 
+                            className="w-36 mx-auto"
+                            draggable={false}
+                            onContextMenu={(e) => e.preventDefault()}
+                        />
                         <h1 className="text-4xl font-bold tracking-tight">Bienvenido a Flux</h1>
                         <p className="text-muted-foreground text-lg">Tu motor de flujos local-first, rápido y privado.</p>
                         <div className="pt-8">
@@ -92,9 +96,9 @@ export function OnboardingView() {
                             />
                         </div>
 
-                        <div className="flex gap-4 pt-4">
-                            <Button variant="outline" size="lg" onClick={() => setStep(1)} className="w-full">Atrás</Button>
-                            <Button size="lg" onClick={() => setStep(3)} className="w-full" disabled={!localName.trim()}>Siguiente</Button>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Button variant="outline" size="lg" onClick={() => setStep(1)} >Atrás</Button>
+                            <Button size="lg" onClick={() => setStep(3)}  disabled={!localName.trim()}>Siguiente</Button>
                         </div>
                     </div>
                 )}
@@ -111,27 +115,27 @@ export function OnboardingView() {
                                 className="h-28 flex flex-col gap-3" 
                                 onClick={() => setTheme('light')}
                             >
-                                <Sun className="w-6 h-6" /> Claro
+                                <Sun /> Claro
                             </Button>
                             <Button 
                                 variant={theme === 'dark' ? 'default' : 'outline'} 
                                 className="h-28 flex flex-col gap-3" 
                                 onClick={() => setTheme('dark')}
                             >
-                                <Moon className="w-6 h-6" /> Oscuro
+                                <Moon /> Oscuro
                             </Button>
                             <Button 
                                 variant={theme === 'system' ? 'default' : 'outline'} 
                                 className="h-28 flex flex-col gap-3" 
                                 onClick={() => setTheme('system')}
                             >
-                                <Monitor className="w-6 h-6" /> Sistema
+                                <Monitor /> Sistema
                             </Button>
                         </div>
 
-                        <div className="flex gap-4 pt-4">
-                            <Button variant="outline" size="lg" onClick={() => setStep(2)} className="w-full">Atrás</Button>
-                            <Button size="lg" onClick={() => setStep(4)} className="w-full">Siguiente</Button>
+                        <div className="grid grid-cols-2 gap-4 pt-4">
+                            <Button variant="outline" size="lg" onClick={() => setStep(2)}>Atrás</Button>
+                            <Button size="lg" onClick={() => setStep(4)}>Siguiente</Button>
                         </div>
                     </div>
                 )}
@@ -152,10 +156,10 @@ export function OnboardingView() {
                             <Switch checked={runInBackground} onCheckedChange={setRunInBackground} className="data-[state=checked]:bg-primary" />
                         </div>
 
-                        <div className="flex gap-4 pt-8">
-                            <Button variant="outline" size="lg" onClick={() => setStep(3)} className="w-full">Atrás</Button>
-                            <Button size="lg" onClick={finishOnboarding} className="w-full gap-2">
-                                <Check className="w-4 h-4" /> Finalizar
+                        <div className="grid grid-cols-2 gap-4 pt-8">
+                            <Button variant="outline" size="lg" onClick={() => setStep(3)}>Atrás</Button>
+                            <Button size="lg" onClick={finishOnboarding}>
+                                <Check /> Finalizar
                             </Button>
                         </div>
                     </div>

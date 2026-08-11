@@ -48,10 +48,11 @@ export const useUserStore = create<UserState>((set) => ({
         set({ avatarPath: val });
     },
     setRunInBackground: async (val) => {
-        await store.set('runInBackground', val);
+        const enabled = !!val;
+        await store.set('runInBackground', enabled);
         await store.save();
-        await invoke('set_run_in_background', { enabled: val }).catch(console.error);
-        set({ runInBackground: val });
+        await invoke('set_run_in_background', { enabled }).catch(console.error);
+        set({ runInBackground: enabled });
     },
     initStore: async () => {
         const isFirstTime = await store.get<boolean>('isFirstTime');
@@ -64,9 +65,10 @@ export const useUserStore = create<UserState>((set) => ({
         if (userName !== null) set({ userName });
         if (theme !== null) set({ theme });
         if (avatarPath !== null) set({ avatarPath });
-        if (runInBackground !== null) {
-            set({ runInBackground });
-            await invoke('set_run_in_background', { enabled: runInBackground }).catch(console.error);
+        if (runInBackground !== null && runInBackground !== undefined) {
+            const enabled = !!runInBackground;
+            set({ runInBackground: enabled });
+            await invoke('set_run_in_background', { enabled }).catch(console.error);
         }
     }
 }));

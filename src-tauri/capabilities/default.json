@@ -17,6 +17,8 @@
         "fs:allow-read-text-file",
         "fs:allow-resource-read-recursive",
         "dialog:default",
+        "store:default",
+        "shell:default",
         {
             "identifier": "shell:allow-execute",
             "allow": [

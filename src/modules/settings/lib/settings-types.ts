@@ -23,17 +23,6 @@ export interface WorkflowNodeSummary {
     label: string
 }
 
-// --- Configuración persistida por la app (esto es lo que guardaría el "config") ---
-
-export interface UserProfile {
-    displayName: string
-    handle: string
-    email: string
-    avatarUrl: string
-    bio: string
-    onboardingCompleted: boolean
-}
-
 export type ThemeMode = "light" | "dark" | "system"
 export type AccentColor = "violet" | "blue" | "emerald" | "amber" | "rose"
 export type UiDensity = "comfortable" | "compact"

@@ -3,30 +3,19 @@
 import { useMemo, useState } from "react"
 import { Input } from "@/ui/components/ui/input"
 import {
-    Bell,
-    Info,
-    MessageCircle,
-    Palette,
     Search,
-    Sliders,
-    User,
-    FolderTree,
 } from "lucide-react"
 
 import {
     mockAutomation,
     mockGlobalVars,
     mockNotifications,
-    mockProfile,
-    mockSessions,
     mockWorkspaces,
 } from "../../lib/settings-data"
 import type {
     AutomationDefaults,
     GlobalVariable,
     NotificationConfig,
-    UserProfile,
-    WaSessionConfig,
     WorkflowConfig,
     WorkspaceConfig,
 } from "../../lib/settings-types"
@@ -39,53 +28,20 @@ import { AutomationSection } from "./sections/automation-section"
 import { NotificationsSection } from "./sections/notifications-section"
 import { AboutSection } from "./sections/about-section"
 import { cn } from "@/shared/utils/utils"
-
-type SectionId =
-    | "general"
-    | "appearance"
-    | "workspaces"
-    | "whatsapp"
-    | "automation"
-    | "notifications"
-    | "about"
-
-const NAV: {
-    id: SectionId
-    label: string
-    icon: typeof User
-    group: string
-    keywords: string[]
-}[] = [
-        { id: "general", label: "General", icon: User, group: "Cuenta", keywords: ["perfil", "nombre", "avatar", "bienvenida", "onboarding", "foto"] },
-        { id: "appearance", label: "Apariencia", icon: Palette, group: "Cuenta", keywords: ["tema", "claro", "oscuro", "color", "acento", "densidad", "fuente"] },
-        { id: "workspaces", label: "Workspaces", icon: FolderTree, group: "Automatización", keywords: ["flujo", "workflow", "cron", "nodos", "eliminar", "programado"] },
-        { id: "whatsapp", label: "Sesiones WhatsApp", icon: MessageCircle, group: "Automatización", keywords: ["whatsapp", "sesion", "qr", "sidecar", "contactos", "chats", "reciclar"] },
-        { id: "automation", label: "Automatización", icon: Sliders, group: "Automatización", keywords: ["http", "timeout", "reintentos", "ssl", "cookies", "variables", "global"] },
-        { id: "notifications", label: "Notificaciones", icon: Bell, group: "Preferencias", keywords: ["notificacion", "alerta", "sonido", "escritorio"] },
-        { id: "about", label: "Acerca de", icon: Info, group: "Preferencias", keywords: ["version", "build", "actualizar", "tauri"] },
-    ]
-
-const SECTION_TITLES: Record<SectionId, { title: string; subtitle: string }> = {
-    general: { title: "General", subtitle: "Tu perfil y la bienvenida de la app." },
-    appearance: { title: "Apariencia", subtitle: "Tema, color de acento y densidad de la interfaz." },
-    workspaces: { title: "Workspaces", subtitle: "Configura cada workspace y sus flujos." },
-    whatsapp: { title: "Sesiones de WhatsApp", subtitle: "Gestiona y recicla las conexiones del sidecar." },
-    automation: { title: "Automatización", subtitle: "Valores por defecto de nodos y variables globales." },
-    notifications: { title: "Notificaciones", subtitle: "Controla qué eventos te avisan." },
-    about: { title: "Acerca de", subtitle: "Información de versión y recursos." },
-}
+import { useUserStore } from "@/shared/stores/user-store"
+import { convertFileSrc } from "@tauri-apps/api/core"
+import { SectionId, NAV, SECTION_TITLES } from "../../lib/data"
 
 export default function SettingsView() {
     const [active, setActive] = useState<SectionId>("general")
     const [query, setQuery] = useState("")
 
     // Estado (mock) — así se vería la config persistida por la app
-    const [profile, setProfile] = useState<UserProfile>(mockProfile)
     const [workspaces, setWorkspaces] = useState<WorkspaceConfig[]>(mockWorkspaces)
-    const [sessions, setSessions] = useState<WaSessionConfig[]>(mockSessions)
     const [automation, setAutomation] = useState<AutomationDefaults>(mockAutomation)
     const [vars, setVars] = useState<GlobalVariable[]>(mockGlobalVars)
     const [notifications, setNotifications] = useState<NotificationConfig>(mockNotifications)
+    const {avatarPath, userName} = useUserStore();
 
     const filteredNav = useMemo(() => {
         const q = query.trim().toLowerCase()
@@ -162,13 +118,12 @@ export default function SettingsView() {
                     {/* Tarjeta de usuario */}
                     <div className="flex items-center gap-2.5 border-t border-border p-3">
                         <img
-                            src={profile.avatarUrl || "/avatar-default.png"}
+                            src={convertFileSrc(avatarPath)}
                             alt=""
                             className="size-8 rounded-lg object-cover"
                         />
                         <div className="min-w-0 leading-tight">
-                            <p className="truncate text-sm font-medium text-foreground">{profile.displayName}</p>
-                            <p className="truncate text-[11px] text-muted-foreground">@{profile.handle}</p>
+                            <p className="truncate text-sm font-medium text-foreground">{userName}</p>
                         </div>
                     </div>
                 </nav>
@@ -182,53 +137,16 @@ export default function SettingsView() {
                         </div>
 
                         {active === "general" && (
-                            <GeneralSection profile={profile} onChange={(p) => setProfile((s) => ({ ...s, ...p }))} />
+                            <GeneralSection />
                         )}
                         {active === "appearance" && (
                             <AppearanceSection />
                         )}
-                        {active === "workspaces" && (
-                            <WorkspacesSection
-                                workspaces={workspaces}
-                                sessions={sessions}
-                                onUpdateWorkspace={(wsId, patch) =>
-                                    setWorkspaces((ws) => ws.map((w) => (w.id === wsId ? { ...w, ...patch } : w)))
-                                }
-                                onUpdateWorkflow={(wsId, wfId, patch) =>
-                                    setWorkspaces((ws) =>
-                                        ws.map((w) =>
-                                            w.id === wsId
-                                                ? {
-                                                    ...w,
-                                                    workflows: w.workflows.map((f) =>
-                                                        f.id === wfId ? ({ ...f, ...patch } as WorkflowConfig) : f,
-                                                    ),
-                                                }
-                                                : w,
-                                        ),
-                                    )
-                                }
-                                onDeleteWorkspace={(wsId) => setWorkspaces((ws) => ws.filter((w) => w.id !== wsId))}
-                                onDeleteWorkflow={(wsId, wfId) =>
-                                    setWorkspaces((ws) =>
-                                        ws.map((w) =>
-                                            w.id === wsId
-                                                ? { ...w, workflows: w.workflows.filter((f) => f.id !== wfId) }
-                                                : w,
-                                        ),
-                                    )
-                                }
-                            />
-                        )}
+                        {/* {active === "workspaces" && (
+                            <WorkspacesSection />
+                        )} */}
                         {active === "whatsapp" && (
-                            <WhatsAppSection
-                                sessions={sessions}
-                                workspaces={workspaces}
-                                onUpdate={(id, patch) =>
-                                    setSessions((ss) => ss.map((s) => (s.id === id ? { ...s, ...patch } : s)))
-                                }
-                                onDelete={(id) => setSessions((ss) => ss.filter((s) => s.id !== id))}
-                            />
+                            <WhatsAppSection />
                         )}
                         {active === "automation" && (
                             <AutomationSection
