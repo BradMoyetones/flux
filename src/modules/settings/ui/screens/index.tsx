@@ -10,19 +10,15 @@ import {
     mockAutomation,
     mockGlobalVars,
     mockNotifications,
-    mockWorkspaces,
 } from "../../lib/settings-data"
 import type {
     AutomationDefaults,
     GlobalVariable,
     NotificationConfig,
-    WorkflowConfig,
-    WorkspaceConfig,
 } from "../../lib/settings-types"
 
 import { GeneralSection } from "./sections/general-section"
 import { AppearanceSection } from "./sections/appearance-section"
-import { WorkspacesSection } from "./sections/workspaces-section"
 import { WhatsAppSection } from "./sections/whatsapp-section"
 import { AutomationSection } from "./sections/automation-section"
 import { NotificationsSection } from "./sections/notifications-section"
@@ -37,7 +33,6 @@ export default function SettingsView() {
     const [query, setQuery] = useState("")
 
     // Estado (mock) — así se vería la config persistida por la app
-    const [workspaces, setWorkspaces] = useState<WorkspaceConfig[]>(mockWorkspaces)
     const [automation, setAutomation] = useState<AutomationDefaults>(mockAutomation)
     const [vars, setVars] = useState<GlobalVariable[]>(mockGlobalVars)
     const [notifications, setNotifications] = useState<NotificationConfig>(mockNotifications)

@@ -3,22 +3,34 @@
 import { SectionCard, SettingRow } from "@/modules/settings/ui/components/controls"
 import { Button } from "@/ui/components/ui/button"
 import { useUpdater } from "@/ui/hooks/use-updater"
-import { BookOpen, Bug, Code2, RefreshCw, Workflow } from "lucide-react"
-import { getTauriVersion } from '@tauri-apps/api/app';
+import { BookOpen, Bug, Code2, RefreshCw } from "lucide-react"
 import { useState } from "react";
 import { APP_CONFIG } from "@/shared/config/app"
-import { check } from '@tauri-apps/plugin-updater';
+
+import { Update } from '@tauri-apps/plugin-updater';
+import { toast } from 'sonner';
 
 export function AboutSection() {
-    const { appVersion } = useUpdater()
-    const [tauriVersion] = useState(getTauriVersion().then((v) => {
-        return v;
-    }).catch(() => {
-        return "Unknown";
-    }));
+    const { appVersion, tauriVersion, checkForUpdates, promptUpdate } = useUpdater()
 
-    const checkUpdates = async() => {
-        const update = await check();
+    const [isChecking, setIsChecking] = useState(false);
+    const [update, setUpdate] = useState<Update | null>(null);
+
+    const handleCheckUpdates = async () => {
+        if (update) {
+            promptUpdate(update);
+            return;
+        }
+
+        setIsChecking(true);
+        const newUpdate = await checkForUpdates();
+        setIsChecking(false);
+
+        if (newUpdate) {
+            setUpdate(newUpdate);
+        } else {
+            toast.success("Ya tienes la última versión instalada.");
+        }
     }
 
     return (
@@ -37,9 +49,15 @@ export function AboutSection() {
                         Automatización de flujos local · versión {appVersion} ({tauriVersion})
                     </p>
                 </div>
-                <Button variant="outline" size="sm" className="ml-auto" onClick={() => { }}>
-                    <RefreshCw />
-                    Buscar actualizaciones
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="ml-auto" 
+                    onClick={handleCheckUpdates}
+                    disabled={isChecking}
+                >
+                    <RefreshCw className={isChecking ? "animate-spin" : ""} />
+                    {isChecking ? "Buscando..." : update ? "Iniciar proceso de instalación" : "Buscar actualizaciones"}
                 </Button>
             </div>
 

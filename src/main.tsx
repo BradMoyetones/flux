@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from '@/ui/components/layout/theme-provider';
-import './ui/styles/index.css';
 import { RouterProvider } from 'react-router';
 import { invoke } from '@tauri-apps/api/core';
 import router from './shared/router';
@@ -9,17 +8,22 @@ import { Toaster } from './ui/components/ui/sonner';
 import { useUpdater } from './ui/hooks/use-updater';
 import { TooltipProvider } from './ui/components/ui/tooltip';
 import { ColorThemeProvider } from './shared/contexts/color-theme-provider';
-
 import { useUserStore } from './shared/stores/user-store';
 
+import './ui/styles/index.css';
+
 function UpdaterComponent() {
-    const { checkForUpdates } = useUpdater();
+    const { checkForUpdates, promptUpdate } = useUpdater();
 
     useEffect(() => {
         // Ejecutar revisión de actualizaciones antes de cerrar el splash
-        checkForUpdates().finally(() => {
-            invoke('close_splashscreen').catch(console.error);
-        });
+        checkForUpdates()
+            .then((update) => {
+                if (update) promptUpdate(update);
+            })
+            .finally(() => {
+                invoke('close_splashscreen').catch(console.error);
+            });
     }, []);
 
     return null;
