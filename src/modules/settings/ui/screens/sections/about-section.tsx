@@ -3,15 +3,19 @@
 import { SectionCard, SettingRow } from "@/modules/settings/ui/components/controls"
 import { Button } from "@/ui/components/ui/button"
 import { useUpdater } from "@/ui/hooks/use-updater"
-import { BookOpen, Bug, Code2, RefreshCw } from "lucide-react"
+import { BookOpen, Bug, Code2, FileText, RefreshCw } from "lucide-react"
 import { useState } from "react";
 import { APP_CONFIG } from "@/shared/config/app"
 
 import { Update } from '@tauri-apps/plugin-updater';
 import { toast } from 'sonner';
+import { useTabs } from "@/shared/contexts/tabs-context"
+import { useNavigate } from "react-router"
 
 export function AboutSection() {
     const { appVersion, tauriVersion, checkForUpdates, promptUpdate } = useUpdater()
+    const { openTab } = useTabs()
+    const navigate = useNavigate()
 
     const [isChecking, setIsChecking] = useState(false);
     const [update, setUpdate] = useState<Update | null>(null);
@@ -31,6 +35,11 @@ export function AboutSection() {
         } else {
             toast.success("Ya tienes la última versión instalada.");
         }
+    }
+
+    const handleOpenReleaseNotes = async () => {
+        openTab("/release-notes")
+        navigate("/release-notes")
     }
 
     return (
@@ -73,7 +82,7 @@ export function AboutSection() {
             </SectionCard>
 
             <SectionCard title="Recursos">
-                <div className="grid gap-2 sm:grid-cols-3">
+                <div className="grid gap-2 sm:grid-cols-4">
                     <Button variant="outline" size="sm" className="justify-start" asChild>
                         <a target="_blank" rel="noopener noreferrer" href={APP_CONFIG.getDocumentationUrl()}>
                             <BookOpen />
@@ -91,6 +100,10 @@ export function AboutSection() {
                             <Bug />
                             Reportar un bug
                         </a>
+                    </Button>
+                    <Button variant="outline" size="sm" className="justify-start" onClick={handleOpenReleaseNotes}>
+                        <FileText />
+                        Nota de release
                     </Button>
                 </div>
             </SectionCard>
