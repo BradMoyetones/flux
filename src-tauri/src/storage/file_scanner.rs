@@ -52,6 +52,34 @@ pub fn delete_workflow_file(path: &str) -> Result<(), String> {
     std::fs::remove_file(path_buf).map_err(|e| e.to_string())
 }
 
+/// Renombra un archivo .flux en disco y devuelve la nueva ruta.
+pub fn rename_workflow_file(old_path: &str, new_name: &str) -> Result<String, String> {
+    let old_buf = PathBuf::from(old_path);
+    if !old_buf.is_absolute() {
+        return Err("Se requiere una ruta absoluta para renombrar el workflow".into());
+    }
+    if !old_buf.exists() {
+        return Err(format!("El archivo no existe: {}", old_path));
+    }
+    let parent = old_buf.parent().ok_or("Ruta sin directorio padre")?;
+    
+    // Normalize new name (e.g. replacing spaces with hyphens, lowercase)
+    let sanitized_name = new_name.replace(" ", "-").to_lowercase();
+    let new_buf = parent.join(format!("{}.flux", sanitized_name));
+
+    if new_buf.exists() {
+        // Podríamos retornar la ruta existente si es igual, pero por simplicidad de momento:
+        if new_buf != old_buf {
+            return Err("Ya existe un flujo con ese nombre en este workspace".into());
+        }
+        return Ok(new_buf.to_string_lossy().to_string());
+    }
+
+    std::fs::rename(&old_buf, &new_buf).map_err(|e| e.to_string())?;
+
+    Ok(new_buf.to_string_lossy().to_string())
+}
+
 /// Entrada ligera del índice — solo metadatos derivados del filesystem.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FluxEntry {

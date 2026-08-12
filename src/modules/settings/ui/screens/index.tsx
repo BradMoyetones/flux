@@ -6,17 +6,6 @@ import {
     Search,
 } from "lucide-react"
 
-import {
-    mockAutomation,
-    mockGlobalVars,
-    mockNotifications,
-} from "../../lib/settings-data"
-import type {
-    AutomationDefaults,
-    GlobalVariable,
-    NotificationConfig,
-} from "../../lib/settings-types"
-
 import { GeneralSection } from "./sections/general-section"
 import { AppearanceSection } from "./sections/appearance-section"
 import { WhatsAppSection } from "./sections/whatsapp-section"
@@ -27,15 +16,13 @@ import { cn } from "@/shared/utils/utils"
 import { useUserStore } from "@/shared/stores/user-store"
 import { convertFileSrc } from "@tauri-apps/api/core"
 import { SectionId, NAV, SECTION_TITLES } from "../../lib/data"
+import { WorkspacesSection } from "./sections/workspaces-section"
 
 export default function SettingsView() {
     const [active, setActive] = useState<SectionId>("general")
     const [query, setQuery] = useState("")
 
     // Estado (mock) — así se vería la config persistida por la app
-    const [automation, setAutomation] = useState<AutomationDefaults>(mockAutomation)
-    const [vars, setVars] = useState<GlobalVariable[]>(mockGlobalVars)
-    const [notifications, setNotifications] = useState<NotificationConfig>(mockNotifications)
     const {avatarPath, userName} = useUserStore();
 
     const filteredNav = useMemo(() => {
@@ -137,25 +124,17 @@ export default function SettingsView() {
                         {active === "appearance" && (
                             <AppearanceSection />
                         )}
-                        {/* {active === "workspaces" && (
+                        {active === "workspaces" && (
                             <WorkspacesSection />
-                        )} */}
+                        )}
                         {active === "whatsapp" && (
                             <WhatsAppSection />
                         )}
                         {active === "automation" && (
-                            <AutomationSection
-                                automation={automation}
-                                vars={vars}
-                                onChangeAutomation={(p) => setAutomation((s) => ({ ...s, ...p }))}
-                                onChangeVars={setVars}
-                            />
+                            <AutomationSection />
                         )}
                         {active === "notifications" && (
-                            <NotificationsSection
-                                config={notifications}
-                                onChange={(p) => setNotifications((s) => ({ ...s, ...p }))}
-                            />
+                            <NotificationsSection />
                         )}
                         {active === "about" && <AboutSection />}
                     </div>

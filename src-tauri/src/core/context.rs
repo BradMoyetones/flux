@@ -3,19 +3,22 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use tauri::AppHandle;
 use reqwest::cookie::Jar;
+use crate::state::GlobalVariable;
 
 #[derive(Clone)]
 pub struct ExecutionContext {
     pub variables: Arc<RwLock<HashMap<String, Value>>>,
     pub cookie_jar: Arc<Jar>,
+    pub custom_variables: Vec<GlobalVariable>,
     pub app: AppHandle,
 }
 
 impl ExecutionContext {
-    pub fn new(app: AppHandle) -> Self {
+    pub fn new(app: AppHandle, custom_variables: Vec<GlobalVariable>) -> Self {
         Self {
             variables: Arc::new(RwLock::new(HashMap::new())),
             cookie_jar: Arc::new(Jar::default()),
+            custom_variables,
             app,
         }
     }
@@ -32,5 +35,9 @@ impl ExecutionContext {
         } else {
             None
         }
+    }
+
+    pub fn get_custom_variable(&self, key: &str) -> Option<String> {
+        self.custom_variables.iter().find(|v| v.key == key).map(|v| v.value.clone())
     }
 }

@@ -6,7 +6,7 @@ import type {
     UserProfile,
     WaSessionConfig,
     WorkspaceConfig,
-} from "./settings-types"
+} from "@/types/data"
 
 export const mockProfile: UserProfile = {
     displayName: "Brad",

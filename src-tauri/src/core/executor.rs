@@ -5,11 +5,12 @@ use crate::models::workflow::Workflow;
 use crate::core::context::ExecutionContext;
 use crate::core::events::{emit_node_event, emit_workflow_event};
 use crate::core::interpolator::interpolate_value;
+use crate::core::logger::{log_info, log_warn, log_error, log_debug};
 use crate::models::runtime::{NodeExecutionEvent, NodeStatus, WorkflowExecutionEvent};
 use crate::plugins::registry::PluginRegistry;
 use crate::plugins::http::plugin::HttpPlugin;
 use crate::plugins::whatsapp::plugin::WhatsAppPlugin;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use std::collections::HashMap;
 use tokio::sync::watch;
 use tokio::task::JoinSet;
@@ -23,6 +24,8 @@ fn build_registry() -> PluginRegistry {
 }
 
 pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), String> {
+    log_info(&app, &workflow.id, None, &format!("▶ Iniciando workflow '{}' ({} nodos)", workflow.name, workflow.nodes.len()));
+    let workflow_name_clone = workflow.name.clone();
     let registry = Arc::new(build_registry());
     let mut graph = DiGraphMap::new();
     let mut node_map = HashMap::new();
@@ -50,8 +53,15 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
         Ok(sorted) => sorted,
         Err(_) => return Err("Ciclo detectado en el DAG del workflow".into()),
     };
-
-    let ctx = Arc::new(ExecutionContext::new(app.clone()));
+    let custom_variables = {
+        let state = app.state::<Arc<crate::state::AppState>>();
+        // Because execute_workflow is async, we can just block or await
+        // Wait, execute_workflow is an async fn, but let's see if we can await here without blocking
+        // Actually, we can just await the read lock
+        let config = state.config.read().await;
+        config.variables.clone()
+    };
+    let ctx = Arc::new(ExecutionContext::new(app.clone(), custom_variables));
 
     emit_workflow_event(&app, &WorkflowExecutionEvent {
         workflow_id: workflow.id.clone(),
@@ -97,10 +107,13 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                     }
                 }
                 if *rx.borrow() == Some(false) {
+                    log_warn(&app_clone, &workflow_id, Some(&node.id), &format!("⊘ Nodo '{}' cancelado: dependencia falló", node.label));
                     let _ = tx.send(Some(false));
-                    return Err(format!("Cancelado: Un nodo padre falló para '{}'", node_id));
+                    return Err(format!("Cancelado: Un nodo padre falló para '{}'", node.id));
                 }
             }
+
+            log_info(&app_clone, &workflow_id, Some(&node.id), &format!("▶ Ejecutando nodo '{}' ({})", node.label, node.node_type));
 
             emit_node_event(&app_clone, &NodeExecutionEvent {
                 workflow_id: workflow_id.clone(),
@@ -127,10 +140,12 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                                 workflow_id: workflow_id.clone(),
                                 node_id: node.id.clone(),
                                 status: NodeStatus::Success,
-                                result: Some(result),
+                                result: Some(result.clone()),
                                 error: None,
                             });
                             
+                            log_info(&app_clone, &workflow_id, Some(&node.id), &format!("✓ Nodo '{}' completado", node.label));
+                            log_debug(&app_clone, &workflow_id, Some(&node.id), &result.to_string());
                             let _ = tx.send(Some(true));
                             Ok(())
                         }
@@ -142,12 +157,14 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                                 result: None,
                                 error: Some(error.clone()),
                             });
+                            log_error(&app_clone, &workflow_id, Some(&node.id), &format!("✗ Nodo '{}' falló: {}", node.label, error), None);
                             let _ = tx.send(Some(false));
                             Err(format!("Nodo '{}' falló: {}", node.id, error))
                         }
                     }
                 }
                 None => {
+                    log_error(&app_clone, &workflow_id, Some(&node.id), &format!("✗ Plugin '{}' no registrado", node.node_type), None);
                     let error = format!("Plugin '{}' no registrado", node.node_type);
                     emit_node_event(&app_clone, &NodeExecutionEvent {
                         workflow_id: workflow_id.clone(),
@@ -186,6 +203,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
     }
 
     if workflow_failed {
+        log_error(&app, &workflow.id, None, &format!("✗ Workflow '{}' falló: {}", workflow_name_clone, first_error.as_ref().unwrap()), None);
         emit_workflow_event(&app, &WorkflowExecutionEvent {
             workflow_id: workflow.id.clone(),
             status: NodeStatus::Error,
@@ -193,6 +211,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
         return Err(first_error.unwrap_or_else(|| "Error desconocido".into()));
     }
 
+    log_info(&app, &workflow.id, None, &format!("✓ Workflow '{}' completado exitosamente", workflow_name_clone));
     emit_workflow_event(&app, &WorkflowExecutionEvent {
         workflow_id: workflow.id.clone(),
         status: NodeStatus::Success,

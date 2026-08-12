@@ -6,17 +6,17 @@ import {
     useReactFlow,
 } from '@xyflow/react';
 
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { useFlowStore, setupFlowListeners, type AppNode } from '../../core/use-flow-store';
 import { nodeTypes } from '../../plugins/node-types';
 import { pluginRegistry } from '../../plugins/registry';
-import { MessageSquare, Play, Save } from 'lucide-react';
+import { MessageSquare, Play, Save, Settings } from 'lucide-react';
 import { ZoomSlider } from '@/ui/components/react-flow/zoom-slider';
 import { SidebarProvider, SidebarTrigger } from '@/ui/components/ui/sidebar';
 import { FlowSidebar } from '../components/sidebar';
 import { NodeConfigPanel } from '../components/node-config-panel';
+import { WorkflowSettingsPanel } from '../components/workflow-settings-panel';
 import { Button } from '@/ui/components/ui/button';
-import { invoke } from '@tauri-apps/api/core';
 import { useWhatsAppSession } from '../../plugins/whatsapp/use-whatsapp-session';
 import { WaSessionDialog } from '../../plugins/whatsapp/wa-session-dialog';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/ui/components/ui/resizable';
@@ -29,18 +29,19 @@ export default function FlowCanvas() {
     const { pathId } = useParams();
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [inspectorOpen, setInspectorOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const { screenToFlowPosition, fitView } = useReactFlow();
     const wa = useWhatsAppSession();
 
     const {
         nodes,
         edges,
-        workflowId,
         onNodesChange,
         onEdgesChange,
         onConnect,
         setNodes,
         executeWorkflow,
+        stopWorkflow,
         loadWorkflow,
         isExecuting,
     } = useFlowStore();
@@ -61,42 +62,29 @@ export default function FlowCanvas() {
 
     const [isSaving, setIsSaving] = useState(false);
 
+    const navigate = useNavigate();
+
     // ──── Save ────
     const onSave = useCallback(async () => {
         if (!pathId) return;
         setIsSaving(true);
         const decodedPath = decodeURIComponent(pathId);
 
-        const workflowPayload = {
-            id: workflowId,
-            name: decodedPath.split(/[/\\]/).pop()?.replace('.flux', '').replace('.json', '') || 'Flujo',
-            trigger: { type: "manual" },
-            nodes: nodes.map(n => ({
-                id: n.id,
-                name: n.data.name || n.id,
-                type: n.type || 'default',
-                label: n.data.label,
-                config: n.data.config,
-                position: n.position,
-            })),
-            edges: edges.map(e => ({
-                id: e.id,
-                source: e.source,
-                target: e.target,
-                sourceHandle: e.sourceHandle,
-                targetHandle: e.targetHandle,
-            })),
-        };
-
         try {
-            await invoke('cmd_save_workflow', { path: decodedPath, workflow: workflowPayload });
+            const { saveWorkflow } = useFlowStore.getState();
+            const newPath = await saveWorkflow(decodedPath);
+            
+            if (newPath && newPath !== decodedPath) {
+                // If path changed due to rename, navigate to the new path
+                navigate(`/workspaces/flow/${encodeURIComponent(newPath)}`, { replace: true });
+            }
             console.log("Saved successfully");
         } catch (e) {
             console.error("Save failed", e);
         } finally {
             setIsSaving(false);
         }
-    }, [pathId, workflowId, nodes, edges]);
+    }, [pathId, navigate]);
 
     // ──── Drag & Drop (API nativa dataTransfer, sin React state) ────
     const onDragOver = useCallback((event: React.DragEvent) => {
@@ -176,7 +164,16 @@ export default function FlowCanvas() {
             <div className="flex-1 relative flex flex-col">
                 {/* @ts-ignore: Prop direction is valid but TS definition might be missing it */}
                 <ResizablePanelGroup direction="horizontal">
-                    <ResizablePanel defaultSize={inspectorOpen ? 70 : 100} className="relative">
+                    {settingsOpen && (
+                        <>
+                            <ResizablePanel defaultSize={25} minSize={20}>
+                                <WorkflowSettingsPanel onClose={() => setSettingsOpen(false)} />
+                            </ResizablePanel>
+                            <ResizableHandle withHandle />
+                        </>
+                    )}
+
+                    <ResizablePanel defaultSize={inspectorOpen && settingsOpen ? 45 : (inspectorOpen || settingsOpen ? 70 : 100)} className="relative">
                         <ReactFlow
                             nodes={nodes}
                             edges={edges}
@@ -234,6 +231,15 @@ export default function FlowCanvas() {
                                 </Button>
 
                                 <Button
+                                    onClick={() => setSettingsOpen(!settingsOpen)}
+                                    variant={settingsOpen ? "secondary" : "outline"}
+                                    title="Ajustes del Flujo"
+                                >
+                                    <Settings className="w-4 h-4" />
+                                    Ajustes
+                                </Button>
+
+                                <Button
                                     onClick={onSave}
                                     variant='outline'
                                     title="Save Workflow"
@@ -244,11 +250,12 @@ export default function FlowCanvas() {
                                 </Button>
 
                                 <Button
-                                    onClick={executeWorkflow}
-                                    disabled={isExecuting || nodes.length === 0}
+                                    onClick={isExecuting ? stopWorkflow : executeWorkflow}
+                                    disabled={nodes.length === 0}
+                                    variant={isExecuting ? "destructive" : "default"}
                                 >
-                                    <Play className={isExecuting ? "animate-pulse" : ""} />
-                                    {isExecuting ? 'Running...' : 'Execute Flow'}
+                                    <Play className={isExecuting ? "animate-pulse hidden" : ""} />
+                                    {isExecuting ? 'Stop Flow' : 'Execute Flow'}
                                 </Button>
                             </Panel>
                         </ReactFlow>

@@ -21,6 +21,11 @@ export interface WaChat {
     name: string;
 }
 
+export interface WaGroup {
+    jid: string;
+    name: string;
+}
+
 interface UseWhatsAppSessionReturn {
     sessions: WhatsAppSessionInfo[];
     loading: boolean;
@@ -29,6 +34,8 @@ interface UseWhatsAppSessionReturn {
     contacts: Record<string, WaContact[]>;
     /** Chats por sessionId */
     chats: Record<string, WaChat[]>;
+    /** Grupos por sessionId */
+    groups: Record<string, WaGroup[]>;
     /** QR URL para una sesión (para SSE) */
     qrUrl: string | null;
     /** Sesión que se está vinculando actualmente */
@@ -40,6 +47,7 @@ interface UseWhatsAppSessionReturn {
     getStatus: (sessionId: string) => Promise<{ connected: boolean; jid: string } | null>;
     fetchContacts: (sessionId: string) => Promise<WaContact[]>;
     fetchChats: (sessionId: string) => Promise<WaChat[]>;
+    fetchGroups: (sessionId: string) => Promise<WaGroup[]>;
     setLinkingSessionId: (id: string | null) => void;
 }
 
@@ -49,6 +57,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
     const [error, setError] = useState<string | null>(null);
     const [contacts, setContacts] = useState<Record<string, WaContact[]>>({});
     const [chats, setChats] = useState<Record<string, WaChat[]>>({});
+    const [groups, setGroups] = useState<Record<string, WaGroup[]>>({});
     const [qrUrl, setQrUrl] = useState<string | null>(null);
     const [linkingSessionId, setLinkingSessionId] = useState<string | null>(null);
 
@@ -175,6 +184,26 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
         }
     }, []);
 
+    // ──── Fetch groups ────
+    const fetchGroups = useCallback(async (sessionId: string): Promise<WaGroup[]> => {
+        try {
+            const raw = await invoke<Array<{ jid: string; name?: string }>>('cmd_wa_proxy_request', {
+                sessionId, method: 'GET', path: '/groups', body: null,
+            });
+
+            const parsed: WaGroup[] = (Array.isArray(raw) ? raw : []).map(g => ({
+                jid: g.jid || '',
+                name: g.name || g.jid || '',
+            }));
+
+            setGroups(prev => ({ ...prev, [sessionId]: parsed }));
+            return parsed;
+        } catch (e) {
+            console.error('Error fetching groups:', e);
+            return [];
+        }
+    }, []);
+
     // ──── Auto-refresh on mount ────
     useEffect(() => {
         refreshSessions();
@@ -186,6 +215,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
         error,
         contacts,
         chats,
+        groups,
         qrUrl,
         linkingSessionId,
         startSession,
@@ -195,6 +225,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
         getStatus,
         fetchContacts,
         fetchChats,
+        fetchGroups,
         setLinkingSessionId,
     };
 }

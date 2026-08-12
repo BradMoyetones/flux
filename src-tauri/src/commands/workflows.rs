@@ -4,7 +4,7 @@ use crate::storage::settings::{
     add_workspace, get_workspaces, remove_workspace,
     get_workflow_index, set_workflow_index, add_to_index, remove_from_index,
 };
-use crate::storage::file_scanner::{scan_flux_paths, save_workflow_file, delete_workflow_file, FluxEntry};
+use crate::storage::file_scanner::{scan_flux_paths, save_workflow_file, delete_workflow_file, rename_workflow_file, FluxEntry};
 use std::path::PathBuf;
 
 #[command]
@@ -111,4 +111,34 @@ pub async fn cmd_delete_workflow(app: AppHandle, path: String) -> Result<(), Str
 
     // Quitar del índice
     remove_from_index(&app, &path)
+}
+
+/// Renombra un workflow cambiando su archivo .flux físico y actualizando el índice.
+#[command]
+pub async fn cmd_rename_workflow(app: AppHandle, old_path: String, new_name: String) -> Result<String, String> {
+    let old_path_clone = old_path.clone();
+    
+    // 1. Mover el archivo físico
+    let new_path = tauri::async_runtime::spawn_blocking(move || {
+        rename_workflow_file(&old_path_clone, &new_name)
+    })
+    .await
+    .map_err(|e| format!("spawn_blocking error: {}", e))??;
+    
+    // 2. Actualizar el índice
+    let mut index = get_workflow_index(&app)?;
+    if let Some(pos) = index.iter().position(|e| e.path == old_path) {
+        let mut entry = index.remove(pos);
+        entry.path = new_path.clone();
+        let name_stem = std::path::Path::new(&new_path)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("sin-nombre")
+            .to_string();
+        entry.name = name_stem;
+        index.push(entry);
+        set_workflow_index(&app, &index)?;
+    }
+    
+    Ok(new_path)
 }

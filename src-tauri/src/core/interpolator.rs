@@ -37,6 +37,8 @@ fn resolve_expression(expr: &str, ctx: &ExecutionContext) -> String {
         "global" => resolve_global(parts.get(1).copied().unwrap_or("")),
         "env" => std::env::var(parts.get(1).copied().unwrap_or(""))
             .unwrap_or_default(),
+        "custom" => ctx.get_custom_variable(parts.get(1).copied().unwrap_or(""))
+            .unwrap_or_else(|| format!("{{{{ERR: custom '{}' no encontrado}}}}", parts.get(1).copied().unwrap_or(""))),
         node_id => {
             // Soporta tanto nodeId.data.path.to.value como nodeId.path.to.value
             let suffix = expr.strip_prefix(node_id).unwrap_or("");

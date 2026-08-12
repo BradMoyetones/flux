@@ -13,10 +13,29 @@ pub struct Workflow {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Trigger {
-    #[serde(rename = "type")]
-    pub trigger_type: String, // e.g., "manual", "cron", "webhook"
-    pub config: Option<Value>,
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum Trigger {
+    Manual {
+        #[serde(default)]
+        config: Option<Value>, // for backwards compatibility
+    },
+    Cron {
+        expression: String,
+        timezone: Option<String>,
+        starts_at: Option<String>,
+        expires_at: Option<String>,
+        max_runs: Option<u64>,
+    },
+    Webhook {
+        path: String,
+        method: Option<String>,
+    },
+}
+
+impl Default for Trigger {
+    fn default() -> Self {
+        Trigger::Manual { config: None }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

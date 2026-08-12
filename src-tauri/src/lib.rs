@@ -23,7 +23,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_shell::init())
-        .manage(std::sync::Arc::new(services::whatsapp_manager::WhatsAppManager::new()))
         .manage(commands::window::RunInBackgroundState(std::sync::Mutex::new(true)))
         .setup(|app| {
             // Obtenemos la ventana nativa de Tauri v2
@@ -36,6 +35,27 @@ pub fn run() {
             #[cfg(target_os = "windows")]
             apply_acrylic(&window, Some((0, 0, 0, 0)))
                 .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+
+            let config = storage::config::load_config(app.handle()).unwrap_or_default();
+            
+            {
+                let run_state = app.state::<commands::window::RunInBackgroundState>();
+                *run_state.0.lock().unwrap() = config.general.run_in_background;
+            }
+            
+            let scheduler = tauri::async_runtime::block_on(async {
+                let s = crate::services::scheduler::SchedulerService::new(app.handle().clone()).await.unwrap();
+                s.start().await.unwrap();
+                s
+            });
+
+            let app_state = crate::state::AppState {
+                wa_manager: std::sync::Arc::new(crate::services::whatsapp_manager::WhatsAppManager::new()),
+                config: std::sync::Arc::new(tokio::sync::RwLock::new(config)),
+                scheduler: std::sync::Arc::new(scheduler),
+                active_executions: std::sync::Mutex::new(std::collections::HashMap::new()),
+            };
+            app.manage(std::sync::Arc::new(app_state));
 
 
             let show_i = MenuItem::with_id(app, "show", "Show Flux", true, None::<&str>).unwrap();

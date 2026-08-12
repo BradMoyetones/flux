@@ -1,9 +1,6 @@
-export type NodeStatus = 'pending' | 'running' | 'success' | 'error';
+import type { Trigger } from "@/types/data";
 
-export interface WorkflowTrigger {
-  type: string;
-  config?: Record<string, any>;
-}
+export type NodeStatus = 'pending' | 'running' | 'success' | 'error';
 
 export interface WorkflowNodeConfig {
   [key: string]: any;
@@ -16,6 +13,7 @@ export interface XYPosition {
 
 export interface WorkflowNode {
   id: string;
+  name: string;
   type: string;
   label: string;
   config: WorkflowNodeConfig;
@@ -34,7 +32,7 @@ export interface Workflow {
   id: string;
   name: string;
   description?: string;
-  trigger: WorkflowTrigger;
+  trigger: Trigger;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
 }

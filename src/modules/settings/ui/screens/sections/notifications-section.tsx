@@ -1,16 +1,9 @@
 "use client"
 
-import type { NotificationConfig } from "@/modules/settings/lib/settings-types"
-import { SectionCard, SettingRow, Switch } from "@/modules/settings/ui/components/controls"
+import { SectionCard, SettingRow } from "@/modules/settings/ui/components/controls"
+import { Switch } from "@/ui/components/ui/switch"
 
-export function NotificationsSection({
-    config,
-    onChange,
-}: {
-    config: NotificationConfig
-    onChange: (patch: Partial<NotificationConfig>) => void
-}) {
-    const disabled = !config.desktopEnabled
+export function NotificationsSection() {
     return (
         <div className="space-y-5">
             <SectionCard title="Notificaciones de escritorio">
@@ -18,20 +11,20 @@ export function NotificationsSection({
                     title="Activar notificaciones"
                     description="Permite que Flux envíe notificaciones nativas del sistema."
                 >
-                    <Switch checked={config.desktopEnabled} onCheckedChange={(v) => onChange({ desktopEnabled: v })} />
+                    <Switch />
                 </SettingRow>
             </SectionCard>
 
             <SectionCard title="Eventos" description="Elige qué eventos disparan una notificación.">
                 <div className="divide-y divide-border">
                     <SettingRow title="Flujo ejecutado con éxito">
-                        <Switch disabled={disabled} checked={config.onFlowSuccess} onCheckedChange={(v) => onChange({ onFlowSuccess: v })} />
+                        <Switch />
                     </SettingRow>
                     <SettingRow title="Flujo con error">
-                        <Switch disabled={disabled} checked={config.onFlowError} onCheckedChange={(v) => onChange({ onFlowError: v })} />
+                        <Switch />
                     </SettingRow>
                     <SettingRow title="Sesión de WhatsApp desconectada">
-                        <Switch disabled={disabled} checked={config.onSessionDisconnect} onCheckedChange={(v) => onChange({ onSessionDisconnect: v })} />
+                        <Switch />
                     </SettingRow>
                 </div>
             </SectionCard>
@@ -39,10 +32,10 @@ export function NotificationsSection({
             <SectionCard title="Preferencias">
                 <div className="divide-y divide-border">
                     <SettingRow title="Sonido" description="Reproduce un sonido con cada notificación.">
-                        <Switch disabled={disabled} checked={config.sound} onCheckedChange={(v) => onChange({ sound: v })} />
+                        <Switch />
                     </SettingRow>
                     <SettingRow title="Horario de silencio" description="Silencia notificaciones entre 22:00 y 07:00.">
-                        <Switch disabled={disabled} checked={config.quietHours} onCheckedChange={(v) => onChange({ quietHours: v })} />
+                        <Switch />
                     </SettingRow>
                 </div>
             </SectionCard>

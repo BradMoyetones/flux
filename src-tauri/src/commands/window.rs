@@ -47,7 +47,19 @@ pub async fn close_splashscreen(app: tauri::AppHandle) -> Result<(), AppError> {
 }
 
 #[tauri::command]
-pub async fn set_run_in_background(state: tauri::State<'_, RunInBackgroundState>, enabled: bool) -> Result<(), AppError> {
-    *state.0.lock().unwrap() = enabled;
+pub async fn set_run_in_background(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, std::sync::Arc<crate::state::AppState>>,
+    run_state: tauri::State<'_, RunInBackgroundState>,
+    enabled: bool,
+) -> Result<(), AppError> {
+    *run_state.0.lock().unwrap() = enabled;
+    
+    let config_clone = {
+        let mut config = state.config.write().await;
+        config.general.run_in_background = enabled;
+        config.clone()
+    };
+    crate::storage::config::save_config(&app, &config_clone).map_err(AppError::Internal)?;
     Ok(())
 }

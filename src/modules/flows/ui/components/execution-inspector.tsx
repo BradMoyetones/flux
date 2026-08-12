@@ -10,7 +10,7 @@ export function ExecutionInspector() {
     const executedNodes = nodes.filter(n => n.data.status && n.data.status !== 'pending');
 
     return (
-        <div className="h-full bg-card border-l flex flex-col w-full">
+        <div className="h-full bg-card border-l flex flex-col w-full select-auto cursor-auto">
             <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
                 <Bug className="w-4 h-4 text-primary" />
                 <h3 className="text-sm font-semibold">Inspector de Ejecución</h3>

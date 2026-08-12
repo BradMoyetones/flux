@@ -15,6 +15,7 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { NodeExecutionEvent, WorkflowExecutionEvent, NodeStatus, Workflow } from './types';
+import { Trigger } from '@/types/data';
 
 export type AppNodeData = {
   name: string;
@@ -27,8 +28,11 @@ export type AppNodeData = {
 
 export type AppNode = Node<AppNodeData>;
 
-interface FlowState {
+export interface FlowState {
   workflowId: string;
+  workflowName: string;
+  originalWorkflowName: string;
+  trigger: Trigger;
   nodes: AppNode[];
   edges: Edge[];
   isExecuting: boolean;
@@ -38,18 +42,28 @@ interface FlowState {
   onConnect: OnConnect;
   setNodes: (nodes: AppNode[]) => void;
   setEdges: (edges: Edge[]) => void;
+  setTrigger: (trigger: Trigger) => void;
+  setWorkflowName: (name: string) => void;
   
   // Custom Actions
   updateNodeStatus: (nodeId: string, status: NodeStatus, result?: any, error?: string) => void;
   executeWorkflow: () => Promise<void>;
+  stopWorkflow: () => Promise<void>;
   loadWorkflow: (filePath: string) => Promise<void>;
+  saveWorkflow: (currentPath?: string) => Promise<string | undefined>;
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
   workflowId: crypto.randomUUID(),
+  workflowName: "Flujo",
+  originalWorkflowName: "Flujo",
+  trigger: { type: "manual" },
   nodes: [],
   edges: [],
   isExecuting: false,
+
+  setTrigger: (trigger: Trigger) => set({ trigger }),
+  setWorkflowName: (workflowName: string) => set({ workflowName }),
 
   loadWorkflow: async (filePath: string) => {
     try {
@@ -74,8 +88,13 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         targetHandle: e.targetHandle,
       }));
 
+      const name = workflow.name || filePath.split(/[/\\]/).pop()?.replace('.flux', '').replace('.json', '') || 'Flujo';
+      
       set({
         workflowId: workflow.id,
+        workflowName: name,
+        originalWorkflowName: name,
+        trigger: workflow.trigger as Trigger ?? { type: "manual" },
         nodes: reactFlowNodes,
         edges: reactFlowEdges,
       });
@@ -125,20 +144,21 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   },
 
   executeWorkflow: async () => {
-    const { workflowId, nodes, edges } = get();
+    const state = get();
+    if (!state.workflowId || state.isExecuting) return;
+
     set({ isExecuting: true });
 
     // Reset status of all nodes
     set({
-      nodes: nodes.map(n => ({ ...n, data: { ...n.data, status: 'pending', result: undefined, error: undefined } }))
+      nodes: state.nodes.map(n => ({ ...n, data: { ...n.data, status: 'pending', result: undefined, error: undefined } }))
     });
 
-    // Build the Rust-compatible Workflow JSON
-    const workflowPayload: Workflow = {
-      id: workflowId,
-      name: "Local Flow", // Debería extraerse del path o metadata
-      trigger: { type: "manual" },
-      nodes: nodes.map(n => ({
+    const workflowPayload = {
+      id: state.workflowId,
+      name: state.workflowName,
+      trigger: state.trigger,
+      nodes: state.nodes.map(n => ({
         id: n.id,
         name: n.data.name || n.id,
         type: n.type || 'default',
@@ -146,7 +166,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         config: n.data.config,
         position: n.position,
       })),
-      edges: edges.map(e => ({
+      edges: state.edges.map(e => ({
         id: e.id,
         source: e.source,
         target: e.target,
@@ -156,12 +176,73 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     };
 
     try {
-      // Opcional: auto-guardar antes de ejecutar si tenemos el filePath en el state, 
-      // pero por ahora solo ejecutamos.
       await invoke('cmd_execute_workflow', { workflow: workflowPayload });
     } catch (err) {
-      console.error("Failed to start workflow execution", err);
+      console.error("Workflow execution failed to start", err);
       set({ isExecuting: false });
+    }
+  },
+
+  stopWorkflow: async () => {
+    const state = get();
+    if (!state.workflowId || !state.isExecuting) return;
+    
+    try {
+      await invoke('cmd_stop_workflow', { workflowId: state.workflowId });
+      // El backend emitirá workflow://status con Error/Cancelled y actualizaremos isExecuting en el listener
+    } catch (err) {
+      console.error("Failed to stop workflow", err);
+    }
+  },
+
+  saveWorkflow: async (currentPath?: string): Promise<string | undefined> => {
+    const state = get();
+    if (!currentPath) return undefined;
+    
+    let pathToSave = currentPath;
+    
+    // Check if renamed
+    if (state.workflowName !== state.originalWorkflowName) {
+        try {
+            pathToSave = await invoke('cmd_rename_workflow', { 
+                oldPath: currentPath, 
+                newName: state.workflowName 
+            });
+            // Update original name so subsequent saves don't rename again
+            set({ originalWorkflowName: state.workflowName });
+        } catch (err) {
+            console.error("Failed to rename workflow", err);
+            throw err;
+        }
+    }
+
+    const workflowPayload = {
+        id: state.workflowId,
+        name: state.workflowName,
+        trigger: state.trigger,
+        nodes: state.nodes.map(n => ({
+            id: n.id,
+            name: n.data.name || n.id,
+            type: n.type || 'default',
+            label: n.data.label,
+            config: n.data.config,
+            position: n.position,
+        })),
+        edges: state.edges.map(e => ({
+            id: e.id,
+            source: e.source,
+            target: e.target,
+            sourceHandle: e.sourceHandle,
+            targetHandle: e.targetHandle,
+        })),
+    };
+
+    try {
+        await invoke('cmd_save_workflow', { path: pathToSave, workflow: workflowPayload });
+        return pathToSave;
+    } catch (e) {
+        console.error("Save failed", e);
+        throw e;
     }
   },
 }));
@@ -186,5 +267,12 @@ export const setupFlowListeners = async () => {
     if (statusStr === 'success' || statusStr === 'error') {
       useFlowStore.setState({ isExecuting: false });
     }
+  });
+
+  await listen<{ workflow_id: string, status: string }>('workflow://scheduler-status', (event) => {
+    const { workflow_id, status } = event.payload;
+    console.log(`[Scheduler] Workflow ${workflow_id} status changed to ${status}`);
+    // Podríamos extender el estado global o lanzar toasts aquí,
+    // por ahora un log para confirmación visual de que funciona.
   });
 };
