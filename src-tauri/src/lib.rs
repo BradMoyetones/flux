@@ -7,7 +7,7 @@ mod storage;
 mod services;
 mod state;
 
-use tauri::{Manager, WindowEvent};
+use tauri::{Manager, WindowEvent, Emitter};
 use tauri::{menu::{Menu, MenuItem, PredefinedMenuItem}, tray::TrayIconBuilder};
 use tauri_plugin_os;
 use window_vibrancy::*;
@@ -25,6 +25,31 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .manage(commands::window::RunInBackgroundState(std::sync::Mutex::new(true)))
         .setup(|app| {
+            // Setup Tracing & Terminal Logger
+            use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+            let terminal_layer = crate::core::terminal_logger::init_terminal_logger(app.handle().clone());
+            tracing_subscriber::registry()
+                .with(tracing_subscriber::fmt::layer())
+                .with(terminal_layer)
+                .init();
+
+            // Setup Global Panic Hook
+            let app_handle = app.handle().clone();
+            std::panic::set_hook(Box::new(move |info| {
+                let msg = match info.payload().downcast_ref::<&'static str>() {
+                    Some(s) => *s,
+                    None => match info.payload().downcast_ref::<String>() {
+                        Some(s) => &s[..],
+                        None => "Box<dyn Any>",
+                    },
+                };
+                
+                let location = info.location().unwrap();
+                let panic_msg = format!("\x1b[31m[PANIC] Thread panicked at '{}', {}\x1b[0m\r\n", msg, location);
+                eprintln!("{}", panic_msg);
+                let _ = app_handle.emit("terminal://stdout", panic_msg);
+            }));
+
             // Obtenemos la ventana nativa de Tauri v2
             let window = app.get_webview_window("main").unwrap();
             // Aplicamos Vibrancy real de macOS usando los métodos del trait

@@ -11,7 +11,7 @@ import { useTabs } from '@/shared/contexts/tabs-context';
 import { useFlowStore, setupFlowListeners, type AppNode } from '../../core/use-flow-store';
 import { nodeTypes } from '../../plugins/node-types';
 import { pluginRegistry } from '../../plugins/registry';
-import { MessageSquare, Play, Save, Settings } from 'lucide-react';
+import { MessageSquare, Play, Save, Settings, TerminalSquare } from 'lucide-react';
 import { ZoomSlider } from '@/ui/components/react-flow/zoom-slider';
 import { SidebarProvider, SidebarTrigger } from '@/ui/components/ui/sidebar';
 import { FlowSidebar } from '../components/sidebar';
@@ -22,6 +22,8 @@ import { useWhatsAppSession } from '../../plugins/whatsapp/use-whatsapp-session'
 import { WaSessionDialog } from '../../plugins/whatsapp/wa-session-dialog';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/ui/components/ui/resizable';
 import { ExecutionInspector } from '../components/execution-inspector';
+import { TerminalConsole } from '../../../terminal/ui/components/terminal-console';
+import { useTerminalStore } from '../../../terminal/core/use-terminal-store';
 import { Bug } from 'lucide-react';
 import { Badge } from '@/ui/components/ui/badge';
 import { Spinner } from '@/ui/components/ui/spinner';
@@ -34,6 +36,8 @@ export default function FlowCanvas() {
     const { updateActiveTabPath } = useTabs();
     const { screenToFlowPosition, fitView } = useReactFlow();
     const wa = useWhatsAppSession();
+
+    const { isOpen: terminalOpen, toggleOpen: toggleTerminal } = useTerminalStore();
 
     const {
         nodes,
@@ -77,7 +81,7 @@ export default function FlowCanvas() {
         try {
             const { saveWorkflow } = useFlowStore.getState();
             const newPath = await saveWorkflow(decodedPath);
-            
+
             if (newPath && newPath !== decodedPath) {
                 const nextRoute = `/flows/${encodeURIComponent(newPath)}`;
                 updateActiveTabPath(nextRoute);
@@ -168,125 +172,147 @@ export default function FlowCanvas() {
             <FlowSidebar />
             <div className="flex-1 relative flex flex-col">
                 {/* @ts-ignore: Prop direction is valid but TS definition might be missing it */}
-                <ResizablePanelGroup direction="horizontal">
-                    {settingsOpen && (
-                        <>
-                            <ResizablePanel defaultSize={20} minSize={300} maxSize={800}>
-                                <WorkflowSettingsPanel onClose={() => setSettingsOpen(false)} />
-                            </ResizablePanel>
-                            <ResizableHandle withHandle />
-                        </>
-                    )}
+                <ResizablePanelGroup direction="vertical">
+                    <ResizablePanel defaultSize={terminalOpen ? 70 : 100}>
+                        {/* @ts-ignore: Prop direction is valid but TS definition might be missing it */}
+                        <ResizablePanelGroup direction="horizontal">
+                            {settingsOpen && (
+                                <>
+                                    <ResizablePanel defaultSize={20} minSize={300} maxSize={800}>
+                                        <WorkflowSettingsPanel onClose={() => setSettingsOpen(false)} />
+                                    </ResizablePanel>
+                                    <ResizableHandle withHandle />
+                                </>
+                            )}
 
-                    <ResizablePanel defaultSize={inspectorOpen && settingsOpen ? 45 : (inspectorOpen || settingsOpen ? 70 : 100)} className="relative">
-                        <ReactFlow
-                            nodes={nodes}
-                            edges={edges}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-                            onConnect={onConnect}
-                            onDragOver={onDragOver}
-                            onDrop={onDrop}
-                            onNodeClick={onNodeClick}
-                            onPaneClick={onPaneClick}
-                            nodeTypes={nodeTypes}
-                            fitView
-                        >
-                            <Panel position="top-left">
-                                <SidebarTrigger variant={"outline"} className="shadow-lg" />
-                            </Panel>
+                            <ResizablePanel defaultSize={inspectorOpen && settingsOpen ? 45 : (inspectorOpen || settingsOpen ? 70 : 100)} className="relative">
+                                <ReactFlow
+                                    nodes={nodes}
+                                    edges={edges}
+                                    onNodesChange={onNodesChange}
+                                    onEdgesChange={onEdgesChange}
+                                    onConnect={onConnect}
+                                    onDragOver={onDragOver}
+                                    onDrop={onDrop}
+                                    onNodeClick={onNodeClick}
+                                    onPaneClick={onPaneClick}
+                                    nodeTypes={nodeTypes}
+                                    fitView
+                                >
+                                    <Panel position="top-left">
+                                        <SidebarTrigger variant={"outline"} className="shadow-lg" />
+                                    </Panel>
 
-                            <Background
-                                color="color-mix(in srgb, var(--muted-foreground) 50%, transparent)"
-                            />
-                            <ZoomSlider position='bottom-left' />
+                                    <Background
+                                        color="color-mix(in srgb, var(--muted-foreground) 50%, transparent)"
+                                    />
+                                    <ZoomSlider position='bottom-left' />
 
-                            <Panel position="top-right" className="flex gap-2 bg-card p-2 rounded-xl shadow-lg border">
-                                <WaSessionDialog
-                                    sessions={wa.sessions}
-                                    loading={wa.loading}
-                                    error={wa.error}
-                                    qrUrl={wa.qrUrl}
-                                    linkingSessionId={wa.linkingSessionId}
-                                    onStartSession={wa.startSession}
-                                    onStopSession={wa.stopSession}
-                                    onDeleteSession={wa.deleteSession}
-                                    onRefresh={wa.refreshSessions}
-                                    onSetLinking={wa.setLinkingSessionId}
-                                    trigger={
-                                        <Button variant="outline">
-                                            <MessageSquare className="text-green-500" />
-                                            WhatsApp
-                                            {wa.sessions.filter(s => s.connected).length > 0 && (
-                                                <Badge variant="secondary" className=" text-green-400">
-                                                    {wa.sessions.filter(s => s.connected).length}
-                                                </Badge>
-                                            )}
+                                    <Panel position="top-right" className="flex gap-2 bg-card p-2 rounded-xl shadow-lg border">
+                                        <WaSessionDialog
+                                            sessions={wa.sessions}
+                                            loading={wa.loading}
+                                            error={wa.error}
+                                            qrUrl={wa.qrUrl}
+                                            linkingSessionId={wa.linkingSessionId}
+                                            onStartSession={wa.startSession}
+                                            onStopSession={wa.stopSession}
+                                            onDeleteSession={wa.deleteSession}
+                                            onRefresh={wa.refreshSessions}
+                                            onSetLinking={wa.setLinkingSessionId}
+                                            trigger={
+                                                <Button variant="outline">
+                                                    <MessageSquare className="text-green-500" />
+                                                    WhatsApp
+                                                    {wa.sessions.filter(s => s.connected).length > 0 && (
+                                                        <Badge variant="secondary" className=" text-green-400">
+                                                            {wa.sessions.filter(s => s.connected).length}
+                                                        </Badge>
+                                                    )}
+                                                </Button>
+                                            }
+                                        />
+
+                                        <Button
+                                            onClick={() => setInspectorOpen(!inspectorOpen)}
+                                            variant={inspectorOpen ? "secondary" : "outline"}
+                                            title="Debug Inspector"
+                                        >
+                                            <Bug />
+                                            Debug
                                         </Button>
-                                    }
-                                />
 
-                                <Button
-                                    onClick={() => setInspectorOpen(!inspectorOpen)}
-                                    variant={inspectorOpen ? "secondary" : "outline"}
-                                    title="Debug Inspector"
-                                >
-                                    <Bug />
-                                    Debug
-                                </Button>
+                                        <Button
+                                            onClick={toggleTerminal}
+                                            variant={terminalOpen ? "secondary" : "outline"}
+                                            title="Console"
+                                        >
+                                            <TerminalSquare className="w-4 h-4" />
+                                            Console
+                                        </Button>
 
-                                <Button
-                                    onClick={() => setSettingsOpen(!settingsOpen)}
-                                    variant={settingsOpen ? "secondary" : "outline"}
-                                    title="Ajustes del Flujo"
-                                >
-                                    <Settings className="w-4 h-4" />
-                                    Ajustes
-                                </Button>
+                                        <Button
+                                            onClick={() => setSettingsOpen(!settingsOpen)}
+                                            variant={settingsOpen ? "secondary" : "outline"}
+                                            title="Ajustes del Flujo"
+                                        >
+                                            <Settings className="w-4 h-4" />
+                                            Ajustes
+                                        </Button>
 
-                                <Button
-                                    onClick={onSave}
-                                    variant='outline'
-                                    title="Save Workflow"
-                                    disabled={isSaving}
-                                >
-                                    {isSaving ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                                    {isSaving ? 'Guardando...' : 'Save'}
-                                </Button>
+                                        <Button
+                                            onClick={onSave}
+                                            variant='outline'
+                                            title="Save Workflow"
+                                            disabled={isSaving}
+                                        >
+                                            {isSaving ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                                            {isSaving ? 'Guardando...' : 'Save'}
+                                        </Button>
 
-                                <Button
-                                    onClick={isExecuting ? stopWorkflow : executeWorkflow}
-                                    disabled={nodes.length === 0}
-                                    variant={isExecuting ? "destructive" : "default"}
-                                >
-                                    <Play className={isExecuting ? "animate-pulse hidden" : ""} />
-                                    {isExecuting ? 'Stop Flow' : 'Execute Flow'}
-                                </Button>
-                            </Panel>
-                        </ReactFlow>
+                                        <Button
+                                            onClick={isExecuting ? stopWorkflow : executeWorkflow}
+                                            disabled={nodes.length === 0}
+                                            variant={isExecuting ? "destructive" : "default"}
+                                        >
+                                            <Play className={isExecuting ? "animate-pulse hidden" : ""} />
+                                            {isExecuting ? 'Stop Flow' : 'Execute Flow'}
+                                        </Button>
+                                    </Panel>
+                                </ReactFlow>
+                            </ResizablePanel>
+
+                            {selectedNode && (
+                                <>
+                                    <ResizableHandle withHandle />
+                                    <ResizablePanel defaultSize={20} minSize={300} maxSize={800}>
+                                        <NodeConfigPanel
+                                            node={selectedNode}
+                                            onClose={() => setSelectedNodeId(null)}
+                                            onUpdateConfig={onUpdateNodeConfig}
+                                            onUpdateLabel={onUpdateNodeLabel}
+                                            onUpdateName={onUpdateNodeName}
+                                        />
+                                    </ResizablePanel>
+                                </>
+                            )}
+
+                            {inspectorOpen && (
+                                <>
+                                    <ResizableHandle withHandle />
+                                    <ResizablePanel defaultSize={20} minSize={300} maxSize={1000}>
+                                        <ExecutionInspector />
+                                    </ResizablePanel>
+                                </>
+                            )}
+                        </ResizablePanelGroup>
                     </ResizablePanel>
 
-                    {/* Panel de configuración del nodo seleccionado */}
-                    {selectedNode && (
+                    {terminalOpen && (
                         <>
                             <ResizableHandle withHandle />
-                            <ResizablePanel defaultSize={20} minSize={300} maxSize={800}>
-                                <NodeConfigPanel
-                                    node={selectedNode}
-                                    onClose={() => setSelectedNodeId(null)}
-                                    onUpdateConfig={onUpdateNodeConfig}
-                                    onUpdateLabel={onUpdateNodeLabel}
-                                    onUpdateName={onUpdateNodeName}
-                                />
-                            </ResizablePanel>
-                        </>
-                    )}
-
-                    {inspectorOpen && (
-                        <>
-                            <ResizableHandle withHandle />
-                            <ResizablePanel defaultSize={20} minSize={300} maxSize={1000}>
-                                <ExecutionInspector />
+                            <ResizablePanel defaultSize={30} minSize={300} maxSize={800}>
+                                <TerminalConsole />
                             </ResizablePanel>
                         </>
                     )}
