@@ -9,12 +9,11 @@ import {
     SettingRow,
     Select,
     Switch,
-    TextArea,
     TextInput,
 } from "@/modules/settings/ui/components/controls"
 import { Button } from "@/ui/components/ui/button"
 import {
-    FolderTree,
+    Folder,
     MessageCircle,
     Play,
     Plus,
@@ -25,16 +24,17 @@ import {
 import { cn } from "@/shared/utils/utils"
 import { useHomeStore } from "@/modules/home/stores/home-store"
 import { FluxEntry, Workspace } from "@/types/data"
-import { useWhatsAppSession, WhatsAppSessionInfo } from "@/modules/flows/plugins/whatsapp/use-whatsapp-session"
 import { workspaceName } from "@/modules/home/lib/format"
+import { toast } from "sonner"
+import { Spinner } from "@/ui/components/ui/spinner"
 
 export function WorkspacesSection() {
-    const {sessions} = useWhatsAppSession()
-    const {workspaces, workflows, loadData} = useHomeStore()
+    const { workspaces, workflows, loadData, addWorkspace } = useHomeStore()
     const firstWs = workspaces[0] // Esto puede no existir
-    const firstWf = workflows.find(wf => wf.workspace === firstWs)
     const [selWs, setSelWs] = useState<Workspace | null>(firstWs ?? null)
-    const [selWf, setSelWf] = useState<FluxEntry | null>(firstWf ?? null)
+    const [selWf, setSelWf] = useState<FluxEntry | null>(null)
+
+    const [isAdding, setIsAdding] = useState(false)
 
     const workspace = useMemo(() => workspaces.find((w) => w === selWs) ?? null, [workspaces, selWs])
     const workflow = useMemo(
@@ -46,6 +46,12 @@ export function WorkspacesSection() {
         loadData();
     }, []);
 
+    const handleAddWorkspace = async () => {
+        setIsAdding(true);
+        await addWorkspace();
+        setIsAdding(false);
+    };
+
     return (
         <div className="flex flex-col-reverse gap-4 lg:flex-row">
             {/* Panel de detalle */}
@@ -54,10 +60,11 @@ export function WorkspacesSection() {
                     <WorkflowDetail
                         workspace={workspace}
                         workflow={workflow}
-                        sessions={sessions}
                     />
                 ) : workspace ? (
-                    <WorkspaceDetail />
+                    <WorkspaceDetail
+                        workspace={workspace}
+                    />
                 ) : (
                     <EmptyState />
                 )}
@@ -70,34 +77,39 @@ export function WorkspacesSection() {
                         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                             Workspaces
                         </span>
-                        <Button variant="ghost" size="icon-xs" aria-label="Nuevo workspace">
-                            <Plus className="size-3.5" />
+                        <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label="Nuevo workspace"
+                            onClick={handleAddWorkspace}
+                            disabled={isAdding}
+                        >
+                            {isAdding ? (
+                                <Spinner />
+                            ) : (
+                                <Plus />
+                            )}
                         </Button>
                     </div>
                     <nav className="max-h-[540px] space-y-3 overflow-y-auto p-2">
                         {workspaces.map((ws) => (
                             <div key={ws}>
-                                <button
+                                <Button
+                                    variant={selWs === ws && !selWf ? "secondary" : "ghost"}
                                     type="button"
                                     onClick={() => {
                                         setSelWs(ws)
                                         setSelWf(null)
                                     }}
-                                    className={cn(
-                                        "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors",
-                                        selWs === ws && !selWf
-                                            ? "bg-muted text-foreground"
-                                            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-                                    )}
+                                    className={"w-full"}
                                 >
-                                    <span
-                                        className="size-2.5 shrink-0 rounded-[4px]"
-                                    />
+                                    <Folder />
+
                                     <span className="truncate text-sm font-medium">{workspaceName(ws)}</span>
                                     <span className="ml-auto text-[11px] text-muted-foreground">
                                         {workflows.filter((wf) => wf.workspace === ws).length}
                                     </span>
-                                </button>
+                                </Button>
                                 <div className="mt-0.5 ml-3 space-y-0.5 border-l border-border pl-2">
                                     {workflows.filter((wf) => wf.workspace === ws).map((wf) => (
                                         <button
@@ -116,7 +128,6 @@ export function WorkspacesSection() {
                                         >
                                             <Workflow className="size-3.5 shrink-0" />
                                             <span className="truncate">{wf.name}</span>
-                                            <span className="ml-auto size-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
                                         </button>
                                     ))}
                                 </div>
@@ -132,14 +143,15 @@ export function WorkspacesSection() {
 /* --------------------------- Workflow detail panel -------------------------- */
 
 function WorkflowDetail({
-    workspace: _workspace,
+    workspace,
     workflow,
-    sessions: _sessions,
 }: {
     workspace: Workspace
     workflow: FluxEntry
-    sessions: WhatsAppSessionInfo[]
 }) {
+    const { deleteWorkflow } = useHomeStore()
+    const [isDeleting, setIsDeleting] = useState(false)
+
     return (
         <>
             {/* Header */}
@@ -153,11 +165,11 @@ function WorkflowDetail({
                         </div>
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <h2 className="text-base font-semibold text-foreground">{"Hola"}</h2>
+                                <h2 className="text-base font-semibold text-foreground">{workflow.name}</h2>
                             </div>
-                            <p className="font-mono text-xs text-muted-foreground">{"Hola"}</p>
+                            <p className="font-mono text-xs text-muted-foreground">{workflow.path}</p>
                             <p className="text-xs text-muted-foreground">
-                                en <span className="text-foreground">{"Hola"}</span>
+                                en <span className="text-foreground">{workspaceName(workspace)}</span>
                             </p>
                         </div>
                     </div>
@@ -179,10 +191,10 @@ function WorkflowDetail({
             <SectionCard title="General">
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="Nombre" className="sm:col-span-2">
-                        <TextInput value={workflow.name} onChange={() => {}} />
+                        <p className="text-sm text-muted-foreground">{workspaceName(workspace)}</p>
                     </Field>
                     <Field label="Descripción" className="sm:col-span-2">
-                        <TextArea value={""} onChange={() => {}} />
+                        <p className="text-sm text-muted-foreground">{workspace}</p>
                     </Field>
                 </div>
             </SectionCard>
@@ -192,7 +204,7 @@ function WorkflowDetail({
                     <Field label="Modo de ejecución">
                         <SegmentedControl<"manual" | "cron" | "webhook">
                             value={"manual"}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             options={[
                                 { value: "manual", label: "Manual" },
                                 { value: "cron", label: "Programado (Cron)" },
@@ -207,11 +219,11 @@ function WorkflowDetail({
                                 className="font-mono"
                                 value={"0 18 * * *"}
                                 placeholder="0 18 * * *"
-                                onChange={() => {}}
+                                onChange={() => { }}
                             />
                         </Field>
                         <Field label="Zona horaria">
-                            <Select value={"America/Bogota"} onChange={() => {}}>
+                            <Select value={"America/Bogota"} onChange={() => { }}>
                                 <option value="America/Bogota">America/Bogota</option>
                                 <option value="America/Mexico_City">America/Mexico_City</option>
                                 <option value="America/New_York">America/New_York</option>
@@ -226,7 +238,7 @@ function WorkflowDetail({
                                 type="number"
                                 min={1}
                                 value={1}
-                                onChange={() => {}}
+                                onChange={() => { }}
                             />
                         </Field>
                         <Field label="Timeout (segundos)">
@@ -234,7 +246,7 @@ function WorkflowDetail({
                                 type="number"
                                 min={1}
                                 value={120}
-                                onChange={() => {}}
+                                onChange={() => { }}
                             />
                         </Field>
                     </div>
@@ -244,7 +256,7 @@ function WorkflowDetail({
             <SectionCard title="Reintentos y registro">
                 <div className="divide-y divide-border">
                     <SettingRow title="Reintentar si falla" description="Vuelve a intentar la ejecución completa ante un error.">
-                        <Switch checked={true} onCheckedChange={() => {}} />
+                        <Switch checked={true} onCheckedChange={() => { }} />
                     </SettingRow>
                     {true && (
                         <SettingRow title="Máximo de reintentos">
@@ -253,16 +265,16 @@ function WorkflowDetail({
                                     type="number"
                                     min={0}
                                     value={3}
-                                    onChange={() => {}}
+                                    onChange={() => { }}
                                 />
                             </div>
                         </SettingRow>
                     )}
                     <SettingRow title="Guardar log de ejecución" description="Almacena la salida de cada nodo para depurar.">
-                        <Switch checked={true} onCheckedChange={() => {}} />
+                        <Switch checked={true} onCheckedChange={() => { }} />
                     </SettingRow>
                     <SettingRow title="Notificar en error" description="Envía una notificación de escritorio si el flujo falla.">
-                        <Switch checked={false} onCheckedChange={() => {}} />
+                        <Switch checked={false} onCheckedChange={() => { }} />
                     </SettingRow>
                 </div>
             </SectionCard>
@@ -283,9 +295,9 @@ function WorkflowDetail({
                             <p className="font-mono text-[11px] text-muted-foreground">{"Hola"}</p>
                         </div>
                         <div className="ml-auto flex items-center gap-1.5">
-                                <Badge tone={"success"}>
-                                    {"Hola"}
-                                </Badge>
+                            <Badge tone={"success"}>
+                                {"Hola"}
+                            </Badge>
                             <Badge tone="neutral">{"Hola"}</Badge>
                         </div>
                     </li>
@@ -296,7 +308,19 @@ function WorkflowDetail({
                 title="Eliminar flujo"
                 description="Se borrará el archivo de definición de este flujo. No se puede deshacer."
                 buttonLabel="Eliminar flujo"
-                onDelete={() => {}}
+                onDelete={() => {
+                    toast(`¿Seguro quieres eliminar el flujo ${workflow.name}?`, {
+                        action: {
+                            label: 'Eliminar',
+                            onClick: async () => {
+                                setIsDeleting(true);
+                                await deleteWorkflow(workflow.path);
+                                setIsDeleting(false);
+                            }
+                        }
+                    })
+                }}
+                loading={isDeleting}
             />
         </>
     )
@@ -304,7 +328,13 @@ function WorkflowDetail({
 
 /* --------------------------- Workspace detail panel ------------------------- */
 
-function WorkspaceDetail() {
+function WorkspaceDetail({
+    workspace,
+}: {
+    workspace: Workspace
+}) {
+    const [loading, setLoading] = useState(false)
+    const { removeWorkspace } = useHomeStore()
     return (
         <>
             <div className="rounded-xl border border-border bg-card p-5">
@@ -312,34 +342,37 @@ function WorkspaceDetail() {
                     <div
                         className="flex size-9 items-center justify-center rounded-lg text-white"
                     >
-                        <FolderTree className="size-4.5" />
+                        <Folder className="size-4.5" />
                     </div>
                     <div>
-                        <h2 className="text-base font-semibold text-foreground">{"HOla"}</h2>
-                        <p className="text-xs text-muted-foreground">{"HOla"}</p>
+                        <h2 className="text-base font-semibold text-foreground">{workspaceName(workspace)}</h2>
+                        <p className="text-xs text-muted-foreground">{workspace}</p>
                     </div>
                 </div>
             </div>
 
-            <SectionCard title="General">
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Nombre">
-                        <TextInput value={"Hola"} onChange={() => {}} />
-                    </Field>
-                    <Field label="Slug" hint="Identificador en rutas y archivos.">
-                        <TextInput className="font-mono" value={"Hola"} onChange={() => {}} />
-                    </Field>
-                    <Field label="Descripción" className="sm:col-span-2">
-                        <TextArea value={"Hola"} onChange={() => {}} />
-                    </Field>
-                </div>
-            </SectionCard>
-
             <DangerZone
                 title="Eliminar workspace"
-                description={`Se eliminará "Hola" y todos sus Hola flujos.`}
+                description={`Se eliminará "${workspaceName(workspace)}" y todos sus flujos.`}
                 buttonLabel="Eliminar workspace"
-                onDelete={() => {}}
+                onDelete={() => {
+                    toast('¿Seguro que deseas eliminar este workspace?', {
+                        description: 'Por seguridad los Workflows asociados a este workspace no serán eliminados.',
+                        action: {
+                            label: 'Eliminar',
+                            onClick: async () => {
+                                setLoading(true);
+                                toast.promise(removeWorkspace(workspace), {
+                                    loading: 'Eliminando workspace...',
+                                    success: 'Workspace eliminado exitosamente!',
+                                    error: 'Error al eliminar workspace'
+                                });
+                                setLoading(false);
+                            }
+                        }
+                    })
+                }}
+                loading={loading}
             />
         </>
     )
@@ -361,11 +394,13 @@ function DangerZone({
     description,
     buttonLabel,
     onDelete,
+    loading,
 }: {
     title: string
     description: string
     buttonLabel: string
     onDelete: () => void
+    loading: boolean
 }) {
     return (
         <section className="rounded-xl border border-destructive/30 bg-destructive/5">
@@ -374,8 +409,12 @@ function DangerZone({
                     <p className="text-sm font-medium text-foreground">{title}</p>
                     <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
                 </div>
-                <Button variant="destructive" size="sm" onClick={onDelete}>
-                    <Trash2 className="size-3.5" />
+                <Button variant="destructive" size="sm" onClick={onDelete} disabled={loading}>
+                    {loading ? (
+                        <Spinner />
+                    ) : (
+                        <Trash2 />
+                    )}
                     {buttonLabel}
                 </Button>
             </div>
