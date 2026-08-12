@@ -51,6 +51,7 @@ export interface FlowState {
   updateNodeStatus: (nodeId: string, status: NodeStatus, result?: any, error?: string) => void;
   executeWorkflow: () => Promise<void>;
   stopWorkflow: () => Promise<void>;
+  hydrateExecutionState: () => Promise<void>;
   loadWorkflow: (filePath: string) => Promise<void>;
   saveWorkflow: (currentPath?: string) => Promise<string | undefined>;
 }
@@ -205,6 +206,23 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     }
   },
 
+  hydrateExecutionState: async () => {
+    const state = get();
+    if (!state.workflowId) return;
+
+    try {
+      const activeFlows = await invoke<{ executing: string[], scheduled: string[] }>('cmd_get_active_workflows');
+      const isExecuting = activeFlows.executing.includes(state.workflowId) || activeFlows.scheduled.includes(state.workflowId);
+      
+      set({ isExecuting });
+      if (isExecuting) {
+          console.log(`[Hydration] Restored isExecuting=true for workflow ${state.workflowId}`);
+      }
+    } catch (err) {
+      console.error("Failed to hydrate execution state", err);
+    }
+  },
+
   saveWorkflow: async (currentPath?: string): Promise<string | undefined> => {
     const state = get();
     if (!currentPath) return undefined;
@@ -282,6 +300,19 @@ export const setupFlowListeners = async () => {
       if (store.trigger.type !== 'cron') {
         useFlowStore.setState({ isExecuting: false });
       }
+    }
+  });
+
+  await listen<{ workflow_id: string }>('workflow://started-tick', (event) => {
+    const { workflow_id } = event.payload;
+    const store = useFlowStore.getState();
+    
+    if (store.workflowId === workflow_id) {
+      // Opcional: mostrar un toast o hacer reset a los nodos para la nueva corrida
+      console.log(`[FlowCanvas] Cron tick started for ${workflow_id}`);
+      useFlowStore.setState({
+        nodes: store.nodes.map(n => ({ ...n, data: { ...n.data, status: 'pending', result: undefined, error: undefined } }))
+      });
     }
   });
 

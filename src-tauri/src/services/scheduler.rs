@@ -37,14 +37,34 @@ impl SchedulerService {
             let wf_clone = workflow.clone();
             let wf_id = workflow.id.clone();
 
-            let cron_expr = expression.clone();
+            let mut cron_expr = expression.clone();
+            
+            // tokio-cron-scheduler requires 6 fields minimum (seconds included).
+            // If the user provides a standard 5-field UNIX cron, prepend "0 " (0th second)
+            let parts: Vec<&str> = cron_expr.split_whitespace().collect();
+            if parts.len() == 5 {
+                cron_expr = format!("0 {}", cron_expr);
+            }
 
             let job = Job::new_async(cron_expr.as_str(), move |_uuid, _lock| {
                 let app = app_clone.clone();
                 let wf = wf_clone.clone();
+                let wf_id = wf_clone.id.clone();
+                
                 Box::pin(async move {
+                    println!("[Scheduler] Tick for workflow {}: starting execution...", wf_id);
+                    
+                    #[derive(serde::Serialize, Clone)]
+                    struct TickEvent {
+                        workflow_id: String,
+                    }
+                    
+                    let _ = app.emit("workflow://started-tick", TickEvent {
+                        workflow_id: wf_id.clone(),
+                    });
+
                     if let Err(e) = execute_workflow(app, wf).await {
-                        eprintln!("Scheduled workflow failed: {}", e);
+                        eprintln!("[Scheduler] Scheduled workflow {} failed: {}", wf_id, e);
                     }
                 })
             }).map_err(|e| AppError::Scheduler(format!("Failed to create job: {}", e)))?;

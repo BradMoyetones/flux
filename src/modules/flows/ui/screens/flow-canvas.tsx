@@ -54,9 +54,11 @@ export default function FlowCanvas() {
             const decodedPath = decodeURIComponent(pathId);
             loadWorkflow(decodedPath).then(() => {
                 fitView({ duration: 300 });
+                // Check if this workflow is currently executing in the backend
+                useFlowStore.getState().hydrateExecutionState();
             }).catch(console.error);
         }
-    }, [pathId, loadWorkflow]);
+    }, [pathId, loadWorkflow, fitView]);
 
     useEffect(() => {
         setupFlowListeners();

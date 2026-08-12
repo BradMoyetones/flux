@@ -47,3 +47,20 @@ pub async fn cmd_stop_workflow(app: AppHandle, workflow_id: String) -> Result<()
     }
     Err("Workflow no encontrado o no está en ejecución".to_string())
 }
+
+#[derive(serde::Serialize)]
+pub struct ActiveWorkflowsResponse {
+    pub executing: Vec<String>,
+    pub scheduled: Vec<String>,
+}
+
+#[command]
+pub async fn cmd_get_active_workflows(state: tauri::State<'_, Arc<AppState>>) -> Result<ActiveWorkflowsResponse, String> {
+    let executing: Vec<String> = state.active_executions.lock().unwrap().keys().cloned().collect();
+    let scheduled: Vec<String> = state.scheduler.list_scheduled().await;
+    
+    Ok(ActiveWorkflowsResponse {
+        executing,
+        scheduled,
+    })
+}
