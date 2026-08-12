@@ -1,9 +1,7 @@
----
-title: Flux v2.0.0
-version: v2.0.0
-date: 12 de agosto de 2026
-tag: v2.0.0
----
+# flux
+
+## 2.0.0
+
 ### Major Changes
 
 - c59ee05: # Flux v2.0.0 - The Automation Engine Update
