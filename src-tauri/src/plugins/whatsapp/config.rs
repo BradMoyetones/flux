@@ -12,6 +12,7 @@ pub struct WhatsAppNodeConfig {
     pub sidecar_port: Option<u16>,
 
     // ──── Envío ────
+    pub send_to_group: Option<bool>,
     /// Número de teléfono destino con código de país (ej: "+573001234567").
     /// Soporta interpolación: "{{node1.data.body.phone}}"
     pub phone_number: Option<String>,

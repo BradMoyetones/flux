@@ -7,6 +7,7 @@ import {
 } from '@xyflow/react';
 
 import { useParams, useNavigate } from 'react-router';
+import { useTabs } from '@/shared/contexts/tabs-context';
 import { useFlowStore, setupFlowListeners, type AppNode } from '../../core/use-flow-store';
 import { nodeTypes } from '../../plugins/node-types';
 import { pluginRegistry } from '../../plugins/registry';
@@ -30,6 +31,7 @@ export default function FlowCanvas() {
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [inspectorOpen, setInspectorOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const { updateActiveTabPath } = useTabs();
     const { screenToFlowPosition, fitView } = useReactFlow();
     const wa = useWhatsAppSession();
 
@@ -75,8 +77,9 @@ export default function FlowCanvas() {
             const newPath = await saveWorkflow(decodedPath);
             
             if (newPath && newPath !== decodedPath) {
-                // If path changed due to rename, navigate to the new path
-                navigate(`/workspaces/flow/${encodeURIComponent(newPath)}`, { replace: true });
+                const nextRoute = `/flows/${encodeURIComponent(newPath)}`;
+                updateActiveTabPath(nextRoute);
+                navigate(nextRoute, { replace: true });
             }
             console.log("Saved successfully");
         } catch (e) {

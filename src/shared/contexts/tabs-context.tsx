@@ -34,6 +34,10 @@ interface TabsState {
 
     /** Open a route in a tab and return its path. See {@link OpenTabOptions} for de-duplication. */
     openTab: (path: string, options?: OpenTabOptions) => string;
+    
+    /** Update the path of the currently active tab (useful for renaming resources). */
+    updateActiveTabPath: (newPath: string) => void;
+
     /** Focus an already-open tab by id. */
     activateTab: (id: string) => void;
     /** Close a tab by id and return the new active path to navigate to, if changed. */
@@ -109,6 +113,14 @@ export const useTabsStore = create<TabsState>()(
                 if (get().tabs.some((tab) => tab.id === id)) set({ activeId: id });
             },
 
+            updateActiveTabPath: (newPath) => {
+                const { tabs, activeId } = get();
+                const next = tabs.map(tab => 
+                    tab.id === activeId ? { ...tab, path: newPath } : tab
+                );
+                set({ tabs: next });
+            },
+
             closeTab: (id) => {
                 const { tabs, activeId } = get();
                 const target = tabs.find((tab) => tab.id === id);
@@ -149,9 +161,10 @@ export function useTabs() {
     const openTab = useTabsStore((state) => state.openTab);
     const activateTab = useTabsStore((state) => state.activateTab);
     const closeTab = useTabsStore((state) => state.closeTab);
+    const updateActiveTabPath = useTabsStore((state) => state.updateActiveTabPath);
     const activePath = useActivePath();
 
-    return { tabs, activeId, activePath, openTab, activateTab, closeTab };
+    return { tabs, activeId, activePath, openTab, activateTab, closeTab, updateActiveTabPath };
 }
 
 /**

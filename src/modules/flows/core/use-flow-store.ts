@@ -32,6 +32,7 @@ export interface FlowState {
   workflowId: string;
   workflowName: string;
   originalWorkflowName: string;
+  description?: string;
   trigger: Trigger;
   nodes: AppNode[];
   edges: Edge[];
@@ -44,6 +45,7 @@ export interface FlowState {
   setEdges: (edges: Edge[]) => void;
   setTrigger: (trigger: Trigger) => void;
   setWorkflowName: (name: string) => void;
+  setDescription: (desc: string) => void;
   
   // Custom Actions
   updateNodeStatus: (nodeId: string, status: NodeStatus, result?: any, error?: string) => void;
@@ -57,6 +59,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   workflowId: crypto.randomUUID(),
   workflowName: "Flujo",
   originalWorkflowName: "Flujo",
+  description: "",
   trigger: { type: "manual" },
   nodes: [],
   edges: [],
@@ -64,6 +67,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
   setTrigger: (trigger: Trigger) => set({ trigger }),
   setWorkflowName: (workflowName: string) => set({ workflowName }),
+  setDescription: (description: string) => set({ description }),
 
   loadWorkflow: async (filePath: string) => {
     try {
@@ -88,12 +92,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         targetHandle: e.targetHandle,
       }));
 
-      const name = workflow.name || filePath.split(/[/\\]/).pop()?.replace('.flux', '').replace('.json', '') || 'Flujo';
-      
       set({
         workflowId: workflow.id,
-        workflowName: name,
-        originalWorkflowName: name,
+        workflowName: workflow.name || 'Sin Título',
+        originalWorkflowName: workflow.name || 'Sin Título',
+        description: workflow.description || "",
         trigger: workflow.trigger as Trigger ?? { type: "manual" },
         nodes: reactFlowNodes,
         edges: reactFlowEdges,
@@ -176,7 +179,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     };
 
     try {
-      await invoke('cmd_execute_workflow', { workflow: workflowPayload });
+      if (state.trigger.type === 'cron') {
+        await invoke('cmd_schedule_workflow', { workflow: workflowPayload });
+      } else {
+        await invoke('cmd_execute_workflow', { workflow: workflowPayload });
+      }
     } catch (err) {
       console.error("Workflow execution failed to start", err);
       set({ isExecuting: false });
@@ -188,6 +195,9 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     if (!state.workflowId || !state.isExecuting) return;
     
     try {
+      if (state.trigger.type === 'cron') {
+        await invoke('cmd_unschedule_workflow', { workflowId: state.workflowId });
+      }
       await invoke('cmd_stop_workflow', { workflowId: state.workflowId });
       // El backend emitirá workflow://status con Error/Cancelled y actualizaremos isExecuting en el listener
     } catch (err) {
@@ -219,6 +229,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     const workflowPayload = {
         id: state.workflowId,
         name: state.workflowName,
+        description: state.description,
         trigger: state.trigger,
         nodes: state.nodes.map(n => ({
             id: n.id,
@@ -263,16 +274,29 @@ export const setupFlowListeners = async () => {
   await listen<WorkflowExecutionEvent>('workflow://status', (event) => {
     const payload = event.payload;
     const statusStr = typeof payload.status === 'string' ? (payload.status as string).toLowerCase() as NodeStatus : 'pending';
+    const store = useFlowStore.getState();
     
-    if (statusStr === 'success' || statusStr === 'error') {
-      useFlowStore.setState({ isExecuting: false });
+    // Solo cambiar a false si NO es un trigger cron. 
+    // Los flujos cron se quedan "Ejecutándose" (esperando su próxima iteración) hasta que se desprogramen.
+    if ((statusStr === 'success' || statusStr === 'error') && store.workflowId === payload.workflow_id) {
+      if (store.trigger.type !== 'cron') {
+        useFlowStore.setState({ isExecuting: false });
+      }
     }
   });
 
   await listen<{ workflow_id: string, status: string }>('workflow://scheduler-status', (event) => {
     const { workflow_id, status } = event.payload;
+    const store = useFlowStore.getState();
+    
     console.log(`[Scheduler] Workflow ${workflow_id} status changed to ${status}`);
-    // Podríamos extender el estado global o lanzar toasts aquí,
-    // por ahora un log para confirmación visual de que funciona.
+    
+    if (store.workflowId === workflow_id) {
+      if (status === 'scheduled') {
+        useFlowStore.setState({ isExecuting: true });
+      } else if (status === 'unscheduled') {
+        useFlowStore.setState({ isExecuting: false });
+      }
+    }
   });
 };

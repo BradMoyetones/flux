@@ -12,7 +12,7 @@ interface WorkflowSettingsPanelProps {
 }
 
 export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
-    const { workflowName, setWorkflowName, trigger, setTrigger } = useFlowStore()
+    const { workflowName, setWorkflowName, description, setDescription, trigger, setTrigger } = useFlowStore()
 
     const handleTriggerChange = (type: "manual" | "cron" | "webhook") => {
         if (type === "manual") {
@@ -50,6 +50,8 @@ export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
                     <div className="space-y-2">
                         <Label>Descripción</Label>
                         <Textarea
+                            value={description || ""}
+                            onChange={(e) => setDescription(e.target.value)}
                             placeholder="Añade una descripción para este flujo..."
                             className="min-h-[80px] text-sm bg-background resize-y"
                         />
@@ -86,7 +88,12 @@ export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
                             </div>
                             
                             <div className="space-y-2">
-                                <Label>Inicia en (opcional)</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label>Inicia en (opcional)</Label>
+                                    {trigger.starts_at && (
+                                        <button onClick={() => setTrigger({ ...trigger, starts_at: undefined })} className="text-[10px] text-muted-foreground hover:text-foreground">Limpiar</button>
+                                    )}
+                                </div>
                                 <Input
                                     type="datetime-local"
                                     value={trigger.starts_at || ""}
@@ -95,7 +102,12 @@ export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Expira en (opcional)</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label>Expira en (opcional)</Label>
+                                    {trigger.expires_at && (
+                                        <button onClick={() => setTrigger({ ...trigger, expires_at: undefined })} className="text-[10px] text-muted-foreground hover:text-foreground">Limpiar</button>
+                                    )}
+                                </div>
                                 <Input
                                     type="datetime-local"
                                     value={trigger.expires_at || ""}

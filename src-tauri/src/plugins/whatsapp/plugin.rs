@@ -59,13 +59,17 @@ impl NodePlugin for WhatsAppPlugin {
 
         match cfg.action {
             WhatsAppAction::SendMessage => {
-                let phone = cfg.phone_number
-                    .ok_or("Se requiere phoneNumber para enviar un mensaje")?;
+                let to = if cfg.send_to_group.unwrap_or(false) {
+                    cfg.group_id.clone().ok_or("Se requiere groupId al enviar a un grupo")?
+                } else {
+                    cfg.phone_number.clone().ok_or("Se requiere phoneNumber para enviar un mensaje individual")?
+                };
+                
                 let message = cfg.message
                     .ok_or("Se requiere message para enviar un mensaje")?;
 
                 let res = client.post(format!("{}/send-message", base))
-                    .json(&json!({ "to": phone, "text": message }))
+                    .json(&json!({ "to": to, "text": message }))
                     .send()
                     .await
                     .map_err(|e| format!("Error en request: {}", e))?;
@@ -73,13 +77,17 @@ impl NodePlugin for WhatsAppPlugin {
                 parse_wa_response(res, "send-message").await
             }
             WhatsAppAction::SendMedia => {
-                let phone = cfg.phone_number
-                    .ok_or("Se requiere phoneNumber para enviar media")?;
+                let to = if cfg.send_to_group.unwrap_or(false) {
+                    cfg.group_id.clone().ok_or("Se requiere groupId al enviar media a un grupo")?
+                } else {
+                    cfg.phone_number.clone().ok_or("Se requiere phoneNumber para enviar media individual")?
+                };
+
                 let media_path = cfg.media_path
                     .ok_or("Se requiere mediaPath para enviar media")?;
 
                 let res = client.post(format!("{}/send-media", base))
-                    .json(&json!({ "to": phone, "mediaPath": media_path, "caption": cfg.media_caption.unwrap_or_default() }))
+                    .json(&json!({ "to": to, "mediaPath": media_path, "caption": cfg.media_caption.unwrap_or_default() }))
                     .send()
                     .await
                     .map_err(|e| format!("Error en request: {}", e))?;
