@@ -9,7 +9,9 @@
         "build:splash": "pnpm dlx @tailwindcss/cli -i ./src/ui/styles/index.css -o ./public/splash.css",
         "preview": "vite preview",
         "tauri": "tauri",
-        "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md}\""
+        "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md}\"",
+        "changeset": "changeset",
+        "version-packages": "changeset version && node scripts/sync-release.js"
     },
     "dependencies": {
         "@base-ui/react": "^1.5.0",
@@ -62,6 +64,7 @@
         "zustand": "^5.0.14"
     },
     "devDependencies": {
+        "@changesets/cli": "^3.0.0",
         "@tauri-apps/cli": "^2",
         "@types/node": "^25.9.2",
         "@types/react": "^19.1.8",
