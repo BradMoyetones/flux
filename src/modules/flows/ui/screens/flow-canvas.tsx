@@ -186,100 +186,114 @@ export default function FlowCanvas() {
                             )}
 
                             <ResizablePanel defaultSize={inspectorOpen && settingsOpen ? 45 : (inspectorOpen || settingsOpen ? 70 : 100)} className="relative">
-                                <ReactFlow
-                                    nodes={nodes}
-                                    edges={edges}
-                                    onNodesChange={onNodesChange}
-                                    onEdgesChange={onEdgesChange}
-                                    onConnect={onConnect}
-                                    onDragOver={onDragOver}
-                                    onDrop={onDrop}
-                                    onNodeClick={onNodeClick}
-                                    onPaneClick={onPaneClick}
-                                    nodeTypes={nodeTypes}
-                                    fitView
-                                >
-                                    <Panel position="top-left">
-                                        <SidebarTrigger variant={"outline"} className="shadow-lg" />
-                                    </Panel>
+                                <ResizablePanelGroup orientation="vertical">
+                                    <ResizablePanel defaultSize="25%">
 
-                                    <Background
-                                        color="color-mix(in srgb, var(--muted-foreground) 50%, transparent)"
-                                    />
-                                    <ZoomSlider position='bottom-left' />
+                                        <ReactFlow
+                                            nodes={nodes}
+                                            edges={edges}
+                                            onNodesChange={onNodesChange}
+                                            onEdgesChange={onEdgesChange}
+                                            onConnect={onConnect}
+                                            onDragOver={onDragOver}
+                                            onDrop={onDrop}
+                                            onNodeClick={onNodeClick}
+                                            onPaneClick={onPaneClick}
+                                            nodeTypes={nodeTypes}
+                                            fitView
+                                        >
+                                            <Panel position="top-left">
+                                                <SidebarTrigger variant={"outline"} className="shadow-lg" />
+                                            </Panel>
 
-                                    <Panel position="top-right" className="flex gap-2 bg-card p-2 rounded-xl shadow-lg border">
-                                        <WaSessionDialog
-                                            sessions={wa.sessions}
-                                            loading={wa.loading}
-                                            error={wa.error}
-                                            qrUrl={wa.qrUrl}
-                                            linkingSessionId={wa.linkingSessionId}
-                                            onStartSession={wa.startSession}
-                                            onStopSession={wa.stopSession}
-                                            onDeleteSession={wa.deleteSession}
-                                            onRefresh={wa.refreshSessions}
-                                            onSetLinking={wa.setLinkingSessionId}
-                                            trigger={
-                                                <Button variant="outline">
-                                                    <MessageSquare className="text-green-500" />
-                                                    WhatsApp
-                                                    {wa.sessions.filter(s => s.connected).length > 0 && (
-                                                        <Badge variant="secondary" className=" text-green-400">
-                                                            {wa.sessions.filter(s => s.connected).length}
-                                                        </Badge>
-                                                    )}
+                                            <Background
+                                                color="color-mix(in srgb, var(--muted-foreground) 50%, transparent)"
+                                            />
+                                            <ZoomSlider position='bottom-left' />
+
+                                            <Panel position="top-right" className="flex gap-2 bg-card p-2 rounded-xl shadow-lg border">
+                                                <WaSessionDialog
+                                                    sessions={wa.sessions}
+                                                    loading={wa.loading}
+                                                    error={wa.error}
+                                                    qrUrl={wa.qrUrl}
+                                                    linkingSessionId={wa.linkingSessionId}
+                                                    onStartSession={wa.startSession}
+                                                    onStopSession={wa.stopSession}
+                                                    onDeleteSession={wa.deleteSession}
+                                                    onRefresh={wa.refreshSessions}
+                                                    onSetLinking={wa.setLinkingSessionId}
+                                                    trigger={
+                                                        <Button variant="outline">
+                                                            <MessageSquare className="text-green-500" />
+                                                            WhatsApp
+                                                            {wa.sessions.filter(s => s.connected).length > 0 && (
+                                                                <Badge variant="secondary" className=" text-green-400">
+                                                                    {wa.sessions.filter(s => s.connected).length}
+                                                                </Badge>
+                                                            )}
+                                                        </Button>
+                                                    }
+                                                />
+
+                                                <Button
+                                                    onClick={() => setInspectorOpen(!inspectorOpen)}
+                                                    variant={inspectorOpen ? "secondary" : "outline"}
+                                                    title="Debug Inspector"
+                                                >
+                                                    <Bug />
+                                                    Debug
                                                 </Button>
-                                            }
-                                        />
 
-                                        <Button
-                                            onClick={() => setInspectorOpen(!inspectorOpen)}
-                                            variant={inspectorOpen ? "secondary" : "outline"}
-                                            title="Debug Inspector"
-                                        >
-                                            <Bug />
-                                            Debug
-                                        </Button>
+                                                <Button
+                                                    onClick={toggleTerminal}
+                                                    variant={terminalOpen ? "secondary" : "outline"}
+                                                    title="Console"
+                                                >
+                                                    <TerminalSquare className="w-4 h-4" />
+                                                    Console
+                                                </Button>
 
-                                        <Button
-                                            onClick={toggleTerminal}
-                                            variant={terminalOpen ? "secondary" : "outline"}
-                                            title="Console"
-                                        >
-                                            <TerminalSquare className="w-4 h-4" />
-                                            Console
-                                        </Button>
+                                                <Button
+                                                    onClick={() => setSettingsOpen(!settingsOpen)}
+                                                    variant={settingsOpen ? "secondary" : "outline"}
+                                                    title="Ajustes del Flujo"
+                                                >
+                                                    <Settings className="w-4 h-4" />
+                                                    Ajustes
+                                                </Button>
 
-                                        <Button
-                                            onClick={() => setSettingsOpen(!settingsOpen)}
-                                            variant={settingsOpen ? "secondary" : "outline"}
-                                            title="Ajustes del Flujo"
-                                        >
-                                            <Settings className="w-4 h-4" />
-                                            Ajustes
-                                        </Button>
+                                                <Button
+                                                    onClick={onSave}
+                                                    variant='outline'
+                                                    title="Save Workflow"
+                                                    disabled={isSaving}
+                                                >
+                                                    {isSaving ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                                                    {isSaving ? 'Guardando...' : 'Save'}
+                                                </Button>
 
-                                        <Button
-                                            onClick={onSave}
-                                            variant='outline'
-                                            title="Save Workflow"
-                                            disabled={isSaving}
-                                        >
-                                            {isSaving ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                                            {isSaving ? 'Guardando...' : 'Save'}
-                                        </Button>
+                                                <Button
+                                                    onClick={isExecuting ? stopWorkflow : executeWorkflow}
+                                                    disabled={nodes.length === 0}
+                                                    variant={isExecuting ? "destructive" : "default"}
+                                                >
+                                                    <Play className={isExecuting ? "animate-pulse hidden" : ""} />
+                                                    {isExecuting ? 'Stop Flow' : 'Execute Flow'}
+                                                </Button>
+                                            </Panel>
+                                        </ReactFlow>
+                                    </ResizablePanel>
 
-                                        <Button
-                                            onClick={isExecuting ? stopWorkflow : executeWorkflow}
-                                            disabled={nodes.length === 0}
-                                            variant={isExecuting ? "destructive" : "default"}
-                                        >
-                                            <Play className={isExecuting ? "animate-pulse hidden" : ""} />
-                                            {isExecuting ? 'Stop Flow' : 'Execute Flow'}
-                                        </Button>
-                                    </Panel>
-                                </ReactFlow>
+                                    {terminalOpen && (
+                                        <>
+                                            <ResizableHandle withHandle />
+                                            <ResizablePanel defaultSize={30} minSize={100} maxSize={800}>
+                                                <TerminalConsole />
+                                            </ResizablePanel>
+                                        </>
+                                    )}
+                                </ResizablePanelGroup>
                             </ResizablePanel>
 
                             {selectedNode && (
@@ -307,15 +321,6 @@ export default function FlowCanvas() {
                             )}
                         </ResizablePanelGroup>
                     </ResizablePanel>
-
-                    {terminalOpen && (
-                        <>
-                            <ResizableHandle withHandle />
-                            <ResizablePanel defaultSize={30} minSize={300} maxSize={800}>
-                                <TerminalConsole />
-                            </ResizablePanel>
-                        </>
-                    )}
                 </ResizablePanelGroup>
             </div>
         </SidebarProvider>

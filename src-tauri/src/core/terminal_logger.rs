@@ -26,15 +26,21 @@ impl<S: Subscriber> Layer<S> for TerminalLayer {
         event.record(&mut visitor);
         
         let level = event.metadata().level();
-        let target = event.metadata().target();
+        let mut target = event.metadata().target();
+        if let Some(t) = &visitor.log_target {
+            target = t;
+        }
+        
+        let timestamp = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.6fZ").to_string();
         
         let color = match *level {
             tracing::Level::ERROR => "\x1b[31m", // Red
             tracing::Level::WARN => "\x1b[33m",  // Yellow
             tracing::Level::INFO => "\x1b[32m",  // Green
             tracing::Level::DEBUG => "\x1b[36m", // Cyan
-            tracing::Level::TRACE => "\x1b[90m", // Gray
+            tracing::Level::TRACE => "\x1b[35m", // Magenta
         };
+        let dim = "\x1b[2m";
         let reset = "\x1b[0m";
         
         // Limpiamos comillas extra si message viene como debug string
@@ -44,7 +50,16 @@ impl<S: Subscriber> Layer<S> for TerminalLayer {
             visitor.message
         };
 
-        let msg = format!("{}[{}] [{}] {}{}\r\n", color, level, target, msg_clean, reset);
+        let msg = format!(
+            "{dim}{timestamp}{reset} {color}{level}{reset} {dim}{target}:{reset} {msg_clean}\r\n",
+            dim = dim,
+            timestamp = timestamp,
+            reset = reset,
+            color = color,
+            level = level,
+            target = target,
+            msg_clean = msg_clean
+        );
         
         let _ = self.sender.try_send(msg);
     }
@@ -52,11 +67,12 @@ impl<S: Subscriber> Layer<S> for TerminalLayer {
 
 struct StringVisitor {
     message: String,
+    log_target: Option<String>,
 }
 
 impl StringVisitor {
     fn new() -> Self {
-        Self { message: String::new() }
+        Self { message: String::new(), log_target: None }
     }
 }
 
@@ -64,6 +80,8 @@ impl tracing::field::Visit for StringVisitor {
     fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
         if field.name() == "message" {
             self.message = format!("{:?}", value);
+        } else if field.name() == "log.target" {
+            self.log_target = Some(format!("{:?}", value).trim_matches('"').to_string());
         }
     }
 }
