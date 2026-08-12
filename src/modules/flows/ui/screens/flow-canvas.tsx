@@ -171,7 +171,7 @@ export default function FlowCanvas() {
                 <ResizablePanelGroup direction="horizontal">
                     {settingsOpen && (
                         <>
-                            <ResizablePanel defaultSize={25} minSize={20}>
+                            <ResizablePanel defaultSize={20} minSize={300} maxSize={800}>
                                 <WorkflowSettingsPanel onClose={() => setSettingsOpen(false)} />
                             </ResizablePanel>
                             <ResizableHandle withHandle />
@@ -264,21 +264,28 @@ export default function FlowCanvas() {
                                 </Button>
                             </Panel>
                         </ReactFlow>
-
-                        {/* Panel de configuración del nodo seleccionado */}
-                        <NodeConfigPanel
-                            node={selectedNode}
-                            onClose={() => setSelectedNodeId(null)}
-                            onUpdateConfig={onUpdateNodeConfig}
-                            onUpdateLabel={onUpdateNodeLabel}
-                            onUpdateName={onUpdateNodeName}
-                        />
                     </ResizablePanel>
+
+                    {/* Panel de configuración del nodo seleccionado */}
+                    {selectedNode && (
+                        <>
+                            <ResizableHandle withHandle />
+                            <ResizablePanel defaultSize={20} minSize={300} maxSize={800}>
+                                <NodeConfigPanel
+                                    node={selectedNode}
+                                    onClose={() => setSelectedNodeId(null)}
+                                    onUpdateConfig={onUpdateNodeConfig}
+                                    onUpdateLabel={onUpdateNodeLabel}
+                                    onUpdateName={onUpdateNodeName}
+                                />
+                            </ResizablePanel>
+                        </>
+                    )}
 
                     {inspectorOpen && (
                         <>
                             <ResizableHandle withHandle />
-                            <ResizablePanel defaultSize={30} minSize={20}>
+                            <ResizablePanel defaultSize={20} minSize={300} maxSize={1000}>
                                 <ExecutionInspector />
                             </ResizablePanel>
                         </>

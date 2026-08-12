@@ -32,7 +32,7 @@ export function NodeConfigPanel({ node, onClose, onUpdateConfig, onUpdateLabel, 
     const Icon = ICON_MAP[plugin?.icon || ''] || Settings2;
 
     return (
-        <div className="absolute right-0 top-0 h-full w-[340px] border-l bg-card z-50 shadow-xl flex flex-col animate-in slide-in-from-right-4 duration-200">
+        <div className="h-full w-full bg-card flex flex-col animate-in slide-in-from-right-4 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b">
                 <div className="flex items-center gap-2">
