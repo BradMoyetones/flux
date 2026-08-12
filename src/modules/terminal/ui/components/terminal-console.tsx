@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Terminal } from 'xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
 import { useTerminalStore } from '../../core/use-terminal-store';
 import 'xterm/css/xterm.css';
 import { Trash2 } from 'lucide-react';
@@ -40,6 +41,15 @@ export function TerminalConsole() {
         fitAddon.current = fit;
 
         term.writeln('\x1b[32m[Flux Terminal]\x1b[0m Ready and waiting for logs...\r\n');
+
+        // Petición del historial acumulado
+        invoke<string>('cmd_get_terminal_history')
+            .then(history => {
+                if (history) {
+                    term.write(history);
+                }
+            })
+            .catch(console.error);
 
         const unlisten = listen<string>('terminal://stdout', (event) => {
             term.write(event.payload);

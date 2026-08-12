@@ -41,5 +41,6 @@ pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
         scheduler::cmd_schedule_workflow,
         scheduler::cmd_unschedule_workflow,
         scheduler::cmd_list_scheduled,
+        window::cmd_get_terminal_history,
     ]
 }

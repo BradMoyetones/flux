@@ -29,7 +29,6 @@ pub fn run() {
             use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
             let terminal_layer = crate::core::terminal_logger::init_terminal_logger(app.handle().clone());
             tracing_subscriber::registry()
-                .with(tracing_subscriber::fmt::layer())
                 .with(terminal_layer)
                 .init();
 

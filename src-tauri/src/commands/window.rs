@@ -63,3 +63,8 @@ pub async fn set_run_in_background(
     crate::storage::config::save_config(&app, &config_clone).map_err(AppError::Internal)?;
     Ok(())
 }
+
+#[tauri::command]
+pub fn cmd_get_terminal_history() -> String {
+    crate::core::terminal_logger::get_log_history()
+}

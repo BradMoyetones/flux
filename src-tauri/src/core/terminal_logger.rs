@@ -3,6 +3,18 @@ use tracing_subscriber::{layer::Context, Layer};
 use tauri::{AppHandle, Emitter};
 use tokio::sync::mpsc;
 use tokio::time::{interval, Duration};
+use std::sync::{Arc, Mutex, OnceLock};
+
+static LOG_HISTORY: OnceLock<Arc<Mutex<String>>> = OnceLock::new();
+
+pub fn get_log_history() -> String {
+    if let Some(history) = LOG_HISTORY.get() {
+        let lock = history.lock().unwrap();
+        lock.clone()
+    } else {
+        String::new()
+    }
+}
 
 pub struct TerminalLayer {
     sender: mpsc::Sender<String>,
@@ -60,12 +72,23 @@ pub fn init_terminal_logger(app: AppHandle) -> TerminalLayer {
     let (tx, mut rx) = mpsc::channel::<String>(10000);
     
     tauri::async_runtime::spawn(async move {
+        let history_arc = Arc::new(Mutex::new(String::with_capacity(100 * 1024)));
+        let _ = LOG_HISTORY.set(history_arc.clone());
+
         let mut buffer = String::new();
         let mut interval = interval(Duration::from_millis(50));
         
         loop {
             tokio::select! {
                 Some(msg) = rx.recv() => {
+                    if let Ok(mut h) = history_arc.lock() {
+                        h.push_str(&msg);
+                        if h.len() > 100 * 1024 {
+                            let drain_amt = h.len() - (50 * 1024);
+                            h.drain(..drain_amt);
+                        }
+                    }
+
                     buffer.push_str(&msg);
                     if buffer.len() > 1024 * 1024 { // 1MB limite por chunk de buffer
                         let _ = app.emit("terminal://stdout", buffer.clone());
