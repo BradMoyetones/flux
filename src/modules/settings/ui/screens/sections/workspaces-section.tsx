@@ -1,20 +1,17 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import {
-    Badge,
-    Field,
-    SectionCard,
-    SegmentedControl,
-    SettingRow,
-    Select,
-    Switch,
-    TextInput,
-} from "@/modules/settings/ui/components/controls"
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/components/ui/card"
+import { Label } from "@/ui/components/ui/label"
+import { Input } from "@/ui/components/ui/input"
+import { Tabs, TabsList, TabsTrigger } from "@/ui/components/ui/tabs"
+import { useFlowStore } from "@/modules/flows/core/use-flow-store"
 import { Button } from "@/ui/components/ui/button"
+import { Trigger } from "@/types/data"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/ui/select"
 import {
     Folder,
-    MessageCircle,
     Play,
     Plus,
     Sparkles,
@@ -150,7 +147,39 @@ function WorkflowDetail({
     workflow: FluxEntry
 }) {
     const { deleteWorkflow } = useHomeStore()
+    const { loadWorkflow, saveWorkflow, setTrigger, trigger, executeWorkflow, isExecuting, metadata } = useFlowStore()
+    
     const [isDeleting, setIsDeleting] = useState(false)
+    const [isLoaded, setIsLoaded] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+
+    useEffect(() => {
+        let mounted = true;
+        setIsLoaded(false);
+        loadWorkflow(workflow.path).then(() => {
+            if (mounted) setIsLoaded(true);
+        });
+
+        return () => {
+            mounted = false;
+        }
+    }, [workflow.path, loadWorkflow])
+
+    const handleSave = async () => {
+        setIsSaving(true)
+        try {
+            await saveWorkflow(workflow.path)
+            toast.success("Configuración guardada exitosamente")
+        } catch (e) {
+            toast.error("Error al guardar la configuración")
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    const lastExecution = metadata?.last_execution ? new Date(metadata.last_execution).toLocaleString() : "Nunca"
+    const totalExecutions = metadata?.total_executions || 0
+    const triggerType = trigger?.type || "manual"
 
     return (
         <>
@@ -161,7 +190,7 @@ function WorkflowDetail({
                         <div
                             className="mt-0.5 flex size-9 items-center justify-center rounded-lg text-white"
                         >
-                            <Workflow className="size-4.5" />
+                            <Workflow className="size-4.5 text-foreground" />
                         </div>
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
@@ -174,135 +203,117 @@ function WorkflowDetail({
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
-                            <Play className="size-3.5" />
-                            Ejecutar
-                        </Button>
+                        {isLoaded && (
+                            <Button variant="outline" size="sm" onClick={executeWorkflow} disabled={isExecuting}>
+                                {isExecuting ? <Spinner className="mr-2" /> : <Play className="mr-2 size-3.5" />}
+                                {isExecuting ? "Ejecutando..." : "Ejecutar"}
+                            </Button>
+                        )}
                     </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
-                    <Stat label="Última ejecución" value={"Nunca"} />
-                    <Stat label="Ejecuciones (7d)" value={"0"} />
-                    <Stat label="Nodos" value={"0"} />
+                <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4">
+                    <Stat label="Última ejecución" value={lastExecution} />
+                    <Stat label="Ejecuciones Totales" value={totalExecutions.toString()} />
                 </div>
             </div>
 
-            <SectionCard title="General">
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Nombre" className="sm:col-span-2">
-                        <p className="text-sm text-muted-foreground">{workspaceName(workspace)}</p>
-                    </Field>
-                    <Field label="Descripción" className="sm:col-span-2">
-                        <p className="text-sm text-muted-foreground">{workspace}</p>
-                    </Field>
+            {!isLoaded ? (
+                <div className="flex h-32 items-center justify-center">
+                    <Spinner />
                 </div>
-            </SectionCard>
-
-            <SectionCard title="Ejecución" description="Cómo y cuándo corre este flujo.">
-                <div className="space-y-4">
-                    <Field label="Modo de ejecución">
-                        <SegmentedControl<"manual" | "cron" | "webhook">
-                            value={"manual"}
-                            onChange={() => { }}
-                            options={[
-                                { value: "manual", label: "Manual" },
-                                { value: "cron", label: "Programado (Cron)" },
-                                { value: "webhook", label: "Webhook" },
-                            ]}
-                        />
-                    </Field>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Expresión CRON" hint="Formato estándar. Ej: 0 18 * * *">
-                            <TextInput
-                                className="font-mono"
-                                value={"0 18 * * *"}
-                                placeholder="0 18 * * *"
-                                onChange={() => { }}
-                            />
-                        </Field>
-                        <Field label="Zona horaria">
-                            <Select value={"America/Bogota"} onChange={() => { }}>
-                                <option value="America/Bogota">America/Bogota</option>
-                                <option value="America/Mexico_City">America/Mexico_City</option>
-                                <option value="America/New_York">America/New_York</option>
-                                <option value="UTC">UTC</option>
-                            </Select>
-                        </Field>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Concurrencia" hint="Ejecuciones simultáneas máximas.">
-                            <TextInput
-                                type="number"
-                                min={1}
-                                value={1}
-                                onChange={() => { }}
-                            />
-                        </Field>
-                        <Field label="Timeout (segundos)">
-                            <TextInput
-                                type="number"
-                                min={1}
-                                value={120}
-                                onChange={() => { }}
-                            />
-                        </Field>
-                    </div>
-                </div>
-            </SectionCard>
-
-            <SectionCard title="Reintentos y registro">
-                <div className="divide-y divide-border">
-                    <SettingRow title="Reintentar si falla" description="Vuelve a intentar la ejecución completa ante un error.">
-                        <Switch checked={true} onCheckedChange={() => { }} />
-                    </SettingRow>
-                    {true && (
-                        <SettingRow title="Máximo de reintentos">
-                            <div className="w-24">
-                                <TextInput
-                                    type="number"
-                                    min={0}
-                                    value={3}
-                                    onChange={() => { }}
-                                />
+            ) : (
+                <>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>General</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5 sm:col-span-2">
+                                    <Label>Nombre</Label>
+                                    <p className="text-sm text-muted-foreground">{workflow.name}</p>
+                                </div>
                             </div>
-                        </SettingRow>
-                    )}
-                    <SettingRow title="Guardar log de ejecución" description="Almacena la salida de cada nodo para depurar.">
-                        <Switch checked={true} onCheckedChange={() => { }} />
-                    </SettingRow>
-                    <SettingRow title="Notificar en error" description="Envía una notificación de escritorio si el flujo falla.">
-                        <Switch checked={false} onCheckedChange={() => { }} />
-                    </SettingRow>
-                </div>
-            </SectionCard>
+                        </CardContent>
+                    </Card>
 
-            <SectionCard title="Nodos" description={`${1} nodos en este flujo.`}>
-                <ul className="space-y-1.5">
-                    <li
-                        className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2"
-                    >
-                        <span className="flex size-4 items-center justify-center text-[11px] font-medium text-muted-foreground">
-                            1
-                        </span>
-                        <span className="flex size-7 items-center justify-center rounded-md bg-muted text-foreground">
-                            <MessageCircle className="size-3.5" />
-                        </span>
-                        <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-foreground">{"Hola"}</p>
-                            <p className="font-mono text-[11px] text-muted-foreground">{"Hola"}</p>
-                        </div>
-                        <div className="ml-auto flex items-center gap-1.5">
-                            <Badge tone={"success"}>
-                                {"Hola"}
-                            </Badge>
-                            <Badge tone="neutral">{"Hola"}</Badge>
-                        </div>
-                    </li>
-                </ul>
-            </SectionCard>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Ejecución</CardTitle>
+                            <CardDescription>Cómo y cuándo corre este flujo.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-1.5">
+                                <Label>Modo de ejecución</Label>
+                                <Tabs value={triggerType} onValueChange={(v: string) => {
+                                    if (v === "manual") setTrigger({ type: "manual" });
+                                    else if (v === "cron") setTrigger({ type: "cron", expression: "", timezone: "" } as Trigger);
+                                    else if (v === "webhook") setTrigger({ type: "webhook", path: "", method: "POST" } as Trigger);
+                                }}>
+                                    <TabsList className="grid w-full grid-cols-3">
+                                        <TabsTrigger value="manual">Manual</TabsTrigger>
+                                        <TabsTrigger value="cron">Programado</TabsTrigger>
+                                        <TabsTrigger value="webhook">Webhook</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
+                            </div>
+
+                            {triggerType === "cron" && (
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label>Expresión CRON</Label>
+                                        <Input
+                                            className="font-mono"
+                                            value={(trigger as any).expression || ""}
+                                            placeholder="0 18 * * *"
+                                            onChange={(e) => setTrigger({ ...trigger, expression: e.target.value } as Trigger)}
+                                        />
+                                        <p className="text-[11px] text-muted-foreground">Formato estándar. Ej: 0 18 * * *</p>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Zona horaria</Label>
+                                        <Select 
+                                            value={(trigger as any).timezone || ""} 
+                                            onValueChange={(val) => setTrigger({ ...trigger, timezone: val } as Trigger)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecciona..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="America/Bogota">America/Bogota</SelectItem>
+                                                <SelectItem value="America/Mexico_City">America/Mexico_City</SelectItem>
+                                                <SelectItem value="America/New_York">America/New_York</SelectItem>
+                                                <SelectItem value="UTC">UTC</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            )}
+
+                            {triggerType === "webhook" && (
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label>Ruta (Path)</Label>
+                                        <Input
+                                            value={(trigger as any).path || ""}
+                                            placeholder="/webhook/recibir"
+                                            onChange={(e) => setTrigger({ ...trigger, path: e.target.value } as Trigger)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <div className="flex justify-end pt-2 border-t border-border">
+                                <Button onClick={handleSave} disabled={isSaving}>
+                                    {isSaving ? <Spinner className="mr-2" /> : null}
+                                    Guardar Configuración
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </>
+            )}
 
             <DangerZone
                 title="Eliminar flujo"

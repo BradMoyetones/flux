@@ -10,7 +10,7 @@ use crate::models::runtime::{NodeExecutionEvent, NodeStatus, WorkflowExecutionEv
 use crate::plugins::registry::PluginRegistry;
 use crate::plugins::http::plugin::HttpPlugin;
 use crate::plugins::whatsapp::plugin::WhatsAppPlugin;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, Emitter};
 use std::collections::HashMap;
 use tokio::sync::watch;
 use tokio::task::JoinSet;
@@ -216,6 +216,33 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
         workflow_id: workflow.id.clone(),
         status: NodeStatus::Success,
     });
+    
+    // Actualizar metadata de ejecución
+    let mut updated_workflow = workflow.clone();
+    let mut meta = updated_workflow.metadata.unwrap_or_default();
+    meta.last_execution = Some(chrono::Utc::now().to_rfc3339());
+    meta.total_executions += 1;
+    updated_workflow.metadata = Some(meta.clone());
+    
+    // Emitir evento para React
+    let _ = app.emit("workflow://metadata-updated", serde_json::json!({
+        "path": updated_workflow.path.clone(),
+        "metadata": meta,
+    }));
+    
+    // Persistencia asíncrona no bloqueante
+    if let Some(path) = updated_workflow.path.clone() {
+        tauri::async_runtime::spawn(async move {
+            match serde_json::to_string_pretty(&updated_workflow) {
+                Ok(json_content) => {
+                    if let Err(e) = std::fs::write(&path, json_content) {
+                        eprintln!("Error saving workflow metadata to {}: {}", path, e);
+                    }
+                }
+                Err(e) => eprintln!("Error serializing workflow metadata: {}", e),
+            }
+        });
+    }
 
     Ok(())
 }

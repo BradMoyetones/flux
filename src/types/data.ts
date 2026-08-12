@@ -1,7 +1,13 @@
+export interface WorkflowMetadata {
+    last_execution?: string;
+    total_executions: number;
+}
+
 export interface FluxEntry {
     name: string;
     path: string;
     workspace: string;
+    metadata?: WorkflowMetadata;
 }
 
 export type Workspace = string;
@@ -9,7 +15,7 @@ export type Workspace = string;
 export type Trigger =
   | { type: 'manual' }
   | { type: 'webhook'; path: string; method: string }
-  | { type: 'cron'; expression: string; starts_at?: string; expires_at?: string; max_runs?: number };
+  | { type: 'cron'; expression: string; timezone?: string; starts_at?: string; expires_at?: string; max_runs?: number };
 
 export interface WhatsAppSessionInfo {
     id: string;
@@ -48,6 +54,7 @@ export interface WorkflowConfig {
     workspace: string;
     path: string;
     description: string;
+    metadata?: WorkflowMetadata;
     enabled: boolean;
     runMode: RunMode;
     cron: string;

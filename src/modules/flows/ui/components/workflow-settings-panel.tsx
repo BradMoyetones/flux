@@ -76,7 +76,7 @@ export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
 
                     {trigger.type === "cron" && (
                         <div className="grid gap-4 sm:grid-cols-2 bg-muted/30 p-4 rounded-xl border border-border">
-                            <div className="space-y-2 sm:col-span-2">
+                            <div className="space-y-2 sm:col-span-1">
                                 <Label>Expresión CRON</Label>
                                 <Input
                                     className="font-mono"
@@ -85,6 +85,24 @@ export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
                                     onChange={(e) => setTrigger({ ...trigger, expression: e.target.value })}
                                 />
                                 <p className="text-[10px] text-muted-foreground">Ej: 0 18 * * *</p>
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-1">
+                                <Label>Zona horaria</Label>
+                                <Select 
+                                    value={(trigger as any).timezone || ""} 
+                                    onValueChange={(val) => setTrigger({ ...trigger, timezone: val })}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Selecciona..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="America/Bogota">America/Bogota</SelectItem>
+                                        <SelectItem value="America/Mexico_City">America/Mexico_City</SelectItem>
+                                        <SelectItem value="America/New_York">America/New_York</SelectItem>
+                                        <SelectItem value="UTC">UTC</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                             
                             <div className="space-y-2">

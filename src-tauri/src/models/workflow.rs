@@ -1,12 +1,20 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq)]
+pub struct WorkflowMetadata {
+    pub last_execution: Option<String>,
+    pub total_executions: u64,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Workflow {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
     pub path: Option<String>,
+    #[serde(default)]
+    pub metadata: Option<WorkflowMetadata>,
     pub trigger: Trigger,
     pub nodes: Vec<Node>,
     pub edges: Vec<Edge>,

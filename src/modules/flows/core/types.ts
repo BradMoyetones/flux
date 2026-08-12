@@ -1,4 +1,4 @@
-import type { Trigger } from "@/types/data";
+import type { Trigger, WorkflowMetadata } from "@/types/data";
 
 export type NodeStatus = 'pending' | 'running' | 'success' | 'error';
 
@@ -32,7 +32,9 @@ export interface Workflow {
   id: string;
   name: string;
   description?: string;
+  path?: string;
   trigger: Trigger;
+  metadata?: WorkflowMetadata;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
 }

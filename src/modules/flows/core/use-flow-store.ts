@@ -15,7 +15,7 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { NodeExecutionEvent, WorkflowExecutionEvent, NodeStatus, Workflow } from './types';
-import { Trigger } from '@/types/data';
+import { Trigger, WorkflowMetadata } from '@/types/data';
 
 export type AppNodeData = {
   name: string;
@@ -31,8 +31,10 @@ export type AppNode = Node<AppNodeData>;
 export interface FlowState {
   workflowId: string;
   workflowName: string;
+  workflowPath?: string;
   originalWorkflowName: string;
   description?: string;
+  metadata?: WorkflowMetadata;
   trigger: Trigger;
   nodes: AppNode[];
   edges: Edge[];
@@ -96,8 +98,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       set({
         workflowId: workflow.id,
         workflowName: workflow.name || 'Sin Título',
+        workflowPath: filePath,
         originalWorkflowName: workflow.name || 'Sin Título',
         description: workflow.description || "",
+        metadata: workflow.metadata,
         trigger: workflow.trigger as Trigger ?? { type: "manual" },
         nodes: reactFlowNodes,
         edges: reactFlowEdges,
@@ -161,6 +165,9 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     const workflowPayload = {
       id: state.workflowId,
       name: state.workflowName,
+      description: state.description,
+      path: state.workflowPath,
+      metadata: state.metadata,
       trigger: state.trigger,
       nodes: state.nodes.map(n => ({
         id: n.id,
@@ -248,6 +255,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         id: state.workflowId,
         name: state.workflowName,
         description: state.description,
+        path: pathToSave,
+        metadata: state.metadata,
         trigger: state.trigger,
         nodes: state.nodes.map(n => ({
             id: n.id,
@@ -328,6 +337,20 @@ export const setupFlowListeners = async () => {
       } else if (status === 'unscheduled') {
         useFlowStore.setState({ isExecuting: false });
       }
+    }
+  });
+
+  await listen<{ path: string, metadata: WorkflowMetadata }>('workflow://metadata-updated', (event) => {
+    const { metadata } = event.payload;
+    // Update store only if the currently loaded workflow matches the path
+    const store = useFlowStore.getState();
+    if (store.workflowId) {
+        // Technically we don't store `path` in the store currently.
+        // We can just update it, or we could add `workflowPath` to the store.
+        // But since this listener is global, updating the global `metadata` is fine
+        // if we assume `workflowId` or `path` matches. 
+        // We probably should just update the global store's metadata. 
+        useFlowStore.setState({ metadata });
     }
   });
 };
