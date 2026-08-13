@@ -14,6 +14,7 @@ use tauri::{AppHandle, Manager, Emitter};
 use std::collections::HashMap;
 use tokio::sync::watch;
 use tokio::task::JoinSet;
+use crate::errors::AppError;
 
 /// Construye el registry global con todos los plugins disponibles.
 fn build_registry() -> PluginRegistry {
@@ -23,7 +24,7 @@ fn build_registry() -> PluginRegistry {
     registry
 }
 
-pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), String> {
+pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), AppError> {
     log_info(&app, &workflow.id, None, &format!("▶ Iniciando workflow '{}' ({} nodos)", workflow.name, workflow.nodes.len()));
     let workflow_name_clone = workflow.name.clone();
     let registry = Arc::new(build_registry());
@@ -51,13 +52,10 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
     // Topological sort para validar ciclos
     let sorted_nodes = match toposort(&graph, None) {
         Ok(sorted) => sorted,
-        Err(_) => return Err("Ciclo detectado en el DAG del workflow".into()),
+        Err(_) => return Err(AppError::InvalidConfig("Ciclo detectado en el DAG del workflow".into())),
     };
     let custom_variables = {
         let state = app.state::<Arc<crate::state::AppState>>();
-        // Because execute_workflow is async, we can just block or await
-        // Wait, execute_workflow is an async fn, but let's see if we can await here without blocking
-        // Actually, we can just await the read lock
         let config = state.config.read().await;
         config.variables.clone()
     };
@@ -103,13 +101,13 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                     if rx.changed().await.is_err() {
                         // El padre fue destruido inesperadamente
                         let _ = tx.send(Some(false));
-                        return Err(format!("Dependencia falló o fue cancelada para el nodo '{}'", node_id));
+                        return Err(AppError::Internal(format!("Dependencia falló o fue cancelada para el nodo '{}'", node_id)));
                     }
                 }
                 if *rx.borrow() == Some(false) {
                     log_warn(&app_clone, &workflow_id, Some(&node.id), &format!("⊘ Nodo '{}' cancelado: dependencia falló", node.label));
                     let _ = tx.send(Some(false));
-                    return Err(format!("Cancelado: Un nodo padre falló para '{}'", node.id));
+                    return Err(AppError::StepExecution { step_id: node.id.clone(), message: "Cancelado: Un nodo padre falló".into() });
                 }
             }
 
@@ -159,7 +157,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                             });
                             log_error(&app_clone, &workflow_id, Some(&node.id), &format!("✗ Nodo '{}' falló: {}", node.label, error), None);
                             let _ = tx.send(Some(false));
-                            Err(format!("Nodo '{}' falló: {}", node.id, error))
+                            Err(AppError::StepExecution { step_id: node.id.clone(), message: format!("Nodo falló: {}", error) })
                         }
                     }
                 }
@@ -174,7 +172,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                         error: Some(error.clone()),
                     });
                     let _ = tx.send(Some(false));
-                    Err(error)
+                    Err(AppError::InvalidConfig(error))
                 }
             }
         });
@@ -196,23 +194,25 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
             Err(e) => {
                 workflow_failed = true;
                 if first_error.is_none() {
-                    first_error = Some(format!("Error interno del task runtime: {}", e));
+                    first_error = Some(AppError::Internal(format!("Error interno del task runtime: {}", e)));
                 }
             }
         }
     }
 
     if workflow_failed {
-        let err_msg = first_error.as_ref().unwrap();
+        let err_obj = first_error.unwrap_or_else(|| AppError::Internal("Error desconocido".into()));
+        let err_msg = err_obj.to_string();
+        
         log_error(&app, &workflow.id, None, &format!("✗ Workflow '{}' falló: {}", workflow_name_clone, err_msg), None);
         emit_workflow_event(&app, &WorkflowExecutionEvent {
             workflow_id: workflow.id.clone(),
             status: NodeStatus::Error,
         });
         
-        let _ = crate::services::notifications::notify_flow_error(&app, &workflow_name_clone, err_msg);
+        let _ = crate::services::notifications::notify_flow_error(&app, &workflow_name_clone, &err_msg);
         
-        return Err(first_error.unwrap_or_else(|| "Error desconocido".into()));
+        return Err(err_obj);
     }
 
     log_info(&app, &workflow.id, None, &format!("✓ Workflow '{}' completado exitosamente", workflow_name_clone));

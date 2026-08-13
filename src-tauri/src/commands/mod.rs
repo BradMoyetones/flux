@@ -18,6 +18,7 @@ pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
         config::cmd_update_config,
         config::cmd_get_global_variables,
         config::cmd_set_global_variables,
+        config::cmd_factory_reset,
         profile::process_and_save_avatar,
         workflows::cmd_get_workspaces,
         workflows::cmd_add_workspace,

@@ -5,6 +5,7 @@ use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
 use serde::{Serialize};
 use serde_json::{Value};
+use crate::errors::AppError;
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -31,7 +32,7 @@ impl WhatsAppManager {
         }
     }
 
-    pub async fn start_session(&self, app: &AppHandle, session_id: &str) -> Result<WhatsAppSessionInfo, String> {
+    pub async fn start_session(&self, app: &AppHandle, session_id: &str) -> Result<WhatsAppSessionInfo, AppError> {
         let mut sessions = self.sessions.lock().await;
         if let Some(session) = sessions.get(session_id) {
             return Ok(session.info.clone());
@@ -39,26 +40,26 @@ impl WhatsAppManager {
 
         let port = {
             let listener = std::net::TcpListener::bind("127.0.0.1:0")
-                .map_err(|e| format!("Failed to bind to free port: {}", e))?;
+                .map_err(|e| AppError::Internal(format!("Failed to bind to free port: {}", e)))?;
             listener.local_addr()
-                .map_err(|e| format!("Failed to get local address: {}", e))?.port()
+                .map_err(|e| AppError::Internal(format!("Failed to get local address: {}", e)))?.port()
         };
 
         let app_data_dir = app.path().app_data_dir()
-            .map_err(|e| format!("Failed to get app_data_dir: {}", e))?;
+            .map_err(|e| AppError::Storage(format!("Failed to get app_data_dir: {}", e)))?;
         
         let mut db_path = app_data_dir.clone();
         db_path.push("whatsapp");
         std::fs::create_dir_all(&db_path)
-            .map_err(|e| format!("Failed to create db path: {}", e))?;
+            .map_err(|e| AppError::Storage(format!("Failed to create db path: {}", e)))?;
         db_path.push(format!("{}.db", session_id));
 
         let (mut rx, child) = app.shell()
             .sidecar("whatsapp-sidecar")
-            .map_err(|e| format!("Failed to create sidecar: {}", e))?
+            .map_err(|e| AppError::Sidecar(format!("Failed to create sidecar: {}", e)))?
             .args(["--port", &port.to_string(), "--db-path", db_path.to_string_lossy().as_ref()])
             .spawn()
-            .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
+            .map_err(|e| AppError::Sidecar(format!("Failed to spawn sidecar: {}", e)))?;
 
         let app_clone = app.clone();
         let sid = session_id.to_string();
@@ -76,20 +77,12 @@ impl WhatsAppManager {
                 }
             }
 
-            // Si el loop de eventos (rx) termina, significa que el binario de Go ha muerto.
-            // Vamos a revisar si esto fue intencional (por el usuario) o si fue un cierre inesperado.
             let state = app_clone.state::<std::sync::Arc<crate::state::AppState>>();
             let mut sessions = state.wa_manager.sessions.lock().await;
 
             if sessions.contains_key(&sid) {
-                // El binario se cerró, pero la sesión sigue en memoria. ¡Esto fue una desconexión anómala o un crasheo!
-                // 1. Enviamos la notificación push
                 let _ = crate::services::notifications::notify_session_disconnect(&app_clone, Some(&sid));
-                
-                // 2. Limpiamos la memoria
                 sessions.remove(&sid);
-                
-                // 3. Avisamos al frontend para que actualice la UI
                 let _ = app_clone.emit("whatsapp://disconnected", serde_json::json!({
                     "sessionId": sid
                 }));
@@ -113,29 +106,32 @@ impl WhatsAppManager {
         Ok(info)
     }
 
-    pub async fn get_session_port(&self, session_id: &str) -> Result<u16, String> {
+    pub async fn get_session_port(&self, session_id: &str) -> Result<u16, AppError> {
         let sessions = self.sessions.lock().await;
         sessions.get(session_id)
             .map(|s| s.info.port)
-            .ok_or_else(|| format!("Session {} not found", session_id))
+            .ok_or_else(|| AppError::WhatsApp(format!("Session {} not found", session_id)))
     }
 
-    pub async fn stop_session(&self, session_id: &str) -> Result<(), String> {
+    pub async fn stop_session(&self, session_id: &str) -> Result<(), AppError> {
         let mut sessions = self.sessions.lock().await;
         if let Some(session) = sessions.remove(session_id) {
-            session.child.kill().map_err(|e| format!("Failed to kill sidecar: {}", e))?;
+            session.child.kill().map_err(|e| AppError::Sidecar(format!("Failed to kill sidecar: {}", e)))?;
         }
         Ok(())
     }
 
-    pub async fn delete_session(&self, app: &AppHandle, session_id: &str) -> Result<(), String> {
-        // 1. Try to disconnect via HTTP to logout from WhatsApp servers
-        let _ = self.send_request(session_id, "POST", "/disconnect", None).await;
+    pub async fn kill_all_sessions(&self) {
+        let mut sessions = self.sessions.lock().await;
+        for (_, session) in sessions.drain() {
+            let _ = session.child.kill();
+        }
+    }
 
-        // 2. Stop the process and remove from memory map
+    pub async fn delete_session(&self, app: &AppHandle, session_id: &str) -> Result<(), AppError> {
+        let _ = self.send_request(session_id, "POST", "/disconnect", None).await;
         self.stop_session(session_id).await?;
 
-        // 3. Delete the SQLite database file
         if let Ok(app_data_dir) = app.path().app_data_dir() {
             let mut db_path = app_data_dir.clone();
             db_path.push("whatsapp");
@@ -151,7 +147,6 @@ impl WhatsAppManager {
     pub async fn list_sessions(&self, app: &AppHandle) -> Vec<WhatsAppSessionInfo> {
         let mut results = HashMap::new();
         
-        // 1. Escanear base de datos locales
         if let Ok(app_data_dir) = app.path().app_data_dir() {
             let mut db_path = app_data_dir.clone();
             db_path.push("whatsapp");
@@ -163,7 +158,7 @@ impl WhatsAppManager {
                         if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
                             results.insert(stem.to_string(), WhatsAppSessionInfo {
                                 id: stem.to_string(),
-                                port: 0, // No corriendo aún
+                                port: 0,
                                 connected: false,
                                 jid: None,
                             });
@@ -173,7 +168,6 @@ impl WhatsAppManager {
             }
         }
 
-        // 2. Sobrescribir con las sesiones corriendo en memoria
         let sessions = self.sessions.lock().await;
         for (id, session) in sessions.iter() {
             results.insert(id.clone(), session.info.clone());
@@ -182,7 +176,7 @@ impl WhatsAppManager {
         results.into_values().collect()
     }
 
-    pub async fn send_request(&self, session_id: &str, method: &str, path: &str, body: Option<&Value>) -> Result<Value, String> {
+    pub async fn send_request(&self, session_id: &str, method: &str, path: &str, body: Option<&Value>) -> Result<Value, AppError> {
         let port = self.get_session_port(session_id).await?;
         let url = format!("http://127.0.0.1:{}{}", port, path);
         
@@ -192,7 +186,7 @@ impl WhatsAppManager {
             "POST" => client.post(&url),
             "PUT" => client.put(&url),
             "DELETE" => client.delete(&url),
-            _ => return Err(format!("Unsupported method: {}", method)),
+            _ => return Err(AppError::InvalidConfig(format!("Unsupported method: {}", method))),
         };
 
         if let Some(b) = body {
@@ -200,10 +194,10 @@ impl WhatsAppManager {
         }
 
         let res = req.send().await
-            .map_err(|e| format!("Request failed: {}", e))?;
+            .map_err(|e| AppError::HttpClient(format!("Request failed: {}", e)))?;
             
         let json = res.json::<Value>().await
-            .map_err(|e| format!("Failed to parse response: {}", e))?;
+            .map_err(|e| AppError::HttpClient(format!("Failed to parse response: {}", e)))?;
 
         Ok(json)
     }

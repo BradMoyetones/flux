@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, State, Manager};
 
 use crate::errors::AppError;
 use crate::state::{AppConfig, AppState, GlobalVariable};
@@ -22,7 +22,7 @@ pub async fn cmd_update_config(
         *current = config.clone();
     }
     
-    save_config(&app, &config).map_err(AppError::Internal)?;
+    save_config(&app, &config).map_err(AppError::Storage)?;
     
     Ok(())
 }
@@ -45,7 +45,30 @@ pub async fn cmd_set_global_variables(
         config.clone()
     };
     
-    save_config(&app, &config_clone).map_err(AppError::Internal)?;
+    save_config(&app, &config_clone).map_err(AppError::Storage)?;
     
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn cmd_factory_reset(app: AppHandle, restart: bool) -> Result<(), AppError> {
+    let state = app.state::<Arc<AppState>>();
+    state.wa_manager.kill_all_sessions().await;
+
+    if let Ok(app_data_dir) = app.path().app_data_dir() {
+        let _ = std::fs::remove_dir_all(&app_data_dir);
+        let _ = std::fs::create_dir_all(&app_data_dir);
+    }
+
+    if let Ok(cache_dir) = app.path().app_cache_dir() {
+        let _ = std::fs::remove_dir_all(&cache_dir);
+    }
+
+    if restart {
+        app.restart();
+    } else {
+        app.exit(0);
+    }
+
     Ok(())
 }

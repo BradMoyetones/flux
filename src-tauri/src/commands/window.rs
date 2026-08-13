@@ -54,7 +54,7 @@ pub async fn set_run_in_background(
         config.general.run_in_background = enabled;
         config.clone()
     };
-    crate::storage::config::save_config(&app, &config_clone).map_err(AppError::Internal)?;
+    crate::storage::config::save_config(&app, &config_clone).map_err(AppError::Storage)?;
     Ok(())
 }
 
