@@ -203,11 +203,15 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
     }
 
     if workflow_failed {
-        log_error(&app, &workflow.id, None, &format!("✗ Workflow '{}' falló: {}", workflow_name_clone, first_error.as_ref().unwrap()), None);
+        let err_msg = first_error.as_ref().unwrap();
+        log_error(&app, &workflow.id, None, &format!("✗ Workflow '{}' falló: {}", workflow_name_clone, err_msg), None);
         emit_workflow_event(&app, &WorkflowExecutionEvent {
             workflow_id: workflow.id.clone(),
             status: NodeStatus::Error,
         });
+        
+        let _ = crate::services::notifications::notify_flow_error(&app, &workflow_name_clone, err_msg);
+        
         return Err(first_error.unwrap_or_else(|| "Error desconocido".into()));
     }
 
@@ -216,6 +220,8 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
         workflow_id: workflow.id.clone(),
         status: NodeStatus::Success,
     });
+    
+    let _ = crate::services::notifications::notify_flow_success(&app, &workflow_name_clone);
     
     // Actualizar metadata de ejecución
     let mut updated_workflow = workflow.clone();

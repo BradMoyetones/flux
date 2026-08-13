@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use tokio::sync::Mutex;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, Emitter};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
 use serde::{Serialize};
@@ -60,6 +60,9 @@ impl WhatsAppManager {
             .spawn()
             .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
 
+        let app_clone = app.clone();
+        let sid = session_id.to_string();
+
         tokio::spawn(async move {
             while let Some(event) = rx.recv().await {
                 match event {
@@ -71,6 +74,25 @@ impl WhatsAppManager {
                     }
                     _ => {}
                 }
+            }
+
+            // Si el loop de eventos (rx) termina, significa que el binario de Go ha muerto.
+            // Vamos a revisar si esto fue intencional (por el usuario) o si fue un cierre inesperado.
+            let state = app_clone.state::<std::sync::Arc<crate::state::AppState>>();
+            let mut sessions = state.wa_manager.sessions.lock().await;
+
+            if sessions.contains_key(&sid) {
+                // El binario se cerró, pero la sesión sigue en memoria. ¡Esto fue una desconexión anómala o un crasheo!
+                // 1. Enviamos la notificación push
+                let _ = crate::services::notifications::notify_session_disconnect(&app_clone, Some(&sid));
+                
+                // 2. Limpiamos la memoria
+                sessions.remove(&sid);
+                
+                // 3. Avisamos al frontend para que actualice la UI
+                let _ = app_clone.emit("whatsapp://disconnected", serde_json::json!({
+                    "sessionId": sid
+                }));
             }
         });
 
