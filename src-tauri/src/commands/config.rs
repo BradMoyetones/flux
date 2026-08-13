@@ -4,7 +4,6 @@ use tauri::{AppHandle, State};
 use crate::errors::AppError;
 use crate::state::{AppConfig, AppState, GlobalVariable};
 use crate::storage::config::save_config;
-use crate::commands::window::RunInBackgroundState;
 
 #[tauri::command]
 pub async fn cmd_get_config(state: State<'_, Arc<AppState>>) -> Result<AppConfig, AppError> {
@@ -16,15 +15,12 @@ pub async fn cmd_get_config(state: State<'_, Arc<AppState>>) -> Result<AppConfig
 pub async fn cmd_update_config(
     app: AppHandle,
     state: State<'_, Arc<AppState>>,
-    run_state: State<'_, RunInBackgroundState>,
     config: AppConfig,
 ) -> Result<(), AppError> {
     {
         let mut current = state.config.write().await;
         *current = config.clone();
     }
-    
-    *run_state.0.lock().unwrap() = config.general.run_in_background;
     
     save_config(&app, &config).map_err(AppError::Internal)?;
     

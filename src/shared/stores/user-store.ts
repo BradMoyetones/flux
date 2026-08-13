@@ -1,8 +1,25 @@
 import { create } from 'zustand';
 import { LazyStore } from '@tauri-apps/plugin-store';
-import { invoke } from '@tauri-apps/api/core';
 
 const store = new LazyStore('user-settings.json');
+
+export interface NotificationConfig {
+    desktopEnabled: boolean;
+    onFlowSuccess: boolean;
+    onFlowError: boolean;
+    onSessionDisconnect: boolean;
+    sound: boolean;
+    quietHours: boolean;
+}
+
+const DEFAULT_NOTIFICATIONS: NotificationConfig = {
+    desktopEnabled: true,
+    onFlowSuccess: true,
+    onFlowError: true,
+    onSessionDisconnect: true,
+    sound: true,
+    quietHours: false,
+};
 
 interface UserState {
     isFirstTime: boolean;
@@ -10,6 +27,7 @@ interface UserState {
     theme: string;
     avatarPath: string;
     runInBackground: boolean;
+    notifications: NotificationConfig;
     
     // Actions
     setIsFirstTime: (val: boolean) => Promise<void>;
@@ -17,15 +35,17 @@ interface UserState {
     setTheme: (val: string) => Promise<void>;
     setAvatarPath: (val: string) => Promise<void>;
     setRunInBackground: (val: boolean) => Promise<void>;
+    updateNotificationConfig: (partial: Partial<NotificationConfig>) => Promise<void>;
     initStore: () => Promise<void>;
 }
 
-export const useUserStore = create<UserState>((set) => ({
+export const useUserStore = create<UserState>((set, get) => ({
     isFirstTime: true,
     userName: '',
     theme: 'system',
     avatarPath: '',
     runInBackground: true,
+    notifications: { ...DEFAULT_NOTIFICATIONS },
     
     setIsFirstTime: async (val) => {
         await store.set('isFirstTime', val);
@@ -51,8 +71,14 @@ export const useUserStore = create<UserState>((set) => ({
         const enabled = !!val;
         await store.set('runInBackground', enabled);
         await store.save();
-        await invoke('set_run_in_background', { enabled }).catch(console.error);
         set({ runInBackground: enabled });
+    },
+    updateNotificationConfig: async (partial) => {
+        const current = get().notifications;
+        const updated = { ...current, ...partial };
+        await store.set('notifications', updated);
+        await store.save();
+        set({ notifications: updated });
     },
     initStore: async () => {
         const isFirstTime = await store.get<boolean>('isFirstTime');
@@ -60,16 +86,17 @@ export const useUserStore = create<UserState>((set) => ({
         const theme = await store.get<string>('theme');
         const avatarPath = await store.get<string>('avatarPath');
         const runInBackground = await store.get<boolean>('runInBackground');
+        const notifications = await store.get<NotificationConfig>('notifications');
         
         if (isFirstTime !== null) set({ isFirstTime });
         if (userName !== null) set({ userName });
         if (theme !== null) set({ theme });
         if (avatarPath !== null) set({ avatarPath });
         if (runInBackground !== null && runInBackground !== undefined) {
-            const enabled = !!runInBackground;
-            set({ runInBackground: enabled });
-            await invoke('set_run_in_background', { enabled }).catch(console.error);
+            set({ runInBackground: !!runInBackground });
+        }
+        if (notifications !== null && notifications !== undefined) {
+            set({ notifications: { ...DEFAULT_NOTIFICATIONS, ...notifications } });
         }
     }
 }));
-

@@ -5,6 +5,7 @@ pub mod whatsapp;
 pub mod profile;
 pub mod config;
 pub mod scheduler;
+pub mod notifications;
 
 pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
     tauri::generate_handler![
@@ -42,5 +43,6 @@ pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
         scheduler::cmd_unschedule_workflow,
         scheduler::cmd_list_scheduled,
         window::cmd_get_terminal_history,
+        notifications::cmd_test_notification,
     ]
 }

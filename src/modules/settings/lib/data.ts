@@ -1,4 +1,4 @@
-import { Bell, FolderTree, Info, LucideIcon, MessageCircle, Palette, Sliders, User } from "lucide-react"
+import { Bell, FolderTree, Info, LucideIcon, MessageCircle, Monitor, Palette, Sliders, User } from "lucide-react"
 
 export type SectionId =
     | "general"
@@ -7,6 +7,7 @@ export type SectionId =
     | "whatsapp"
     | "automation"
     | "notifications"
+    | "system"
     | "about"
 
 export const NAV: {
@@ -22,6 +23,7 @@ export const NAV: {
         { id: "whatsapp", label: "Sesiones WhatsApp", icon: MessageCircle, group: "Automatización", keywords: ["whatsapp", "sesion", "qr", "sidecar", "contactos", "chats", "reciclar"] },
         { id: "automation", label: "Automatización", icon: Sliders, group: "Automatización", keywords: ["http", "timeout", "reintentos", "ssl", "cookies", "variables", "global"] },
         { id: "notifications", label: "Notificaciones", icon: Bell, group: "Preferencias", keywords: ["notificacion", "alerta", "sonido", "escritorio"] },
+        { id: "system", label: "Sistema", icon: Monitor, group: "Preferencias", keywords: ["sistema", "segundo plano", "notificacion", "alerta", "sonido", "escritorio"] },
         { id: "about", label: "Acerca de", icon: Info, group: "Preferencias", keywords: ["version", "build", "actualizar", "tauri"] },
     ]
 
@@ -33,5 +35,6 @@ export const SECTION_TITLES: Record<SectionId, { title: string; subtitle: string
     whatsapp: { title: "Sesiones de WhatsApp", subtitle: "Gestiona y recicla las conexiones del sidecar." },
     automation: { title: "Automatización", subtitle: "Valores por defecto de nodos y variables globales." },
     notifications: { title: "Notificaciones", subtitle: "Controla qué eventos te avisan." },
+    system: { title: "Sistema", subtitle: "Configuración del sistema." },
     about: { title: "Acerca de", subtitle: "Información de versión y recursos." },
 }

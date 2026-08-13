@@ -18,6 +18,7 @@
         "fs:allow-resource-read-recursive",
         "dialog:default",
         "store:default",
+        "notification:default",
         "shell:default",
         {
             "identifier": "shell:allow-execute",

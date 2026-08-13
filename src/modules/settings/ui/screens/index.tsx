@@ -17,6 +17,7 @@ import { useUserStore } from "@/shared/stores/user-store"
 import { convertFileSrc } from "@tauri-apps/api/core"
 import { SectionId, NAV, SECTION_TITLES } from "../../lib/data"
 import { WorkspacesSection } from "./sections/workspaces-section"
+import { SystemSection } from "./sections/system-section"
 
 export default function SettingsView() {
     const [active, setActive] = useState<SectionId>("general")
@@ -135,6 +136,9 @@ export default function SettingsView() {
                         )}
                         {active === "notifications" && (
                             <NotificationsSection />
+                        )}
+                        {active === "system" && (
+                            <SystemSection />
                         )}
                         {active === "about" && <AboutSection />}
                     </div>

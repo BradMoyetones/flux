@@ -1,7 +1,4 @@
 use tauri::{Manager, Window};
-use std::sync::Mutex;
-
-pub struct RunInBackgroundState(pub Mutex<bool>);
 
 use crate::errors::AppError;
 
@@ -50,11 +47,8 @@ pub async fn close_splashscreen(app: tauri::AppHandle) -> Result<(), AppError> {
 pub async fn set_run_in_background(
     app: tauri::AppHandle,
     state: tauri::State<'_, std::sync::Arc<crate::state::AppState>>,
-    run_state: tauri::State<'_, RunInBackgroundState>,
     enabled: bool,
 ) -> Result<(), AppError> {
-    *run_state.0.lock().unwrap() = enabled;
-    
     let config_clone = {
         let mut config = state.config.write().await;
         config.general.run_in_background = enabled;
