@@ -11,6 +11,7 @@ import { ColorThemeProvider } from './shared/contexts/color-theme-provider';
 import { useUserStore } from './shared/stores/user-store';
 
 import './ui/styles/index.css';
+import { ErrorBoundary } from './ui/components/layout/ErrorBoundary';
 
 function UpdaterComponent() {
     const { checkForUpdates, promptUpdate } = useUpdater();
@@ -54,16 +55,18 @@ async function initApp() {
                 enableSystem
                 disableTransitionOnChange
             >
-                <ColorThemeProvider>
-                    <TooltipProvider delayDuration={0}>
-                        <RouterProvider router={router} />
-                        <Toaster />
+                <ErrorBoundary>
+                    <ColorThemeProvider>
+                        <TooltipProvider delayDuration={0}>
+                            <RouterProvider router={router} />
+                            <Toaster />
 
-                        {/* Componentes de utilidad en segundo plano */}
-                        <UpdaterComponent />
-                        <FloatVersionComponent />
-                    </TooltipProvider>
-                </ColorThemeProvider>
+                            {/* Componentes de utilidad en segundo plano */}
+                            <UpdaterComponent />
+                            <FloatVersionComponent />
+                        </TooltipProvider>
+                    </ColorThemeProvider>
+                </ErrorBoundary>
             </ThemeProvider>
         </React.StrictMode>
     );
