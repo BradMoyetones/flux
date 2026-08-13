@@ -51,7 +51,7 @@ pub async fn set_run_in_background(
 ) -> Result<(), AppError> {
     let config_clone = {
         let mut config = state.config.write().await;
-        config.general.run_in_background = enabled;
+        config.run_in_background = enabled;
         config.clone()
     };
     crate::storage::config::save_config(&app, &config_clone).map_err(AppError::Storage)?;

@@ -9,20 +9,6 @@ use crate::services::whatsapp_manager::WhatsAppManager;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct GeneralConfig {
-    pub run_in_background: bool,
-}
-
-impl Default for GeneralConfig {
-    fn default() -> Self {
-        Self {
-            run_in_background: true,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct NotificationConfig {
     pub desktop_enabled: bool,
     pub on_flow_success: bool,
@@ -55,12 +41,34 @@ pub struct GlobalVariable {
     pub secret: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AppConfig {
-    pub general: GeneralConfig,
+    pub is_first_time: bool,
+    pub user_name: String,
+    pub theme: String,
+    pub avatar_path: String,
+    pub run_in_background: bool,
     pub notifications: NotificationConfig,
     pub variables: Vec<GlobalVariable>,
+    pub workspaces: Vec<String>,
+    pub workflow_index: Vec<crate::storage::file_scanner::FluxEntry>,
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        Self {
+            is_first_time: true,
+            user_name: String::new(),
+            theme: "system".to_string(),
+            avatar_path: String::new(),
+            run_in_background: true,
+            notifications: NotificationConfig::default(),
+            variables: Vec::new(),
+            workspaces: Vec::new(),
+            workflow_index: Vec::new(),
+        }
+    }
 }
 
 pub struct AppState {

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useUserStore } from '@/shared/stores/user-store';
-import { invoke, convertFileSrc } from '@tauri-apps/api/core';
-import { open } from '@tauri-apps/plugin-dialog';
+import { convertFileSrc } from '@tauri-apps/api/core';
 import { useTheme } from 'next-themes';
 import { Button } from '@/ui/components/ui/button';
 import { Input } from '@/ui/components/ui/input';
@@ -12,7 +11,7 @@ import { Navigate } from 'react-router';
 import { WindowControls } from '@/ui/components/layout/window-controls';
 
 export function OnboardingView() {
-    const { isFirstTime, setIsFirstTime, userName, setUserName, avatarPath, setAvatarPath, runInBackground, setRunInBackground, uploadAvatar } = useUserStore();
+    const { isFirstTime, setIsFirstTime, userName, setUserName, avatarPath, runInBackground, setRunInBackground, uploadAvatar } = useUserStore();
     const { theme, setTheme } = useTheme();
     
     const [step, setStep] = useState(1);
@@ -24,6 +23,9 @@ export function OnboardingView() {
         await setUserName(localName);
         await setIsFirstTime(false);
     };
+    
+    console.log(isFirstTime);
+    
 
     return (
         <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-8 select-none cursor-default">

@@ -50,20 +50,33 @@ pub async fn cmd_set_global_variables(
     Ok(())
 }
 
+use tauri_plugin_store::StoreExt;
+
 #[tauri::command]
 pub async fn cmd_factory_reset(app: AppHandle, restart: bool) -> Result<(), AppError> {
     let state = app.state::<Arc<AppState>>();
+    
+    // 1. Matar sesiones de WhatsApp (sidecar)
     state.wa_manager.kill_all_sessions().await;
 
-    if let Ok(app_data_dir) = app.path().app_data_dir() {
-        let _ = std::fs::remove_dir_all(&app_data_dir);
-        let _ = std::fs::create_dir_all(&app_data_dir);
+    // 2. Limpiar el store en memoria y persistir el estado vacío
+    if let Ok(store) = app.store("user-settings.json") {
+        store.clear();
+        let _ = store.save();
     }
 
+    // 3. Borrado físico explícito
+    if let Ok(app_data_dir) = app.path().app_data_dir() {
+        let _ = std::fs::remove_file(app_data_dir.join("user-settings.json"));
+        let _ = std::fs::remove_dir_all(app_data_dir.join("avatars"));
+    }
+
+    // 4. Limpiar caché (Sidecar/WhatsApp cache)
     if let Ok(cache_dir) = app.path().app_cache_dir() {
         let _ = std::fs::remove_dir_all(&cache_dir);
     }
 
+    // 5. Reiniciar o cerrar
     if restart {
         app.restart();
     } else {

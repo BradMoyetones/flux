@@ -1,6 +1,6 @@
 use tauri::{AppHandle, command};
 use crate::models::workflow::Workflow;
-use crate::storage::settings::{
+use crate::storage::config::{
     add_workspace, get_workspaces, remove_workspace,
     get_workflow_index, set_workflow_index, add_to_index, remove_from_index,
 };
