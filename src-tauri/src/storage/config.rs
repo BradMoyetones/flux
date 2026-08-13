@@ -43,3 +43,19 @@ pub fn save_config(app: &AppHandle, config: &AppConfig) -> Result<(), String> {
     store.save().map_err(|e| e.to_string())?;
     Ok(())
 }
+
+pub fn get_run_in_background(app: &AppHandle) -> bool {
+    app.store(STORE_PATH)
+        .ok()
+        .and_then(|store| store.get("runInBackground"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true)
+}
+
+pub fn get_notification_config(app: &AppHandle) -> NotificationConfig {
+    app.store(STORE_PATH)
+        .ok()
+        .and_then(|store| store.get("notifications"))
+        .and_then(|v| serde_json::from_value(v).ok())
+        .unwrap_or_default()
+}

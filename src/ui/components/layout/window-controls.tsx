@@ -20,7 +20,9 @@ const ButtonWindowControl = (props: ButtonHTMLAttributes<HTMLButtonElement>) => 
     );
 };
 
-export function WindowControls() {
+interface WindowControlsProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+export function WindowControls({className, ...props}: WindowControlsProps) {
     const osPlatform = platform();
     const [maximized, setMaximized] = useState(false);
 
@@ -44,7 +46,7 @@ export function WindowControls() {
     if (osPlatform === 'macos') return null;
 
     return (
-        <div className="flex h-full items-stretch">
+        <div className={cn("flex h-full items-stretch", className)} {...props}>
             <ButtonWindowControl
                 onClick={() => {
                     getCurrentWindow().minimize().catch(console.error);

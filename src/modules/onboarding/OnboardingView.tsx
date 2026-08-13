@@ -9,6 +9,7 @@ import { Label } from '@/ui/components/ui/label';
 import { Switch } from '@/ui/components/ui/switch';
 import { Upload, Check, Moon, Sun, Monitor } from 'lucide-react';
 import { Navigate } from 'react-router';
+import { WindowControls } from '@/ui/components/layout/window-controls';
 
 export function OnboardingView() {
     const { isFirstTime, setIsFirstTime, userName, setUserName, avatarPath, setAvatarPath, runInBackground, setRunInBackground } = useUserStore();
@@ -47,7 +48,9 @@ export function OnboardingView() {
 
     return (
         <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-8 select-none cursor-default">
-            <header data-tauri-drag-region className='h-10 fixed top-0 w-full z-50' />
+            <header data-tauri-drag-region className='h-10 fixed top-0 w-full z-50 flex justify-end'>
+                <WindowControls />
+            </header>
             <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in duration-500">
                 {step === 1 && (
                     <div className="text-center space-y-6">

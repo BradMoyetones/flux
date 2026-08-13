@@ -93,13 +93,7 @@ pub fn run() {
             let app_handle_for_close = app.handle().clone();
             window.on_window_event(move |event| match event {
                 WindowEvent::CloseRequested { api, .. } => {
-                    use tauri_plugin_store::StoreExt;
-                    let run_in_background = app_handle_for_close
-                        .store("user-settings.json")
-                        .ok()
-                        .and_then(|store| store.get("runInBackground"))
-                        .and_then(|v| v.as_bool())
-                        .unwrap_or(true);
+                    let run_in_background = crate::storage::config::get_run_in_background(&app_handle_for_close);
                         
                     if run_in_background {
                         window_clone.hide().unwrap();
