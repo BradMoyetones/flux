@@ -93,11 +93,14 @@ pub fn run() {
             let app_handle_for_close = app.handle().clone();
             window.on_window_event(move |event| match event {
                 WindowEvent::CloseRequested { api, .. } => {
-                    let state = app_handle_for_close.state::<std::sync::Arc<crate::state::AppState>>();
-                    let run_in_background = {
-                        let config = tauri::async_runtime::block_on(state.config.read());
-                        config.general.run_in_background
-                    };
+                    use tauri_plugin_store::StoreExt;
+                    let run_in_background = app_handle_for_close
+                        .store("user-settings.json")
+                        .ok()
+                        .and_then(|store| store.get("runInBackground"))
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(true);
+                        
                     if run_in_background {
                         window_clone.hide().unwrap();
                         api.prevent_close();
