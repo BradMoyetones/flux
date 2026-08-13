@@ -7,17 +7,16 @@ import { Switch } from "@/ui/components/ui/switch"
 import { Button } from "@/ui/components/ui/button"
 import { invoke } from "@tauri-apps/api/core"
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/ui/components/ui/alert-dialog"
-import { AlertTriangle, Loader2 } from "lucide-react"
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/ui/components/ui/dialog"
+import { AlertTriangle } from "lucide-react"
+import { Spinner } from "@/ui/components/ui/spinner";
 
 export function SystemSection() {
     const { runInBackground, setRunInBackground } = useUserStore();
@@ -44,7 +43,7 @@ export function SystemSection() {
                 </SettingRow>
             </SectionCard>
 
-            <SectionCard title="Zona de Peligro" description="Acciones destructivas y de restablecimiento.">
+            <SectionCard title="Zona de Peligro" description="Acciones destructivas y de restablecimiento." className="bg-destructive/5 border-destructive/60">
                 <div className="flex items-center justify-between">
                     <div>
                         <h4 className="text-sm font-medium text-destructive">Resetear Aplicación</h4>
@@ -52,24 +51,22 @@ export function SystemSection() {
                             Elimina toda la configuración, sesiones de WhatsApp y cachés.
                         </p>
                     </div>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
+                    <Dialog>
+                        <DialogTrigger asChild>
                             <Button variant="destructive" size="sm" disabled={isResetting}>
-                                {isResetting ? <Loader2 className="size-4 animate-spin mr-2" /> : <AlertTriangle className="size-4 mr-2" />}
+                                {isResetting ? <Spinner /> : <AlertTriangle />}
                                 Resetear
                             </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>¿Estás completamente seguro?</AlertDialogTitle>
-                                <AlertDialogDescription>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>¿Estás completamente seguro?</DialogTitle>
+                                <DialogDescription>
                                     Esta acción eliminará toda la configuración, credenciales y sesiones de la aplicación.
                                     <strong> Esta acción no se puede deshacer.</strong> Tus archivos de flujo (.flux) y Workspaces en disco no serán eliminados.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter className="sm:justify-between">
-                                <AlertDialogCancel disabled={isResetting}>Cancelar</AlertDialogCancel>
-                                <div className="flex gap-2">
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
                                     <Button 
                                         variant="outline" 
                                         disabled={isResetting} 
@@ -84,10 +81,9 @@ export function SystemSection() {
                                     >
                                         Resetear y Reiniciar
                                     </Button>
-                                </div>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </SectionCard>
         </div>

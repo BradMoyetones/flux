@@ -12,34 +12,13 @@ import { Navigate } from 'react-router';
 import { WindowControls } from '@/ui/components/layout/window-controls';
 
 export function OnboardingView() {
-    const { isFirstTime, setIsFirstTime, userName, setUserName, avatarPath, setAvatarPath, runInBackground, setRunInBackground } = useUserStore();
+    const { isFirstTime, setIsFirstTime, userName, setUserName, avatarPath, setAvatarPath, runInBackground, setRunInBackground, uploadAvatar } = useUserStore();
     const { theme, setTheme } = useTheme();
     
     const [step, setStep] = useState(1);
     const [localName, setLocalName] = useState(userName || '');
 
     if (!isFirstTime) return <Navigate to="/" />;
-
-    const handleAvatarUpload = async () => {
-        try {
-            const selected = await open({
-                multiple: false,
-                filters: [{
-                    name: 'Image',
-                    extensions: ['png', 'jpeg', 'jpg', 'gif', 'webp']
-                }]
-            });
-            if (selected) {
-                const path = typeof selected === 'string' ? selected : (selected as any).path;
-                if (!path) return;
-                
-                const newPath = await invoke<string>('process_and_save_avatar', { filePath: path });
-                setAvatarPath(newPath);
-            }
-        } catch (e) {
-            console.error('Failed to upload avatar:', e);
-        }
-    };
 
     const finishOnboarding = async () => {
         await setUserName(localName);
@@ -76,7 +55,7 @@ export function OnboardingView() {
                         </div>
                         
                         <div className="flex flex-col items-center gap-4">
-                            <div className="relative group cursor-pointer transition-all hover:scale-105" onClick={handleAvatarUpload}>
+                            <div className="relative group cursor-pointer transition-all hover:scale-105" onClick={uploadAvatar}>
                                 <div className="w-32 h-32 rounded-full border-2 border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden bg-muted group-hover:border-primary">
                                     {avatarPath ? (
                                         <img src={convertFileSrc(avatarPath)} alt="Avatar" className="w-full h-full object-cover" />

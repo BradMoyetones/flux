@@ -38,8 +38,12 @@ interface UserState {
     setAvatarPath: (val: string) => Promise<void>;
     setRunInBackground: (val: boolean) => Promise<void>;
     updateNotificationConfig: (partial: Partial<NotificationConfig>) => Promise<void>;
+    uploadAvatar: () => Promise<void>;
     initStore: () => Promise<void>;
 }
+
+import { open } from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
 
 export const useUserStore = create<UserState>((set, get) => ({
     isFirstTime: true,
@@ -81,6 +85,26 @@ export const useUserStore = create<UserState>((set, get) => ({
         await store.set('notifications', updated);
         await store.save();
         set({ notifications: updated });
+    },
+    uploadAvatar: async () => {
+        try {
+            const selected = await open({
+                multiple: false,
+                filters: [{
+                    name: 'Image',
+                    extensions: ['png', 'jpeg', 'jpg', 'gif', 'webp', 'heic', 'heif']
+                }]
+            });
+            if (selected) {
+                const path = typeof selected === 'string' ? selected : (selected as any).path;
+                if (!path) return;
+
+                const newPath = await invoke<string>('process_and_save_avatar', { filePath: path });
+                await get().setAvatarPath(newPath);
+            }
+        } catch (e) {
+            console.error('Failed to upload avatar:', e);
+        }
     },
     initStore: async () => {
         const isFirstTime = await store.get<boolean>('isFirstTime');

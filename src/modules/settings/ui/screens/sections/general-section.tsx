@@ -5,35 +5,15 @@ import { Field, SectionCard, SettingRow, Switch, TextInput } from "@/modules/set
 import { Button } from "@/ui/components/ui/button"
 import { Camera, RotateCcw, Save, Sparkles } from "lucide-react"
 import { useUserStore } from "@/shared/stores/user-store"
-import { open } from "@tauri-apps/plugin-dialog"
-import { convertFileSrc, invoke } from "@tauri-apps/api/core"
+import { convertFileSrc } from "@tauri-apps/api/core"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/components/ui/tooltip"
 
 export function GeneralSection() {
-    const { userName, avatarPath, isFirstTime, setIsFirstTime, setAvatarPath, setUserName } = useUserStore();
+    const { userName, avatarPath, isFirstTime, setIsFirstTime, setUserName, uploadAvatar } = useUserStore();
     const [name, setName] = useState(userName)
 
-    const handleAvatarUpload = async () => {
-        try {
-            const selected = await open({
-                multiple: false,
-                filters: [{
-                    name: 'Image',
-                    extensions: ['png', 'jpeg', 'jpg', 'gif', 'webp']
-                }]
-            });
-            if (selected) {
-                const path = typeof selected === 'string' ? selected : (selected as any).path;
-                if (!path) return;
-
-                const newPath = await invoke<string>('process_and_save_avatar', { filePath: path });
-                setAvatarPath(newPath);
-            }
-        } catch (e) {
-            console.error('Failed to upload avatar:', e);
-        }
-    };
-
+    console.log(isFirstTime);
+    
     return (
         <div className="space-y-5">
             {/* Bienvenida / onboarding */}
@@ -68,7 +48,7 @@ export function GeneralSection() {
                             />
                             <button
                                 type="button"
-                                onClick={handleAvatarUpload}
+                                onClick={uploadAvatar}
                                 className="absolute -bottom-1.5 -right-1.5 flex size-7 items-center justify-center rounded-lg border border-border bg-background text-foreground shadow-sm transition-colors hover:bg-muted"
                                 aria-label="Cambiar foto"
                             >

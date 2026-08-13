@@ -226,20 +226,6 @@ function WorkflowDetail({
                 <>
                     <Card>
                         <CardHeader>
-                            <CardTitle>General</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="space-y-1.5 sm:col-span-2">
-                                    <Label>Nombre</Label>
-                                    <p className="text-sm text-muted-foreground">{workflow.name}</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
                             <CardTitle>Ejecución</CardTitle>
                             <CardDescription>Cómo y cuándo corre este flujo.</CardDescription>
                         </CardHeader>

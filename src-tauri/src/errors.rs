@@ -7,9 +7,6 @@ pub enum AppError {
     #[error("Step execution failed in '{step_id}': {message}")]
     StepExecution { step_id: String, message: String },
 
-    #[error("Workflow not found: {0}")]
-    WorkflowNotFound(String),
-
     #[error("Invalid configuration: {0}")]
     InvalidConfig(String),
 
@@ -41,7 +38,6 @@ impl Serialize for AppError {
         
         let (code, category) = match self {
             AppError::StepExecution { .. } => ("STEP_EXECUTION", "execution"),
-            AppError::WorkflowNotFound(_) => ("WORKFLOW_NOT_FOUND", "execution"),
             AppError::InvalidConfig(_) => ("INVALID_CONFIG", "config"),
             AppError::HttpClient(_) => ("HTTP_CLIENT", "network"),
             AppError::WhatsApp(_) => ("WHATSAPP", "sidecar"),
