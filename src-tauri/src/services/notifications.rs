@@ -16,13 +16,15 @@ fn evaluate_and_send(
     title: &str,
     body: &str,
 ) -> Result<(), String> {
-    if let Some(window) = app.get_webview_window("main") {
-        if window.is_focused().unwrap_or(false) {
-            return Ok(());
+    let config = crate::storage::config::get_notification_config(app);
+
+    if config.only_when_unfocused {
+        if let Some(window) = app.get_webview_window("main") {
+            if window.is_focused().unwrap_or(false) {
+                return Ok(());
+            }
         }
     }
-
-    let config = crate::storage::config::get_notification_config(app);
 
     if !config.desktop_enabled {
         return Ok(());

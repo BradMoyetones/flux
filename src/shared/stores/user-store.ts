@@ -10,6 +10,7 @@ export interface NotificationConfig {
     onSessionDisconnect: boolean;
     sound: boolean;
     quietHours: boolean;
+    onlyWhenUnfocused: boolean;
 }
 
 const DEFAULT_NOTIFICATIONS: NotificationConfig = {
@@ -19,6 +20,7 @@ const DEFAULT_NOTIFICATIONS: NotificationConfig = {
     onSessionDisconnect: true,
     sound: true,
     quietHours: false,
+    onlyWhenUnfocused: true,
 };
 
 interface UserState {

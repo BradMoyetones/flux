@@ -67,6 +67,12 @@ export function NotificationsSection() {
 
             <SectionCard title="Preferencias">
                 <div className="divide-y divide-border">
+                    <SettingRow title="Notificar solo en segundo plano" description="Si la aplicación está en uso y visible, no se enviarán notificaciones.">
+                        <Switch
+                            checked={notifications.onlyWhenUnfocused}
+                            onCheckedChange={(val) => updateNotificationConfig({ onlyWhenUnfocused: val })}
+                        />
+                    </SettingRow>
                     <SettingRow title="Sonido" description="Reproduce un sonido con cada notificación.">
                         <Switch
                             checked={notifications.sound}

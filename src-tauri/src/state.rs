@@ -30,6 +30,7 @@ pub struct NotificationConfig {
     pub on_session_disconnect: bool,
     pub sound: bool,
     pub quiet_hours: bool,
+    pub only_when_unfocused: bool,
 }
 
 impl Default for NotificationConfig {
@@ -41,6 +42,7 @@ impl Default for NotificationConfig {
             on_session_disconnect: true,
             sound: true,
             quiet_hours: false,
+            only_when_unfocused: true,
         }
     }
 }
