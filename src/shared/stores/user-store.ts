@@ -30,6 +30,10 @@ interface UserState {
     avatarPath: string;
     runInBackground: boolean;
     notifications: NotificationConfig;
+
+    // Flag la terminacion del Onboarding
+    finishOnboarding: boolean;
+    setFinishOnboarding: (val: boolean) => void;
     
     // Actions
     setIsFirstTime: (val: boolean) => Promise<void>;
@@ -52,6 +56,12 @@ export const useUserStore = create<UserState>((set, get) => ({
     avatarPath: '',
     runInBackground: true,
     notifications: { ...DEFAULT_NOTIFICATIONS },
+
+    // Flag la terminacion del Onboarding
+    finishOnboarding: false,
+    setFinishOnboarding: (val) => {
+        set({ finishOnboarding: val });
+    },
     
     setIsFirstTime: async (val) => {
         await store.set('isFirstTime', val);
@@ -114,10 +124,10 @@ export const useUserStore = create<UserState>((set, get) => ({
         const runInBackground = await store.get<boolean>('runInBackground');
         const notifications = await store.get<NotificationConfig>('notifications');
         
-        if (isFirstTime !== null) set({ isFirstTime });
-        if (userName !== null) set({ userName });
-        if (theme !== null) set({ theme });
-        if (avatarPath !== null) set({ avatarPath });
+        if (isFirstTime !== null && isFirstTime !== undefined) set({ isFirstTime });
+        if (userName !== null && userName !== undefined) set({ userName });
+        if (theme !== null && theme !== undefined) set({ theme });
+        if (avatarPath !== null && avatarPath !== undefined) set({ avatarPath });
         if (runInBackground !== null && runInBackground !== undefined) {
             set({ runInBackground: !!runInBackground });
         }

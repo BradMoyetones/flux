@@ -3,7 +3,7 @@ import { Button } from '@/ui/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { createBrowserRouter, Link } from 'react-router';
 import { toRouteObjects } from './tab-routes';
-import { OnboardingView } from '@/modules/onboarding/OnboardingView';
+import { OnboardingView } from '@/modules/onboarding/onboarding-view';
 
 const router = createBrowserRouter([
     {

@@ -69,6 +69,8 @@ pub fn run() {
                 .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
 
             let config = storage::config::load_config(app.handle()).unwrap_or_default();
+            // Guardar inmediatamente asegura que el archivo se cree con los valores por defecto si no existía.
+            let _ = storage::config::save_config(app.handle(), &config);
             
             let scheduler = tauri::async_runtime::block_on(async {
                 let s = crate::services::scheduler::SchedulerService::new(app.handle().clone()).await.unwrap();

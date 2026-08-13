@@ -89,7 +89,7 @@ export function WorkspacesSection() {
                         </Button>
                     </div>
                     <nav className="max-h-[540px] space-y-3 overflow-y-auto p-2">
-                        {workspaces.map((ws) => (
+                        {workspaces.length > 0 ? workspaces.map((ws) => (
                             <div key={ws}>
                                 <Button
                                     variant={selWs === ws && !selWf ? "secondary" : "ghost"}
@@ -129,7 +129,11 @@ export function WorkspacesSection() {
                                     ))}
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-center">
+                                <p className="text-muted-foreground text-sm">No hay workspaces</p>
+                            </div>
+                        )}
                     </nav>
                 </div>
             </aside>
@@ -188,7 +192,7 @@ function WorkflowDetail({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
                         <div
-                            className="mt-0.5 flex size-9 items-center justify-center rounded-lg text-white"
+                            className="mt-0.5 flex size-9 items-center justify-center rounded-lg"
                         >
                             <Workflow className="size-4.5 text-foreground" />
                         </div>
@@ -337,7 +341,7 @@ function WorkspaceDetail({
             <div className="rounded-xl border border-border bg-card p-5">
                 <div className="flex items-center gap-3">
                     <div
-                        className="flex size-9 items-center justify-center rounded-lg text-white"
+                        className="flex size-9 items-center justify-center rounded-lg"
                     >
                         <Folder className="size-4.5" />
                     </div>
