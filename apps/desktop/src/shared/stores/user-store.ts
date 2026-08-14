@@ -1,17 +1,7 @@
 import { create } from 'zustand';
-import { LazyStore } from '@tauri-apps/plugin-store';
+import { api, LazyStore, type NotificationConfig } from '@flux/api';
 
 const store = new LazyStore('user-settings.json');
-
-export interface NotificationConfig {
-    desktopEnabled: boolean;
-    onFlowSuccess: boolean;
-    onFlowError: boolean;
-    onSessionDisconnect: boolean;
-    sound: boolean;
-    quietHours: boolean;
-    onlyWhenUnfocused: boolean;
-}
 
 const DEFAULT_NOTIFICATIONS: NotificationConfig = {
     desktopEnabled: true,
@@ -46,8 +36,7 @@ interface UserState {
     initStore: () => Promise<void>;
 }
 
-import { open } from '@tauri-apps/plugin-dialog';
-import { invoke } from '@tauri-apps/api/core';
+
 
 export const useUserStore = create<UserState>((set, get) => ({
     isFirstTime: true,
@@ -98,7 +87,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     },
     uploadAvatar: async () => {
         try {
-            const selected = await open({
+            const selected = await api.dialog.open({
                 multiple: false,
                 filters: [{
                     name: 'Image',
@@ -109,7 +98,7 @@ export const useUserStore = create<UserState>((set, get) => ({
                 const path = typeof selected === 'string' ? selected : (selected as any).path;
                 if (!path) return;
 
-                const newPath = await invoke<string>('process_and_save_avatar', { filePath: path });
+                const newPath = await api.profile.processAndSaveAvatar(path);
                 await get().setAvatarPath(newPath);
             }
         } catch (e) {

@@ -1,14 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-
-// ──── Types ────
-
-export interface WhatsAppSessionInfo {
-    id: string;
-    port: number;
-    connected: boolean;
-    jid: string | null;
-}
+import { api, type WhatsAppSessionInfo } from '@flux/api';
 
 export interface WaContact {
     jid: string;
@@ -64,14 +55,12 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
     // ──── Refresh sessions ────
     const refreshSessions = useCallback(async () => {
         try {
-            const result = await invoke<WhatsAppSessionInfo[]>('cmd_wa_list_sessions');
+            const result = await api.whatsapp.listSessions();
             // Enrich with live status
             const enriched: WhatsAppSessionInfo[] = [];
             for (const s of result) {
                 try {
-                    const status = await invoke<{ connected: boolean; jid: string }>('cmd_wa_proxy_request', {
-                        sessionId: s.id, method: 'GET', path: '/status', body: null,
-                    });
+                    const status = await api.whatsapp.proxyRequest<{ connected: boolean; jid: string }>(s.id, 'GET', '/status');
                     enriched.push({ ...s, connected: status.connected, jid: status.jid || null });
                 } catch {
                     enriched.push(s);
@@ -88,8 +77,8 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
         setLoading(true);
         setError(null);
         try {
-            const result = await invoke<WhatsAppSessionInfo>('cmd_wa_start_session', { sessionId });
-            const url = await invoke<string>('cmd_wa_get_qr_url', { sessionId });
+            const result = await api.whatsapp.startSession(sessionId);
+            const url = await api.whatsapp.getQrUrl(sessionId);
             setQrUrl(url);
             setLinkingSessionId(sessionId);
             await refreshSessions();
@@ -106,7 +95,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
     // ──── Stop session ────
     const stopSession = useCallback(async (sessionId: string) => {
         try {
-            await invoke('cmd_wa_stop_session', { sessionId });
+            await api.whatsapp.stopSession(sessionId);
             setQrUrl(null);
             if (linkingSessionId === sessionId) setLinkingSessionId(null);
             await refreshSessions();
@@ -118,7 +107,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
     // ──── Delete session ────
     const deleteSession = useCallback(async (sessionId: string) => {
         try {
-            await invoke('cmd_wa_delete_session', { sessionId });
+            await api.whatsapp.deleteSession(sessionId);
             setQrUrl(null);
             if (linkingSessionId === sessionId) setLinkingSessionId(null);
             await refreshSessions();
@@ -130,9 +119,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
     // ──── Get status ────
     const getStatus = useCallback(async (sessionId: string) => {
         try {
-            return await invoke<{ connected: boolean; jid: string }>('cmd_wa_proxy_request', {
-                sessionId, method: 'GET', path: '/status', body: null,
-            });
+            return await api.whatsapp.proxyRequest<{ connected: boolean; jid: string }>(sessionId, 'GET', '/status');
         } catch {
             return null;
         }
@@ -141,9 +128,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
     // ──── Fetch contacts ────
     const fetchContacts = useCallback(async (sessionId: string): Promise<WaContact[]> => {
         try {
-            const raw = await invoke<Record<string, { PushName?: string; FullName?: string; FirstName?: string; BusinessName?: string }>>('cmd_wa_proxy_request', {
-                sessionId, method: 'GET', path: '/contacts', body: null,
-            });
+            const raw = await api.whatsapp.proxyRequest<Record<string, { PushName?: string; FullName?: string; FirstName?: string; BusinessName?: string }>>(sessionId, 'GET', '/contacts');
 
             // whatsmeow returns a map of JID -> ContactInfo
             const parsed: WaContact[] = Object.entries(raw).map(([jid, info]) => {
@@ -167,9 +152,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
     // ──── Fetch chats ────
     const fetchChats = useCallback(async (sessionId: string): Promise<WaChat[]> => {
         try {
-            const raw = await invoke<Array<{ jid: string; name?: string }>>('cmd_wa_proxy_request', {
-                sessionId, method: 'GET', path: '/chats', body: null,
-            });
+            const raw = await api.whatsapp.proxyRequest<Array<{ jid: string; name?: string }>>(sessionId, 'GET', '/chats');
 
             const parsed: WaChat[] = (Array.isArray(raw) ? raw : []).map(c => ({
                 jid: c.jid || '',
@@ -187,9 +170,7 @@ export function useWhatsAppSession(): UseWhatsAppSessionReturn {
     // ──── Fetch groups ────
     const fetchGroups = useCallback(async (sessionId: string): Promise<WaGroup[]> => {
         try {
-            const raw = await invoke<Array<{ jid: string; name?: string }>>('cmd_wa_proxy_request', {
-                sessionId, method: 'GET', path: '/groups', body: null,
-            });
+            const raw = await api.whatsapp.proxyRequest<Array<{ jid: string; name?: string }>>(sessionId, 'GET', '/groups');
 
             const parsed: WaGroup[] = (Array.isArray(raw) ? raw : []).map(g => ({
                 jid: g.jid || '',

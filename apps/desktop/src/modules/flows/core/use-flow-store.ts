@@ -12,10 +12,15 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
 } from '@xyflow/react';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { NodeExecutionEvent, WorkflowExecutionEvent, NodeStatus, Workflow } from './types';
-import { Trigger, WorkflowMetadata } from '@/types/data';
+import {
+  api,
+  type NodeExecutionEvent,
+  type WorkflowExecutionEvent,
+  type NodeStatus,
+  type Workflow,
+  type Trigger,
+  type WorkflowMetadata
+} from '@flux/api';
 
 export type AppNodeData = {
   name: string;
@@ -74,7 +79,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
   loadWorkflow: async (filePath: string) => {
     try {
-      const workflow: Workflow = await invoke('cmd_get_workflow', { path: filePath });
+      const workflow: Workflow = await api.workflows.getWorkflow(filePath);
       
       const reactFlowNodes: AppNode[] = workflow.nodes.map((n, index) => ({
         id: n.id,
@@ -162,7 +167,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       nodes: state.nodes.map(n => ({ ...n, data: { ...n.data, status: 'pending', result: undefined, error: undefined } }))
     });
 
-    const workflowPayload = {
+    const workflowPayload: Workflow = {
       id: state.workflowId,
       name: state.workflowName,
       description: state.description,
@@ -188,9 +193,9 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
     try {
       if (state.trigger.type === 'cron') {
-        await invoke('cmd_schedule_workflow', { workflow: workflowPayload });
+        await api.scheduler.scheduleWorkflow(workflowPayload);
       } else {
-        await invoke('cmd_execute_workflow', { workflow: workflowPayload });
+        await api.execution.executeWorkflow(workflowPayload);
       }
     } catch (err) {
       console.error("Workflow execution failed to start", err);
@@ -204,9 +209,9 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     
     try {
       if (state.trigger.type === 'cron') {
-        await invoke('cmd_unschedule_workflow', { workflowId: state.workflowId });
+        await api.scheduler.unscheduleWorkflow(state.workflowId);
       }
-      await invoke('cmd_stop_workflow', { workflowId: state.workflowId });
+      await api.execution.stopWorkflow(state.workflowId);
       // El backend emitirá workflow://status con Error/Cancelled y actualizaremos isExecuting en el listener
     } catch (err) {
       console.error("Failed to stop workflow", err);
@@ -218,7 +223,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     if (!state.workflowId) return;
 
     try {
-      const activeFlows = await invoke<{ executing: string[], scheduled: string[] }>('cmd_get_active_workflows');
+      const activeFlows = await api.execution.getActiveWorkflows() as unknown as { executing: string[], scheduled: string[] };
       const isExecuting = activeFlows.executing.includes(state.workflowId) || activeFlows.scheduled.includes(state.workflowId);
       
       set({ isExecuting });
@@ -239,10 +244,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     // Check if renamed
     if (state.workflowName !== state.originalWorkflowName) {
         try {
-            pathToSave = await invoke('cmd_rename_workflow', { 
-                oldPath: currentPath, 
-                newName: state.workflowName 
-            });
+            pathToSave = await api.workflows.renameWorkflow(
+                currentPath, 
+                state.workflowName 
+            );
             // Update original name so subsequent saves don't rename again
             set({ originalWorkflowName: state.workflowName });
         } catch (err) {
@@ -276,7 +281,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     };
 
     try {
-        await invoke('cmd_save_workflow', { path: pathToSave, workflow: workflowPayload });
+        await api.workflows.saveWorkflow(pathToSave, workflowPayload as any);
         return pathToSave;
     } catch (e) {
         console.error("Save failed", e);
@@ -291,14 +296,14 @@ export const setupFlowListeners = async () => {
   if (initializedListeners) return;
   initializedListeners = true;
 
-  await listen<NodeExecutionEvent>('workflow://node-status', (event) => {
+  await api.events.listen<NodeExecutionEvent>('workflow://node-status', (event) => {
     const payload = event.payload;
     // Mapeo el estado (camelCase/snake_case etc. dependencias en Rust)
     const statusStr = typeof payload.status === 'string' ? (payload.status as string).toLowerCase() as NodeStatus : 'pending';
     useFlowStore.getState().updateNodeStatus(payload.node_id, statusStr, payload.result, payload.error);
   });
 
-  await listen<WorkflowExecutionEvent>('workflow://status', (event) => {
+  await api.events.listen<WorkflowExecutionEvent>('workflow://status', (event) => {
     const payload = event.payload;
     const statusStr = typeof payload.status === 'string' ? (payload.status as string).toLowerCase() as NodeStatus : 'pending';
     const store = useFlowStore.getState();
@@ -312,7 +317,7 @@ export const setupFlowListeners = async () => {
     }
   });
 
-  await listen<{ workflow_id: string }>('workflow://started-tick', (event) => {
+  await api.events.listen<{ workflow_id: string }>('workflow://started-tick', (event) => {
     const { workflow_id } = event.payload;
     const store = useFlowStore.getState();
     
@@ -325,7 +330,7 @@ export const setupFlowListeners = async () => {
     }
   });
 
-  await listen<{ workflow_id: string, status: string }>('workflow://scheduler-status', (event) => {
+  await api.events.listen<{ workflow_id: string, status: string }>('workflow://scheduler-status', (event) => {
     const { workflow_id, status } = event.payload;
     const store = useFlowStore.getState();
     
@@ -340,7 +345,7 @@ export const setupFlowListeners = async () => {
     }
   });
 
-  await listen<{ path: string, metadata: WorkflowMetadata }>('workflow://metadata-updated', (event) => {
+  await api.events.listen<{ path: string, metadata: WorkflowMetadata }>('workflow://metadata-updated', (event) => {
     const { metadata } = event.payload;
     // Update store only if the currently loaded workflow matches the path
     const store = useFlowStore.getState();

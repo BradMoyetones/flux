@@ -5,7 +5,7 @@ import { SectionCard, SettingRow } from "@/modules/settings/ui/components/contro
 import { useUserStore } from "@/shared/stores/user-store";
 import { Switch } from "@/ui/components/ui/switch"
 import { Button } from "@/ui/components/ui/button"
-import { invoke } from "@tauri-apps/api/core"
+import { api } from "@flux/api"
 import {
     Dialog,
     DialogContent,
@@ -25,7 +25,7 @@ export function SystemSection() {
     const handleReset = async (restart: boolean) => {
         setIsResetting(true);
         try {
-            await invoke("cmd_factory_reset", { restart });
+            await api.config.factoryReset(restart);
         } catch (e) {
             console.error("Error al resetear la aplicación:", e);
             setIsResetting(false);

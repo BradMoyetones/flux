@@ -2,10 +2,9 @@
 
 import { useEffect, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router';
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import { getRoute } from '@/shared/router/tab-routes';
 import { Spinner } from '@/ui/components/ui/spinner';
-import { type } from '@tauri-apps/plugin-os';
+import { api } from '@flux/api';
 
 const Fallback = () => (
     <div className="flex h-full w-full items-center justify-center">
@@ -27,8 +26,8 @@ function TabHost() {
             // Update browser document title
             document.title = title;
             // Update Tauri OS window title
-            if (type() !== 'macos') {
-                getCurrentWindow().setTitle(title).catch(console.error);
+            if (api.system.type() !== 'macos') {
+                api.window.getCurrentWindow().setTitle(title).catch(console.error);
             }
         } catch (err) {
             console.error('Failed to set window title (maybe running in browser without Tauri)', err);

@@ -5,7 +5,7 @@ import { SectionCard, SettingRow } from "@/modules/settings/ui/components/contro
 import { useUserStore } from "@/shared/stores/user-store"
 import { Switch } from "@/ui/components/ui/switch"
 import { Button } from "@/ui/components/ui/button"
-import { invoke } from "@tauri-apps/api/core"
+import { api } from "@flux/api"
 import { Bell, Loader2 } from "lucide-react"
 
 export function NotificationsSection() {
@@ -17,7 +17,7 @@ export function NotificationsSection() {
         setTesting(true);
         setTestResult(null);
         try {
-            await invoke('cmd_test_notification');
+            await api.notifications.testNotification();
             setTestResult('success');
         } catch (e) {
             console.error('Test notification failed:', e);

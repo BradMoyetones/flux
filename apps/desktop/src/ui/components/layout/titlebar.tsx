@@ -1,6 +1,6 @@
 'use client';
 
-import { platform } from '@tauri-apps/plugin-os';
+import { api } from '@flux/api';
 import { TabBar } from './tab-bar';
 import { WindowControls } from './window-controls';
 import { Settings } from 'lucide-react';
@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router';
 import { useTabs } from '@/shared/contexts/tabs-context';
 
 export function Titlebar() {
-    const osPlatform = platform();
+    const osPlatform = api.system.platform();
     const navigate = useNavigate();
     const { openTab } = useTabs();
 

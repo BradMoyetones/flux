@@ -12,8 +12,6 @@ export function GeneralSection() {
     const { userName, avatarPath, isFirstTime, setIsFirstTime, setUserName, uploadAvatar } = useUserStore();
     const [name, setName] = useState(userName)
 
-    console.log(isFirstTime);
-    
     return (
         <div className="space-y-5">
             {/* Bienvenida / onboarding */}

@@ -8,7 +8,7 @@ import { Separator } from '@/ui/components/ui/separator';
 import { ScrollArea } from '@/ui/components/ui/scroll-area';
 import { Spinner } from '@/ui/components/ui/spinner';
 import { MessageSquare, Plus, Power, PowerOff, RefreshCw, Wifi, Smartphone, Trash2 } from 'lucide-react';
-import type { WhatsAppSessionInfo } from './use-whatsapp-session';
+import type { WhatsAppSessionInfo } from '@flux/api';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/components/ui/tooltip';
 
 interface WaSessionDialogProps {

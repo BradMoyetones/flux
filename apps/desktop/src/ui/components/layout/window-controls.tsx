@@ -1,7 +1,6 @@
 'use client';
 
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import { platform } from '@tauri-apps/plugin-os';
+import { api } from '@flux/api';
 import { useInterval } from '@mantine/hooks';
 import { ButtonHTMLAttributes, useEffect, useState } from 'react';
 import { VscChromeMaximize, VscChromeMinimize, VscChromeClose, VscChromeRestore } from 'react-icons/vsc';
@@ -23,12 +22,12 @@ const ButtonWindowControl = (props: ButtonHTMLAttributes<HTMLButtonElement>) => 
 interface WindowControlsProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function WindowControls({className, ...props}: WindowControlsProps) {
-    const osPlatform = platform();
+    const osPlatform = api.system.platform();
     const [maximized, setMaximized] = useState(false);
 
     const tauriInterval = useInterval(async () => {
         try {
-            const window = getCurrentWindow();
+            const window = api.window.getCurrentWindow();
             const isMaximized = await window.isMaximized();
             setMaximized(isMaximized);
         } catch (e) {
@@ -49,14 +48,14 @@ export function WindowControls({className, ...props}: WindowControlsProps) {
         <div className={cn("flex h-full items-stretch", className)} {...props}>
             <ButtonWindowControl
                 onClick={() => {
-                    getCurrentWindow().minimize().catch(console.error);
+                    api.window.getCurrentWindow().minimize().catch(console.error);
                 }}
             >
                 <VscChromeMinimize className="size-4" />
             </ButtonWindowControl>
             <ButtonWindowControl
                 onClick={() => {
-                    getCurrentWindow().toggleMaximize().catch(console.error);
+                    api.window.getCurrentWindow().toggleMaximize().catch(console.error);
                     setMaximized(!maximized);
                 }}
             >
@@ -64,7 +63,7 @@ export function WindowControls({className, ...props}: WindowControlsProps) {
             </ButtonWindowControl>
             <ButtonWindowControl
                 onClick={() => {
-                    getCurrentWindow().close().catch(console.error);
+                    api.window.getCurrentWindow().close().catch(console.error);
                 }}
                 className="hover:bg-red-500 hover:text-red-50"
             >

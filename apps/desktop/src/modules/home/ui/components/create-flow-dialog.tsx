@@ -2,11 +2,9 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/ui/components/ui/dialog";
 import { Button } from "@/ui/components/ui/button";
 import { Input } from "@/ui/components/ui/input";
-import { invoke } from "@tauri-apps/api/core";
-import { join } from "@tauri-apps/api/path";
+import { api, type Workspace } from "@flux/api";
 import SelectWorkspaceModal from "./select-workspace";
 import { Folder } from "lucide-react";
-import { Workspace } from "@/types/data";
 import { workspaceName } from "../../lib/format";
 import { useHomeStore } from "../../stores/home-store";
 import { useTabs } from '@/shared/contexts/tabs-context';
@@ -63,7 +61,7 @@ export function CreateFlowDialog() {
             const filename = sanitizedName.endsWith(".flux") ? sanitizedName : `${sanitizedName}.flux`;
 
             // Usamos path.join nativo para construir la ruta absoluta perfecta
-            const fullPath = await join(selectedWorkspace, filename);
+            const fullPath = await api.path.join(selectedWorkspace as any, filename);
 
             const newWorkflow = {
                 id: crypto.randomUUID(),
@@ -73,14 +71,14 @@ export function CreateFlowDialog() {
                 edges: []
             };
 
-            await invoke('cmd_save_workflow', { path: fullPath, workflow: newWorkflow });
+            await api.workflows.saveWorkflow(fullPath, newWorkflow as any);
             
             // Registrar en el índice para que aparezca instantáneamente en el Home
-            await invoke('cmd_register_workflow', {
-                path: fullPath,
-                name: sanitizedName,
-                workspace: selectedWorkspace,
-            });
+            await api.workflows.registerWorkflow(
+                fullPath,
+                sanitizedName,
+                selectedWorkspace as any,
+            );
 
             loadData();
             
