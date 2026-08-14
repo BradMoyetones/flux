@@ -4,7 +4,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { useTerminalStore } from '../../core/use-terminal-store';
-import 'xterm/css/xterm.css';
+import '@xterm/xterm/css/xterm.css';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/ui/components/ui/button';
 
