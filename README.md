@@ -7,7 +7,7 @@ La arquitectura de la aplicación está diseñada para funcionar como una altern
 
 ---
 
-## 🖥️ Arquitectura Frontend (React + TypeScript)
+## Arquitectura Frontend (React + TypeScript)
 
 El frontend sigue un modelo estricto de **React Clean Architecture**, diseñado para mantener la UI desacoplada, escalable y predecible a medida que crece el motor. 
 
@@ -71,7 +71,7 @@ src/
 
 ---
 
-## ⚙️ Arquitectura del Motor Backend (Rust Tauri)
+## Arquitectura del Motor Backend (Rust Tauri)
 
 El flujo de trabajo se divide en pasos discretos (Steps) que se ejecutan secuencialmente. La información viaja a través de un `PipelineContext` que permite inyectar variables de salida de un paso anterior en las configuraciones del siguiente.
 
@@ -105,6 +105,112 @@ El backend en Rust está dividido en capas modulares que permiten escalar masiva
 > [!TIP]  
 > Para agregar un nuevo tipo de Step a la automatización, únicamente es necesario crear un archivo adicional en la carpeta `steps/` e implementar los métodos requeridos por el trait `Step`. El núcleo del orquestador (`engine/`) permanece intacto, garantizando una alta mantenibilidad a largo plazo.
 
----
+## Instrucciones de Instalación del Sidecar WhatsApp
+
+### 1. Instalar Go
+
+#### macOS
+```bash
+# Opción A: Homebrew (recomendado)
+brew install go
+
+# Opción B: Instalador oficial
+# Descargar de https://go.dev/dl/ el .pkg para macOS
+# Ejecutar el instalador → se instala en /usr/local/go
+
+# Verificar
+go version
+```
+
+#### Linux (Ubuntu/Debian)
+```bash
+# Opción A: Snap
+sudo snap install go --classic
+
+# Opción B: Descarga directa
+wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf go1.22.5.linux-amd64.tar.gz
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+source ~/.bashrc
+
+# Verificar
+go version
+```
+
+#### Windows
+```powershell
+# Opción A: Winget
+winget install GoLang.Go
+
+# Opción B: Instalador oficial
+# Descargar de https://go.dev/dl/ el .msi para Windows
+# Ejecutar el instalador → se agrega al PATH automáticamente
+
+# Verificar (reiniciar terminal después de instalar)
+go version
+```
+
+### 2. Compilar el Sidecar
+
+#### Obtener dependencias
+```bash
+cd src-tauri/sidecar
+go mod tidy
+```
+
+#### Compilar según plataforma
+
+##### macOS (Apple Silicon)
+```bash
+cd src-tauri/sidecar
+GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 go build -o ../binaries/whatsapp-sidecar-aarch64-apple-darwin .
+```
+
+##### macOS (Intel)
+```bash
+cd src-tauri/sidecar
+GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -o ../binaries/whatsapp-sidecar-x86_64-apple-darwin .
+```
+
+##### Linux (x86_64)
+```bash
+cd src-tauri/sidecar
+GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o ../binaries/whatsapp-sidecar-x86_64-unknown-linux-gnu .
+```
+
+##### Windows (x86_64)
+```powershell
+cd src-tauri\sidecar
+set GOOS=windows
+set GOARCH=amd64
+set CGO_ENABLED=1
+go build -o ..\binaries\whatsapp-sidecar-x86_64-pc-windows-msvc.exe .
+```
+
+> **Nota CGO**: whatsmeow requiere SQLite que usa cgo. En macOS y Linux `CGO_ENABLED=1` funciona directamente. En Windows necesitas tener GCC instalado (ej: via MSYS2/MinGW o TDM-GCC).
+
+### 3. Determinar tu Target Triple
+```bash
+# Para saber cuál binario necesitas generar:
+rustc -Vv | grep host
+# Ejemplo output: host: aarch64-apple-darwin
+# Entonces compilas con GOOS=darwin GOARCH=arm64
+```
+
+### 4. Verificar que todo funciona
+```bash
+# Desde la raíz del proyecto:
+cd src-tauri && cargo check
+# Debe compilar sin errores
+```
+
+### 5. Ejecutar la app
+```bash
+# Desde la raíz del proyecto:
+pnpm tauri dev
+```
+
+Al arrastrar un nodo WhatsApp al canvas y configurar una sesión, el backend spawns el sidecar Go en un puerto aleatorio. El QR aparece via SSE en la UI para vincular tu WhatsApp.
 
 Hecho con ❤️ por Brad

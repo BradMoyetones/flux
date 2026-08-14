@@ -1,0 +1,203 @@
+import type {
+    AppearanceConfig,
+    AutomationDefaults,
+    GlobalVariable,
+    NotificationConfig,
+    UserProfile,
+    WaSessionConfig,
+    WorkspaceConfig,
+} from "@/types/data"
+
+export const mockProfile: UserProfile = {
+    displayName: "Brad",
+    handle: "brad.moyetones",
+    email: "brad@parquejaimeduque.com",
+    avatarUrl: "/avatar-default.png",
+    bio: "Automatizo reportes de ventas y notificaciones por WhatsApp.",
+    onboardingCompleted: true,
+}
+
+export const mockAppearance: AppearanceConfig = {
+    theme: "system",
+    accent: "violet",
+    density: "comfortable",
+    reduceMotion: false,
+    monoEditorFont: true,
+    sidebarCollapsed: false,
+}
+
+export const mockWorkspaces: WorkspaceConfig[] = [
+    {
+        id: "ws_parque",
+        name: "Parque Jaime Duque",
+        slug: "parque-jaime-duque",
+        color: "violet",
+        description: "Flujos de reportes de taquilla y notificaciones diarias.",
+        workflows: [
+            {
+                id: "wf_prueba",
+                name: "prueba",
+                workspace: "ws_parque",
+                path: "~/flows/parque/prueba.json",
+                description: "Login + consulta de ventas y envío por WhatsApp.",
+                enabled: true,
+                runMode: "scheduled",
+                cron: "0 18 * * *",
+                timezone: "America/Bogota",
+                concurrency: 1,
+                timeoutSec: 90,
+                retryOnFail: true,
+                maxRetries: 2,
+                saveExecutionLog: true,
+                notifyOnError: true,
+                color: "violet",
+                nodes: [
+                    { id: "n1", name: "node1", type: "http", label: "Login Secure" },
+                    { id: "n2", name: "node2", type: "http", label: "Get Visitors" },
+                    { id: "n3", name: "whatsapp_3", type: "whatsapp", label: "WhatsApp" },
+                ],
+                lastRun: "Hoy, 18:00",
+                lastStatus: "ok",
+                runsThisWeek: 7,
+            },
+            {
+                id: "wf_cierre",
+                name: "cierre-caja",
+                workspace: "ws_parque",
+                path: "~/flows/parque/cierre-caja.json",
+                description: "Consolida el cierre de caja al final del día.",
+                enabled: false,
+                runMode: "manual",
+                cron: "",
+                timezone: "America/Bogota",
+                concurrency: 1,
+                timeoutSec: 60,
+                retryOnFail: false,
+                maxRetries: 0,
+                saveExecutionLog: true,
+                notifyOnError: true,
+                color: "amber",
+                nodes: [
+                    { id: "n1", name: "node1", type: "trigger", label: "Manual" },
+                    { id: "n2", name: "node2", type: "http", label: "Fetch Totales" },
+                    { id: "n3", name: "node3", type: "transform", label: "Formatear" },
+                ],
+                lastRun: "Ayer, 22:10",
+                lastStatus: "error",
+                runsThisWeek: 3,
+            },
+        ],
+    },
+    {
+        id: "ws_personal",
+        name: "Personal",
+        slug: "personal",
+        color: "emerald",
+        description: "Recordatorios y pruebas rápidas.",
+        workflows: [
+            {
+                id: "wf_recordatorios",
+                name: "recordatorios",
+                workspace: "ws_personal",
+                path: "~/flows/personal/recordatorios.json",
+                description: "Envía recordatorios diarios por WhatsApp.",
+                enabled: true,
+                runMode: "scheduled",
+                cron: "0 8 * * 1-5",
+                timezone: "America/Bogota",
+                concurrency: 1,
+                timeoutSec: 30,
+                retryOnFail: true,
+                maxRetries: 1,
+                saveExecutionLog: false,
+                notifyOnError: false,
+                color: "emerald",
+                nodes: [
+                    { id: "n1", name: "node1", type: "delay", label: "Esperar" },
+                    { id: "n2", name: "wa", type: "whatsapp", label: "WhatsApp" },
+                ],
+                lastRun: "Hoy, 08:00",
+                lastStatus: "ok",
+                runsThisWeek: 5,
+            },
+        ],
+    },
+]
+
+export const mockSessions: WaSessionConfig[] = [
+    {
+        id: "session-1786215007973",
+        port: 8801,
+        connected: true,
+        jid: "573022639171@s.whatsapp.net",
+        label: "Ventas Parque",
+        phone: "+57 302 263 9171",
+        boundWorkflowId: "wf_prueba",
+        boundNodeId: "n3",
+        reusable: true,
+        lastActivity: "Hace 4 min",
+        messagesSent: 1284,
+        contactsCount: 342,
+        chatsCount: 57,
+    },
+    {
+        id: "session-1786010114552",
+        port: 8802,
+        connected: false,
+        jid: null,
+        label: "Soporte",
+        phone: null,
+        boundWorkflowId: null,
+        boundNodeId: null,
+        reusable: true,
+        lastActivity: "Hace 2 días",
+        messagesSent: 96,
+        contactsCount: 41,
+        chatsCount: 12,
+    },
+    {
+        id: "session-1785900021110",
+        port: 8803,
+        connected: true,
+        jid: "573001112233@s.whatsapp.net",
+        label: "Recordatorios",
+        phone: "+57 300 111 2233",
+        boundWorkflowId: "wf_recordatorios",
+        boundNodeId: "n2",
+        reusable: false,
+        lastActivity: "Hace 1 h",
+        messagesSent: 530,
+        contactsCount: 18,
+        chatsCount: 9,
+    },
+]
+
+export const mockAutomation: AutomationDefaults = {
+    httpTimeoutMs: 30000,
+    httpRetryCount: 1,
+    httpRetryDelayMs: 1000,
+    persistCookies: true,
+    ignoreSslErrors: true,
+    followRedirects: true,
+    maxRedirects: 10,
+    defaultContentType: "application/x-www-form-urlencoded",
+}
+
+export const mockGlobalVars: GlobalVariable[] = [
+    { key: "timeEmoji", value: "🌙", secret: false },
+    { key: "time_pm", value: "18:00", secret: false },
+    { key: "API_TOKEN", value: "sk_live_9f2a...c71b", secret: true },
+    { key: "BASE_URL", value: "https://secure.parquejaimeduque.com", secret: false },
+]
+
+export const mockNotifications: NotificationConfig = {
+    desktopEnabled: true,
+    onFlowSuccess: false,
+    onFlowError: true,
+    onSessionDisconnect: true,
+    sound: true,
+    quietHours: false,
+}
+
+export const APP_VERSION = "0.4.2"
+export const APP_BUILD = "tauri-2026.08"

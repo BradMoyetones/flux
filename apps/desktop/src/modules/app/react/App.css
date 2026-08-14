@@ -1,0 +1,13 @@
+@reference "@/ui/styles/index.css";
+
+.app-shell {
+    @apply dark:bg-background/80 bg-background text-foreground;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    width: 100vw;
+}
+
+button {
+    @apply cursor-pointer;
+}

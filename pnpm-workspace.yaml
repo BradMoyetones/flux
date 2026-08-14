@@ -1,5 +1,8 @@
+packages:
+  - "apps/*"
+  - "packages/*"
 allowBuilds:
-    esbuild: true
-    '@esbuild/darwin-arm64': true
-    '@esbuild/darwin-x64': true
-    '@tauri-apps/cli': true
+  '@esbuild/darwin-arm64': true
+  '@esbuild/darwin-x64': true
+  '@tauri-apps/cli': true
+  esbuild: true
