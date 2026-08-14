@@ -2,9 +2,9 @@
 
 import { motion } from "motion/react"
 import { Check, Loader2, ArrowLeft } from "lucide-react"
-import { Button } from "@/ui/components/ui/button"
-import { Label } from "@/ui/components/ui/label"
-import { Switch } from "@/ui/components/ui/switch"
+import { Button } from '@flux/ui'
+import { Label } from '@flux/ui'
+import { Switch } from '@flux/ui'
 import { containerVariants, itemVariants } from "../motion"
 import { useUserStore } from "@/shared/stores/user-store"
 import { useState } from "react"

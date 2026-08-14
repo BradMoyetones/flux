@@ -1,8 +1,8 @@
-import { Input } from '@/ui/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/components/ui/select';
-import { Separator } from '@/ui/components/ui/separator';
-import { Textarea } from '@/ui/components/ui/textarea';
-import { Label } from '@/ui/components/ui/label';
+import { Input } from '@flux/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui';
+import { Separator } from '@flux/ui';
+import { Textarea } from '@flux/ui';
+import { Label } from '@flux/ui';
 import { KeyValueBuilder } from '../../ui/components/key-value-builder';
 import { FieldGroup, SwitchField } from '../../ui/components/node-config-panel';
 

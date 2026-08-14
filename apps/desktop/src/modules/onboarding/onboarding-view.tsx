@@ -10,7 +10,7 @@ import { StepProfile } from "./steps/step-profile"
 import { StepAppearance } from "./steps/step-appearance"
 import { StepBackground } from "./steps/step-background"
 import { useUserStore } from "@/shared/stores/user-store"
-import { WindowControls } from "@/ui/components/layout/window-controls"
+import { WindowControls } from "@/components/layout/window-controls"
 import { Navigate } from "react-router"
 
 const TOTAL_STEPS = 4

@@ -1,11 +1,11 @@
 import { X } from "lucide-react"
-import { Button } from "@/ui/components/ui/button"
+import { Button } from '@flux/ui'
 import { useFlowStore } from "../../core/use-flow-store"
-import { ScrollArea } from "@/ui/components/ui/scroll-area"
-import { Textarea } from "@/ui/components/ui/textarea"
-import { Input } from "@/ui/components/ui/input"
-import { Label } from "@/ui/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/ui/select"
+import { ScrollArea } from '@flux/ui'
+import { Textarea } from '@flux/ui'
+import { Input } from '@flux/ui'
+import { Label } from '@flux/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui'
 
 interface WorkflowSettingsPanelProps {
     onClose: () => void;

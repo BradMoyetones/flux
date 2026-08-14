@@ -1,11 +1,11 @@
 "use client"
 
 import { SectionCard, SettingRow } from "@/modules/settings/ui/components/controls"
-import { Button } from "@/ui/components/ui/button"
+import { Button } from "@flux/ui"
 import { useUpdater } from "@/ui/hooks/use-updater"
 import { BookOpen, Bug, Code2, FileText, RefreshCw } from "lucide-react"
 import { useState } from "react";
-import { APP_CONFIG } from "@/shared/config/app"
+import { APP_CONFIG } from "@/config/app"
 
 import { Update } from '@tauri-apps/plugin-updater';
 import { toast } from 'sonner';

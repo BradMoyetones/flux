@@ -4,5 +4,7 @@ packages:
 allowBuilds:
   '@esbuild/darwin-arm64': true
   '@esbuild/darwin-x64': true
+  '@parcel/watcher': true
   '@tauri-apps/cli': true
+  core-js: true
   esbuild: true

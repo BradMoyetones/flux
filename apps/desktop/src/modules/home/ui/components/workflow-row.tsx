@@ -2,13 +2,13 @@
 
 import { memo, useState } from 'react';
 import { Trash2, Workflow } from 'lucide-react';
-import { Button } from '@/ui/components/ui/button';
+import { Button } from '@flux/ui';
 import { FluxEntry } from '@/types/data';
 import { useHomeStore } from '../../stores/home-store';
 import { useTabs } from '@/shared/contexts/tabs-context';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { Spinner } from '@/ui/components/ui/spinner';
+import { Spinner } from '@flux/ui';
 
 /** Dense row used in list view. Memoized: only re-renders when the flow changes. */
 export const WorkflowRow = memo(function WorkflowRow({ flow }: { flow: FluxEntry }) {

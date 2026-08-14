@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { SectionCard, SettingRow } from "@/modules/settings/ui/components/controls"
 import { useUserStore } from "@/shared/stores/user-store";
-import { Switch } from "@/ui/components/ui/switch"
-import { Button } from "@/ui/components/ui/button"
+import { Switch } from '@flux/ui'
+import { Button } from '@flux/ui'
 import { api } from "@flux/api"
 import {
     Dialog,
@@ -14,9 +14,9 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/ui/components/ui/dialog"
+} from '@flux/ui'
 import { AlertTriangle } from "lucide-react"
-import { Spinner } from "@/ui/components/ui/spinner";
+import { Spinner } from '@flux/ui';
 
 export function SystemSection() {
     const { runInBackground, setRunInBackground } = useUserStore();

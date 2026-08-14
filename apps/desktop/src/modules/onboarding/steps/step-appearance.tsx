@@ -3,7 +3,7 @@
 import { motion } from "motion/react"
 import { useTheme } from "next-themes"
 import { Sun, Moon, Monitor, ArrowLeft, ArrowRight, type LucideIcon } from "lucide-react"
-import { Button } from "@/ui/components/ui/button"
+import { Button } from '@flux/ui'
 import { containerVariants, itemVariants, ease } from "../motion"
 
 interface StepAppearanceProps {

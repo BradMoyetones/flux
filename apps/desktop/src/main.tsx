@@ -1,17 +1,17 @@
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import { ThemeProvider } from '@/ui/components/layout/theme-provider';
+import { ThemeProvider } from '@/components/layout/theme-provider';
 import { RouterProvider } from 'react-router';
 import { invoke } from '@tauri-apps/api/core';
 import router from './shared/router';
-import { Toaster } from './ui/components/ui/sonner';
+import { Toaster } from '@flux/ui';
 import { useUpdater } from './ui/hooks/use-updater';
-import { TooltipProvider } from './ui/components/ui/tooltip';
+import { TooltipProvider } from '@flux/ui';
 import { ColorThemeProvider } from './shared/contexts/color-theme-provider';
 import { useUserStore } from './shared/stores/user-store';
 
 import './ui/styles/index.css';
-import { ErrorBoundary } from './ui/components/layout/ErrorBoundary';
+import { ErrorBoundary } from './components/layout/ErrorBoundary';
 
 function UpdaterComponent() {
     const { checkForUpdates, promptUpdate } = useUpdater();

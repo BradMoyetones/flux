@@ -1,6 +1,6 @@
 import { TabsProvider } from '@/shared/contexts/tabs-context';
-import { Titlebar } from '@/ui/components/layout/titlebar';
-import { Workspace } from '@/ui/components/layout/workspace';
+import { Titlebar } from '@/components/layout/titlebar';
+import { Workspace } from '@/components/layout/workspace';
 import { useUserStore } from '@/shared/stores/user-store';
 import { Navigate } from 'react-router';
 import './App.css';

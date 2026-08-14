@@ -2,8 +2,8 @@
 
 import { memo } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
-import { Button } from '@/ui/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/components/ui/tooltip';
+import { Button } from '@flux/ui';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@flux/ui';
 import { useHomeStore } from '../../stores/home-store';
 import { useHomeFilters } from '../../hooks/use-home-filters';
 import { workspaceName } from '../../lib/format';

@@ -11,7 +11,7 @@ import {
     CommandList,
     CommandSeparator,
     CommandShortcut,
-} from "@/ui/components/ui/command"
+} from '@flux/ui'
 import {
     CheckIcon,
     Folder,

@@ -33,7 +33,7 @@ export function HomeView() {
 
                 <div
                     className={cn(
-                        'app-scroll flex-1 overflow-y-auto px-4 py-4 transition-opacity',
+                        'flex-1 overflow-y-auto px-4 py-4 transition-opacity',
                         isStale && 'opacity-60'
                     )}
                 >

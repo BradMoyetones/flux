@@ -2,7 +2,7 @@
 
 import { memo, useState } from 'react';
 import { Ellipsis, Folder, FolderOpen, FolderPlus, Layers, Trash2 } from 'lucide-react';
-import { Button } from '@/ui/components/ui/button';
+import { Button } from '@flux/ui';
 import { cn } from '@/shared/utils/utils';
 import { workspaceName } from '../../lib/format';
 import { useHomeStore } from '../../stores/home-store';
@@ -15,8 +15,8 @@ import {
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuTrigger,
-} from "@/ui/components/ui/dropdown-menu"
-import { Spinner } from '@/ui/components/ui/spinner';
+} from '@flux/ui'
+import { Spinner } from '@flux/ui';
 
 const itemClass = (active: boolean) =>
     cn(
@@ -45,7 +45,7 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebar() {
     };
     return (
         <aside className="flex h-full w-56 shrink-0 select-none flex-col border-r border-border/60 bg-sidebar">
-            <nav className="app-scroll flex-1 overflow-y-auto py-4 px-2" aria-label="Lista de workspaces">
+            <nav className="flex-1 overflow-y-auto py-4 px-2" aria-label="Lista de workspaces">
                 <button
                     type="button"
                     onClick={() => selectWorkspace(null)}

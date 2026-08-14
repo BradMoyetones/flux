@@ -2,8 +2,9 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
-@import './themes.css';
+@import "@xyflow/react/dist/style.css";
 @source "../../../node_modules/streamdown/dist/*.js";
+@import './themes.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -94,11 +95,6 @@
     --sidebar-ring: oklch(0.65 0.18 45);
 
     --shadow-color: oklch(0.65 0.18 45 / 0.15);
-
-    /* Nodes colors */
-    --node-webhook: oklch(0.62 0.19 255);
-    --node-database: oklch(0.66 0.16 155);
-    --node-action: oklch(0.72 0.19 55);
 }
 
 .dark {
@@ -140,11 +136,6 @@
     --sidebar-ring: oklch(0.72 0.18 45);
 
     --shadow-color: oklch(0.72 0.18 45 / 0.25);
-
-    /* Nodes colors */
-    --node-webhook: oklch(0.62 0.19 255);
-    --node-database: oklch(0.66 0.16 155);
-    --node-action: oklch(0.72 0.19 55);
 }
 
 @layer base {
@@ -160,8 +151,6 @@
         @apply font-sans;
     }
     
-    @import "@xyflow/react/dist/style.css";
-
     .react-flow__attribution {
         background-color: var(--muted) !important;
         color: var(--muted-foreground) !important;
@@ -182,24 +171,4 @@
     height: 100vh;
     display: grid;
     grid-template-columns: 250px 1fr;
-}
-
-/* Thin native-feeling scrollbars for the desktop shell */
-.app-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklch, var(--foreground) 18%, transparent) transparent;
-}
-
-.app-scroll::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-.app-scroll::-webkit-scrollbar-thumb {
-    background-color: color-mix(in oklch, var(--primary) 18%, transparent);
-    border-radius: 9999px;
-}
-
-.app-scroll::-webkit-scrollbar-track {
-    background: transparent;
 }

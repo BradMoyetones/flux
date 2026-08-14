@@ -1,4 +1,4 @@
-import { Button } from '@/ui/components/ui/button';
+import { Button } from '@flux/ui';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check } from '@tauri-apps/plugin-updater';
 import { CircleCheck, Info } from 'lucide-react';
@@ -13,7 +13,7 @@ import {
     CustomToastHeader,
     CustomToastIcon,
     CustomToastTitle,
-} from '@/ui/components/ui/custom-toast';
+} from '@/components/custom-toast';
 import { useReleaseNotesStore } from '@/shared/contexts/release-notes-store';
 import { useTabsStore } from '@/shared/contexts/tabs-context';
 import router from '@/shared/router';

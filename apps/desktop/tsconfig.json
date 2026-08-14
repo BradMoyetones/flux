@@ -23,9 +23,17 @@
         "baseUrl": ".",
         "paths": {
             "@/*": ["./src/*"],
-            "@releases/*": ["./releases/*"]
+            "@releases/*": ["./releases/*"],
+            "@flux/api": ["../../packages/api/src/index.ts"],
+            "@flux/ui": ["../../packages/ui/src/index.tsx"]
         }
     },
-    "include": ["src"],
-    "references": [{ "path": "./tsconfig.node.json" }]
+    "include": [
+        "src",
+        "../../packages/ui/src/index.tsx",
+        "../../packages/api/src/index.ts"
+    ],
+    "references": [
+        { "path": "./tsconfig.node.json" }
+    ]
 }

@@ -2,7 +2,7 @@ import { useEffect, ReactNode } from 'react';
 import { Calendar, Code2, Sparkles } from 'lucide-react';
 import { Streamdown } from 'streamdown';
 
-import { APP_CONFIG } from '@/shared/config/app';
+import { APP_CONFIG } from '@/config/app';
 import { cn } from '@/shared/utils/utils';
 import { useReleaseNotesViewModel, generateSlug } from '../viewModels/useReleaseNotes.viewModel';
 
@@ -62,7 +62,7 @@ export function ReleaseNotes() {
     const sourceLink = attributes.tag ? APP_CONFIG.getReleaseUrl(attributes.tag) : null;
 
     return (
-        <div className="app-scroll relative h-full overflow-y-auto">
+        <div className="relative h-full overflow-y-auto">
             <div className="mx-auto flex w-full max-w-5xl px-6 py-12 lg:px-8">
                 {/* Main Content Area */}
                 <article className="mx-auto w-full max-w-2xl shrink-0 space-y-4">

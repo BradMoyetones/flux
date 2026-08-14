@@ -12,21 +12,21 @@ import { useFlowStore, setupFlowListeners, type AppNode } from '../../core/use-f
 import { nodeTypes } from '../../plugins/node-types';
 import { pluginRegistry } from '../../plugins/registry';
 import { MessageSquare, Play, Save, Settings, TerminalSquare } from 'lucide-react';
-import { ZoomSlider } from '@/ui/components/react-flow/zoom-slider';
-import { SidebarProvider, SidebarTrigger } from '@/ui/components/ui/sidebar';
+import { ZoomSlider } from '@/components/react-flow/zoom-slider';
+import { SidebarProvider, SidebarTrigger } from '@flux/ui';
 import { FlowSidebar } from '../components/sidebar';
 import { NodeConfigPanel } from '../components/node-config-panel';
 import { WorkflowSettingsPanel } from '../components/workflow-settings-panel';
-import { Button } from '@/ui/components/ui/button';
+import { Button } from '@flux/ui';
 import { useWhatsAppSession } from '../../plugins/whatsapp/use-whatsapp-session';
 import { WaSessionDialog } from '../../plugins/whatsapp/wa-session-dialog';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/ui/components/ui/resizable';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@flux/ui';
 import { ExecutionInspector } from '../components/execution-inspector';
 import { TerminalConsole } from '../../../terminal/ui/components/terminal-console';
 import { useTerminalStore } from '../../../terminal/core/use-terminal-store';
 import { Bug } from 'lucide-react';
-import { Badge } from '@/ui/components/ui/badge';
-import { Spinner } from '@/ui/components/ui/spinner';
+import { Badge } from '@flux/ui';
+import { Spinner } from '@flux/ui';
 
 export default function FlowCanvas() {
     const { pathId } = useParams();

@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Input } from "@/ui/components/ui/input"
+import { Input } from '@flux/ui'
 import {
     Search,
 } from "lucide-react"

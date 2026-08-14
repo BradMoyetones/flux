@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/components/ui/card"
-import { Label } from "@/ui/components/ui/label"
-import { Input } from "@/ui/components/ui/input"
-import { Tabs, TabsList, TabsTrigger } from "@/ui/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@flux/ui'
+import { Label } from '@flux/ui'
+import { Input } from '@flux/ui'
+import { Tabs, TabsList, TabsTrigger } from '@flux/ui'
 import { useFlowStore } from "@/modules/flows/core/use-flow-store"
-import { Button } from "@/ui/components/ui/button"
+import { Button } from '@flux/ui'
 import { Trigger } from "@/types/data"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui'
 import {
     Folder,
     Play,
@@ -23,7 +23,7 @@ import { useHomeStore } from "@/modules/home/stores/home-store"
 import { FluxEntry, Workspace } from "@/types/data"
 import { workspaceName } from "@/modules/home/lib/format"
 import { toast } from "sonner"
-import { Spinner } from "@/ui/components/ui/spinner"
+import { Spinner } from '@flux/ui'
 
 export function WorkspacesSection() {
     const { workspaces, workflows, loadData, addWorkspace } = useHomeStore()

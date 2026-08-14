@@ -2,9 +2,9 @@ import { memo } from 'react';
 import { Position, type NodeProps } from '@xyflow/react';
 import { AppNode } from '../../core/use-flow-store';
 import { Globe } from 'lucide-react';
-import { BaseNode, BaseNodeHeader, BaseNodeHeaderTitle, BaseNodeContent } from '@/ui/components/react-flow/base-node';
-import { NodeStatusIndicator, type NodeStatus } from '@/ui/components/react-flow/node-status-indicator';
-import { BaseHandle } from '@/ui/components/react-flow/base-handle';
+import { BaseNode, BaseNodeHeader, BaseNodeHeaderTitle, BaseNodeContent } from '@/components/react-flow/base-node';
+import { NodeStatusIndicator, type NodeStatus } from '@/components/react-flow/node-status-indicator';
+import { BaseHandle } from '@/components/react-flow/base-handle';
 
 export const HttpNode = memo(({ data, selected }: NodeProps<AppNode>) => {
   const mapStatus = (status?: string): NodeStatus => {
