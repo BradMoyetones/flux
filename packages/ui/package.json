@@ -13,7 +13,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.js"
-    }
+    },
+    "./styles.css": "./dist/index.css"
   },
   "files": [
     "dist"
@@ -23,7 +24,6 @@
     "dev": "tsup --watch",
     "dev-styles": "pnpm dlx @tailwindcss/cli -i ./src/styles/globals.css -o ./dist/index.css --watch",
     "build-styles": "pnpm dlx @tailwindcss/cli -i ./src/styles/globals.css -o ./dist/index.css --minify",
-    "lint": "eslint src/",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -46,10 +46,6 @@
     "@tailwindcss/cli": "^4.3.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/eslint-plugin": "^8.67.0",
-    "@typescript-eslint/parser": "^8.67.0",
-    "eslint": "^10.8.1",
-    "eslint-plugin-react": "^7.37.5",
     "tsup": "^8.5.1",
     "typescript": "5.2.2"
   }
