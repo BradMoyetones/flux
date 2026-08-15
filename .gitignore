@@ -27,5 +27,5 @@ dist-ssr
 .secrets
 
 # Tauri Sidecars
-src-tauri/binaries/
-src-tauri/sidecar/go.sum
+*binaries/
+*sidecar/go.sum
