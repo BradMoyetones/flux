@@ -3,6 +3,7 @@
   "author": "Brad Moyetones",
   "description": "UI library built with React, Tailwind CSS and shadcn/ui",
   "version": "1.0.0",
+  "private": true,
   "license": "MIT",
   "sideEffects": false,
   "main": "./dist/index.js",
