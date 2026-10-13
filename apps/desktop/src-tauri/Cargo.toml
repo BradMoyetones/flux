@@ -1,6 +1,6 @@
 [package]
 name = "Flux"
-version = "2.1.0"
+version = "2.2.0"
 description = "Flux is a desktop automation and workflow orchestration engine."
 authors = ["Brad Moyetones"]
 edition = "2021"
