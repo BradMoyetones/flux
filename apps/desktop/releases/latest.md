@@ -1,8 +1,8 @@
 ---
-title: Flux v2.2.0
-version: v2.2.0
+title: Flux v2.2.1
+version: v2.2.1
 date: 13 de octubre de 2026
-tag: v2.2.0
+tag: v2.2.1
 ---
 ### Motor y Persistencia (Core)
 
@@ -23,3 +23,7 @@ tag: v2.2.0
 - **Automatización de Pruebas (CI):** Se incorporó una suite integral de pruebas unitarias en el frontend con Vitest y pruebas de integración en el backend con Cargo dentro de GitHub Actions.
 
 - **Nuevo Flujo de Publicación Tag-Driven:** Se modernizó el sistema de versionado mediante un asistente interactivo en terminal y publicación directa por Git tags, asegurando compilaciones multiplataforma automáticas para macOS (Apple Silicon e Intel), Windows y Linux.
+
+### Corrección de errores
+
+- Corrección de las versiones en los paquetes de tauri.
