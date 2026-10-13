@@ -15,11 +15,13 @@
         "dev": "turbo run dev",
         "lint": "turbo run lint",
         "format": "prettier --write \"**/*.{ts,tsx,md,css,json}\"",
-        "version-packages": "changeset version"
+        "release": "node scripts/release.mjs"
     },
     "devDependencies": {
-        "@changesets/cli": "^3.0.3",
+        "@clack/prompts": "^1.8.1",
+        "picocolors": "^1.1.1",
         "prettier": "^3.9.10",
+        "semver": "^7.8.5",
         "turbo": "latest"
     }
 }
