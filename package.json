@@ -4,7 +4,7 @@
     "author": "Brad",
     "type": "module",
     "private": true,
-    "packageManager": "pnpm@11.21.0",
+    "packageManager": "pnpm@12.11.2",
     "scripts": {
         "tauri": "cd apps/desktop && pnpm tauri dev",
         "typecheck": "turbo run typecheck",
@@ -18,8 +18,8 @@
         "version-packages": "changeset version"
     },
     "devDependencies": {
-        "@changesets/cli": "^3.0.0",
-        "prettier": "^3.9.3",
+        "@changesets/cli": "^3.0.3",
+        "prettier": "^3.9.10",
         "turbo": "latest"
     }
 }
