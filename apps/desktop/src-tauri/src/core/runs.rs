@@ -29,7 +29,7 @@ pub fn is_running(app: &AppHandle, workflow_id: &str) -> bool {
 
 /// Lanza un workflow en segundo plano. Política de solapamiento: **skip** — si ya hay
 /// un run de ese workflow en curso devuelve `AlreadyRunning` y no lanza otro.
-pub fn start_run(app: &AppHandle, workflow: Workflow) -> Result<(), AppError> {
+pub fn start_run(app: &AppHandle, workflow: Workflow, trigger: &str) -> Result<(), AppError> {
     let state = app_state(app)?;
     let workflow_id = workflow.id.clone();
     let run_id = uuid::Uuid::new_v4().to_string();
@@ -45,8 +45,9 @@ pub fn start_run(app: &AppHandle, workflow: Workflow) -> Result<(), AppError> {
     let app_task = app.clone();
     let id_task = workflow_id.clone();
     let run_id_task = run_id.clone();
+    let trigger = trigger.to_string();
     let handle = tauri::async_runtime::spawn(async move {
-        if let Err(e) = execute_workflow(app_task.clone(), workflow).await {
+        if let Err(e) = execute_workflow(app_task.clone(), workflow, run_id_task.clone(), trigger).await {
             tracing::warn!("Workflow {id_task} terminó con error: {e}");
         }
 

@@ -7,7 +7,7 @@ use crate::state::AppState;
 
 #[command]
 pub async fn cmd_execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), AppError> {
-    runs::start_run(&app, workflow)
+    runs::start_run(&app, workflow, "manual")
 }
 
 /// Detiene el run en curso. Idempotente: si no hay nada ejecutándose devuelve Ok.

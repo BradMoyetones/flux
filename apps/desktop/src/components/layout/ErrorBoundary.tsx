@@ -17,7 +17,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error) {
-    console.error("Markd crashed:", error);
+    console.error("Flux crashed:", error);
   }
 
   render() {
@@ -27,11 +27,11 @@ export class ErrorBoundary extends Component<Props, State> {
       <div className="flex h-full flex-col items-center justify-center gap-5 bg-bg px-8 text-center">
         <div className="max-w-md">
           <p className="text-[16px] font-semibold tracking-[-0.01em] text-ink">
-            Something went wrong
+            Algo salió mal
           </p>
           <p className="mt-1.5 text-[13px] leading-relaxed text-muted">
-            Markd hit an unexpected error. Your notes are safe on disk — reloading
-            usually fixes it.
+            Flux encontró un error inesperado. Tus flujos están a salvo en disco y
+            los cambios sin guardar se conservan como borrador — recargar suele solucionarlo.
           </p>
           {this.state.error.message && (
             <p className="mt-3 truncate rounded-md border border-line-soft bg-panel px-3 py-2 font-mono text-[11.5px] text-faint">

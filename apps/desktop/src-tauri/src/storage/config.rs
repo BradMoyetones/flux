@@ -75,32 +75,7 @@ impl ConfigService {
     }
 
     pub fn remove_workspace(&self, app: &AppHandle, path: &str) -> Result<(), AppError> {
-        self.update(app, |c| {
-            c.workspaces.retain(|p| p != path);
-            c.workflow_index.retain(|e| e.workspace != path);
-        })
-    }
-
-    // ──── Índice de workflows (caché derivada del filesystem) ────
-
-    pub fn workflow_index(&self) -> Vec<FluxEntry> {
-        self.read(|c| c.workflow_index.clone())
-    }
-
-    pub fn set_workflow_index(&self, app: &AppHandle, index: Vec<FluxEntry>) -> Result<(), AppError> {
-        self.update(app, |c| c.workflow_index = index)
-    }
-
-    pub fn add_to_index(&self, app: &AppHandle, entry: FluxEntry) -> Result<(), AppError> {
-        self.update(app, |c| {
-            if !c.workflow_index.iter().any(|e| e.path == entry.path) {
-                c.workflow_index.push(entry);
-            }
-        })
-    }
-
-    pub fn remove_from_index(&self, app: &AppHandle, path: &str) -> Result<(), AppError> {
-        self.update(app, |c| c.workflow_index.retain(|e| e.path != path))
+        self.update(app, |c| c.workspaces.retain(|p| p != path))
     }
 }
 
@@ -152,7 +127,6 @@ pub fn load_config(app: &AppHandle) -> Result<AppConfig, AppError> {
         notifications: read_field(&store, "notifications", &mut corrupt).unwrap_or(defaults.notifications),
         variables: read_field(&store, "variables", &mut corrupt).unwrap_or(defaults.variables),
         workspaces: read_field(&store, "workspaces", &mut corrupt).unwrap_or(defaults.workspaces),
-        workflow_index: read_field(&store, "workflow_index", &mut corrupt).unwrap_or(defaults.workflow_index),
     };
 
     if corrupt {
@@ -173,8 +147,18 @@ pub fn save_config(app: &AppHandle, config: &AppConfig) -> Result<(), AppError> 
     store.set("notifications", json!(config.notifications));
     store.set("variables", json!(config.variables));
     store.set("workspaces", json!(config.workspaces));
-    store.set("workflow_index", json!(config.workflow_index));
     store.save().map_err(|e| AppError::Storage(e.to_string()))
+}
+
+/// Migración única: hasta ahora el índice de workflows vivía dentro de `user-settings.json`
+/// (clave `workflow_index`). Lo devuelve y lo elimina del archivo; ahora vive en SQLite.
+pub fn take_legacy_workflow_index(app: &AppHandle) -> Vec<FluxEntry> {
+    let Ok(store) = app.store(STORE_PATH) else { return Vec::new() };
+    let Some(value) = store.get("workflow_index") else { return Vec::new() };
+    let entries = serde_json::from_value::<Vec<FluxEntry>>(value).unwrap_or_default();
+    store.delete("workflow_index");
+    let _ = store.save();
+    entries
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

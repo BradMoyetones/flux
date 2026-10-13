@@ -2,14 +2,13 @@ import App from '@/modules/app/react/App';
 import { Button } from '@flux/ui';
 import { ArrowLeft } from 'lucide-react';
 import { createBrowserRouter, Link } from 'react-router';
-import { toRouteObjects } from './tab-routes';
 import { OnboardingView } from '@/modules/onboarding/onboarding-view';
 
 const router = createBrowserRouter([
     {
         path: '/',
+        // La navegación interna es por TABS (ver shared/state/tabs.ts + Workspace), no por rutas.
         element: <App />,
-        children: toRouteObjects() as any, // Cast if necessary depending on type compatibility
     },
     {
         path: '/onboarding',

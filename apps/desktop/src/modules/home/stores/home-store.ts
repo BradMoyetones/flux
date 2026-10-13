@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { api, type FluxEntry, type Workspace } from '@flux/api';
+import { tabActions } from '@/shared/state/tabs';
+import { flowTabPath } from '@/shared/router/route-meta';
 
 export type ViewMode = 'grid' | 'list';
 export type SortMode = 'recent' | 'name';
@@ -100,6 +102,9 @@ export const useHomeStore = create<HomeStore>()((set, get) => ({
     deleteWorkflow: async (path) => {
         try {
             await api.workflows.deleteWorkflow(path);
+            // Si el flujo estaba abierto en algún tab, ese tab ya no tiene sentido.
+            const route = flowTabPath(path);
+            tabActions.getTabs().filter((t) => t.path === route).forEach((t) => tabActions.close(t.id));
             await get().loadData();
         } catch (error) {
             console.error('Failed to delete workflow', error);

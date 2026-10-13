@@ -5,19 +5,14 @@ import { TabBar } from './tab-bar';
 import { WindowControls } from './window-controls';
 import { Settings } from 'lucide-react';
 import { cn } from '@/shared/utils/utils';
-import { useNavigate } from 'react-router';
-import { useTabs } from '@/shared/contexts/tabs-context';
+import { useTabs } from '@/shared/state/tabs';
 import { Logo } from '../logo';
 
 export function Titlebar() {
     const osPlatform = api.system.platform();
-    const navigate = useNavigate();
     const { openTab } = useTabs();
 
-    const handleOpenTab = (path: string) => {
-        const openedPath = openTab(path);
-        navigate(openedPath);
-    };
+    const handleOpenTab = (path: string) => openTab(path);
 
     return (
         <div data-tauri-drag-region className="flex z-1000 relative h-11 items-stretch justify-between bg-background/0 select-none overflow-hidden border-b border-border/50 pointer-events-auto!">

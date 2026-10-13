@@ -6,6 +6,7 @@ pub mod profile;
 pub mod config;
 pub mod scheduler;
 pub mod notifications;
+pub mod runs;
 
 pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
     tauri::generate_handler![
@@ -34,6 +35,9 @@ pub fn get_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool {
         execution::cmd_execute_workflow,
         execution::cmd_stop_workflow,
         execution::cmd_get_active_workflows,
+        runs::cmd_list_runs,
+        runs::cmd_get_run,
+        runs::cmd_clear_runs,
         whatsapp::cmd_wa_start_session,
         whatsapp::cmd_wa_stop_session,
         whatsapp::cmd_wa_delete_session,

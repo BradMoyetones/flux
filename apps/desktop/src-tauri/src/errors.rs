@@ -57,3 +57,28 @@ impl Serialize for AppError {
         state.end()
     }
 }
+
+// Conversiones para poder usar `?` en vez de `.map_err(|e| AppError::…(e.to_string()))`.
+impl From<std::io::Error> for AppError {
+    fn from(e: std::io::Error) -> Self {
+        AppError::Storage(e.to_string())
+    }
+}
+
+impl From<serde_json::Error> for AppError {
+    fn from(e: serde_json::Error) -> Self {
+        AppError::InvalidConfig(e.to_string())
+    }
+}
+
+impl From<rusqlite::Error> for AppError {
+    fn from(e: rusqlite::Error) -> Self {
+        AppError::Storage(format!("Base de datos: {e}"))
+    }
+}
+
+impl From<tauri::Error> for AppError {
+    fn from(e: tauri::Error) -> Self {
+        AppError::Internal(e.to_string())
+    }
+}

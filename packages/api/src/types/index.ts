@@ -100,7 +100,6 @@ export interface AppConfig {
   notifications: NotificationConfig;
   variables: GlobalVariable[];
   workspaces: string[];
-  workflowIndex: FluxEntry[];
 }
 
 /**
@@ -130,3 +129,31 @@ export interface ActiveWorkflows {
   scheduled: string[];
 }
 
+
+export type RunStatus = 'running' | 'success' | 'error' | 'cancelled' | 'interrupted';
+export type RunTrigger = 'manual' | 'cron' | (string & {});
+
+/** Una ejecución del historial (SQLite). */
+export interface RunRecord {
+  id: string;
+  workflowId: string;
+  workflowName: string;
+  workflowPath: string | null;
+  trigger: RunTrigger;
+  status: RunStatus;
+  startedAt: string;
+  finishedAt: string | null;
+  error: string | null;
+}
+
+export interface NodeRunRecord {
+  nodeId: string;
+  status: NodeStatus;
+  startedAt: string | null;
+  finishedAt: string | null;
+  error: string | null;
+}
+
+export interface RunDetail extends RunRecord {
+  nodes: NodeRunRecord[];
+}

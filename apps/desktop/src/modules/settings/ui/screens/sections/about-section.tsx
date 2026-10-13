@@ -9,13 +9,11 @@ import { APP_CONFIG } from "@/config/app"
 
 import { Update } from '@tauri-apps/plugin-updater';
 import { toast } from 'sonner';
-import { useTabs } from "@/shared/contexts/tabs-context"
-import { useNavigate } from "react-router"
+import { useTabs } from "@/shared/state/tabs"
 
 export function AboutSection() {
     const { appVersion, tauriVersion, checkForUpdates, promptUpdate } = useUpdater()
     const { openTab } = useTabs()
-    const navigate = useNavigate()
 
     const [isChecking, setIsChecking] = useState(false);
     const [update, setUpdate] = useState<Update | null>(null);
@@ -39,7 +37,6 @@ export function AboutSection() {
 
     const handleOpenReleaseNotes = async () => {
         openTab("/release-notes")
-        navigate("/release-notes")
     }
 
     return (

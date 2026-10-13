@@ -7,6 +7,7 @@ use crate::core::events::{emit_node_event, emit_workflow_event};
 use crate::core::interpolator::interpolate_value;
 use crate::core::logger::{log_info, log_warn, log_error, log_debug};
 use crate::models::runtime::{NodeExecutionEvent, NodeStatus, WorkflowExecutionEvent};
+use crate::storage::db::Db;
 use crate::storage::file_scanner::touch_workflow_metadata;
 use tauri::{AppHandle, Manager, Emitter};
 use std::collections::HashMap;
@@ -16,35 +17,57 @@ use crate::errors::AppError;
 
 type StatusMap = Arc<Mutex<HashMap<String, NodeStatus>>>;
 
-/// Registra el estado de un nodo y lo emite al frontend (un único punto para ambos).
-fn report_node(
-    app: &AppHandle,
-    statuses: &StatusMap,
-    workflow_id: &str,
-    node_id: &str,
-    status: NodeStatus,
-    result: Option<serde_json::Value>,
-    error: Option<String>,
-) {
-    if let Ok(mut map) = statuses.lock() {
-        map.insert(node_id.to_string(), status.clone());
+fn status_str(status: &NodeStatus) -> &'static str {
+    match status {
+        NodeStatus::Pending => "pending",
+        NodeStatus::Running => "running",
+        NodeStatus::Success => "success",
+        NodeStatus::Error => "error",
+        NodeStatus::Cancelled => "cancelled",
+        NodeStatus::Skipped => "skipped",
     }
-    emit_node_event(app, &NodeExecutionEvent {
-        workflow_id: workflow_id.to_string(),
-        node_id: node_id.to_string(),
-        status,
-        result,
-        error,
-    });
+}
+
+/// Punto único para informar el estado de un nodo: lo guarda en memoria, lo registra
+/// en el historial (SQLite) y lo emite al frontend.
+#[derive(Clone)]
+struct Reporter {
+    app: AppHandle,
+    db: Arc<Db>,
+    statuses: StatusMap,
+    workflow_id: String,
+    run_id: String,
+}
+
+impl Reporter {
+    fn node(&self, node_id: &str, status: NodeStatus, result: Option<serde_json::Value>, error: Option<String>) {
+        if let Ok(mut map) = self.statuses.lock() {
+            map.insert(node_id.to_string(), status.clone());
+        }
+        if let Err(e) = self.db.node_status(&self.run_id, node_id, status_str(&status), error.as_deref()) {
+            tracing::warn!("Historial: no se pudo registrar el nodo {node_id}: {e}");
+        }
+        emit_node_event(&self.app, &NodeExecutionEvent {
+            workflow_id: self.workflow_id.clone(),
+            node_id: node_id.to_string(),
+            status,
+            result,
+            error,
+        });
+    }
+
+    fn finish(&self, status: &str, error: Option<&str>) {
+        if let Err(e) = self.db.run_finished(&self.run_id, status, error) {
+            tracing::warn!("Historial: no se pudo cerrar el run {}: {e}", self.run_id);
+        }
+    }
 }
 
 /// Centinela de la ejecución. Si el run se aborta (`JoinHandle::abort()` al pulsar
 /// Stop) el future se descarta y este `Drop` marca como `cancelled` todos los nodos
 /// que seguían `pending`/`running`, para que la UI nunca quede con nodos "corriendo".
 struct RunGuard {
-    app: AppHandle,
-    workflow_id: String,
-    statuses: StatusMap,
+    reporter: Reporter,
     finished: bool,
 }
 
@@ -54,6 +77,7 @@ impl Drop for RunGuard {
             return;
         }
         let pending: Vec<String> = self
+            .reporter
             .statuses
             .lock()
             .map(|m| {
@@ -65,30 +89,25 @@ impl Drop for RunGuard {
             .unwrap_or_default();
 
         for node_id in pending {
-            emit_node_event(&self.app, &NodeExecutionEvent {
-                workflow_id: self.workflow_id.clone(),
-                node_id,
-                status: NodeStatus::Cancelled,
-                result: None,
-                error: None,
-            });
+            self.reporter.node(&node_id, NodeStatus::Cancelled, None, None);
         }
-        emit_workflow_event(&self.app, &WorkflowExecutionEvent {
-            workflow_id: self.workflow_id.clone(),
+        self.reporter.finish("cancelled", None);
+        emit_workflow_event(&self.reporter.app, &WorkflowExecutionEvent {
+            workflow_id: self.reporter.workflow_id.clone(),
             status: NodeStatus::Cancelled,
         });
-        log_warn(&self.app, &self.workflow_id, None, "⏹ Ejecución cancelada");
+        log_warn(&self.reporter.app, &self.reporter.workflow_id, None, "⏹ Ejecución cancelada");
     }
 }
 
-pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), AppError> {
+pub async fn execute_workflow(app: AppHandle, workflow: Workflow, run_id: String, trigger: String) -> Result<(), AppError> {
     log_info(&app, &workflow.id, None, &format!("▶ Iniciando workflow '{}' ({} nodos)", workflow.name, workflow.nodes.len()));
     let workflow_name_clone = workflow.name.clone();
-    let (registry, custom_variables) = {
+    let (registry, custom_variables, db) = {
         let state = app
             .try_state::<Arc<crate::state::AppState>>()
             .ok_or_else(|| AppError::Internal("AppState no disponible".into()))?;
-        (Arc::clone(&state.registry), state.config.read(|c| c.variables.clone()))
+        (Arc::clone(&state.registry), state.config.read(|c| c.variables.clone()), Arc::clone(&state.db))
     };
 
     let mut graph = DiGraphMap::new();
@@ -122,12 +141,18 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
     let statuses: StatusMap = Arc::new(Mutex::new(
         workflow.nodes.iter().map(|n| (n.id.clone(), NodeStatus::Pending)).collect(),
     ));
-    let mut guard = RunGuard {
+    let reporter = Reporter {
         app: app.clone(),
-        workflow_id: workflow.id.clone(),
+        db: Arc::clone(&db),
         statuses: Arc::clone(&statuses),
-        finished: false,
+        workflow_id: workflow.id.clone(),
+        run_id,
     };
+    let node_ids: Vec<String> = workflow.nodes.iter().map(|n| n.id.clone()).collect();
+    if let Err(e) = db.run_started(&reporter.run_id, &workflow.id, &workflow.name, workflow.path.as_deref(), &trigger, &node_ids) {
+        tracing::warn!("Historial: no se pudo registrar el inicio del run: {e}");
+    }
+    let mut guard = RunGuard { reporter: reporter.clone(), finished: false };
 
     emit_workflow_event(&app, &WorkflowExecutionEvent {
         workflow_id: workflow.id.clone(),
@@ -160,7 +185,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
         let ctx_clone = Arc::clone(&ctx);
         let app_clone = app.clone();
         let registry_clone = Arc::clone(&registry);
-        let statuses_clone = Arc::clone(&statuses);
+        let reporter = reporter.clone();
         let workflow_id = workflow.id.clone();
 
         join_set.spawn(async move {
@@ -170,27 +195,27 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                     if rx.changed().await.is_err() {
                         // El padre fue destruido inesperadamente
                         let _ = tx.send(Some(false));
-                        report_node(&app_clone, &statuses_clone, &workflow_id, &node.id, NodeStatus::Skipped, None, Some("La dependencia no terminó".into()));
+                        reporter.node(&node.id, NodeStatus::Skipped, None, Some("La dependencia no terminó".into()));
                         return Err(AppError::Internal(format!("Dependencia falló o fue cancelada para el nodo '{}'", node_id)));
                     }
                 }
                 if *rx.borrow() == Some(false) {
                     log_warn(&app_clone, &workflow_id, Some(&node.id), &format!("⊘ Nodo '{}' omitido: una dependencia falló", node.label));
-                    report_node(&app_clone, &statuses_clone, &workflow_id, &node.id, NodeStatus::Skipped, None, Some("Omitido: un nodo previo falló".into()));
+                    reporter.node(&node.id, NodeStatus::Skipped, None, Some("Omitido: un nodo previo falló".into()));
                     let _ = tx.send(Some(false));
                     return Err(AppError::StepExecution { step_id: node.id.clone(), message: "Omitido: un nodo padre falló".into() });
                 }
             }
 
             log_info(&app_clone, &workflow_id, Some(&node.id), &format!("▶ Ejecutando nodo '{}' ({})", node.label, node.node_type));
-            report_node(&app_clone, &statuses_clone, &workflow_id, &node.id, NodeStatus::Running, None, None);
+            reporter.node(&node.id, NodeStatus::Running, None, None);
 
             // Interpolar config (falla el nodo si alguna expresión no se puede resolver)
             let interpolated_config = match interpolate_value(&node.config, &ctx_clone) {
                 Ok(v) => v,
                 Err(error) => {
                     log_error(&app_clone, &workflow_id, Some(&node.id), &format!("✗ Nodo '{}' falló al resolver expresiones: {}", node.label, error), None);
-                    report_node(&app_clone, &statuses_clone, &workflow_id, &node.id, NodeStatus::Error, None, Some(error.clone()));
+                    reporter.node(&node.id, NodeStatus::Error, None, Some(error.clone()));
                     let _ = tx.send(Some(false));
                     return Err(AppError::StepExecution { step_id: node.id.clone(), message: error });
                 }
@@ -206,7 +231,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                                 ctx_clone.set_node_result(&node.name, result.clone());
                             }
 
-                            report_node(&app_clone, &statuses_clone, &workflow_id, &node.id, NodeStatus::Success, Some(result.clone()), None);
+                            reporter.node(&node.id, NodeStatus::Success, Some(result.clone()), None);
 
                             log_info(&app_clone, &workflow_id, Some(&node.id), &format!("✓ Nodo '{}' completado", node.label));
                             log_debug(&app_clone, &workflow_id, Some(&node.id), &result.to_string());
@@ -214,7 +239,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                             Ok(())
                         }
                         Err(error) => {
-                            report_node(&app_clone, &statuses_clone, &workflow_id, &node.id, NodeStatus::Error, None, Some(error.clone()));
+                            reporter.node(&node.id, NodeStatus::Error, None, Some(error.clone()));
                             log_error(&app_clone, &workflow_id, Some(&node.id), &format!("✗ Nodo '{}' falló: {}", node.label, error), None);
                             let _ = tx.send(Some(false));
                             Err(AppError::StepExecution { step_id: node.id.clone(), message: format!("Nodo falló: {}", error) })
@@ -224,7 +249,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
                 None => {
                     let error = format!("Plugin '{}' no registrado", node.node_type);
                     log_error(&app_clone, &workflow_id, Some(&node.id), &format!("✗ {}", error), None);
-                    report_node(&app_clone, &statuses_clone, &workflow_id, &node.id, NodeStatus::Error, None, Some(error.clone()));
+                    reporter.node(&node.id, NodeStatus::Error, None, Some(error.clone()));
                     let _ = tx.send(Some(false));
                     Err(AppError::InvalidConfig(error))
                 }
@@ -267,6 +292,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
             status: NodeStatus::Error,
         });
         let _ = crate::services::notifications::notify_flow_error(&app, &workflow_name_clone, &err_msg);
+        reporter.finish("error", Some(&err_msg));
         Err(err_obj)
     } else {
         log_info(&app, &workflow.id, None, &format!("✓ Workflow '{}' completado exitosamente", workflow_name_clone));
@@ -275,6 +301,7 @@ pub async fn execute_workflow(app: AppHandle, workflow: Workflow) -> Result<(), 
             status: NodeStatus::Success,
         });
         let _ = crate::services::notifications::notify_flow_success(&app, &workflow_name_clone);
+        reporter.finish("success", None);
         Ok(())
     };
 

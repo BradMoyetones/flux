@@ -75,7 +75,10 @@ pub async fn cmd_factory_reset(app: AppHandle, restart: bool) -> Result<(), AppE
     // 2. Quitar el inicio automático del SO (una app reseteada no debe seguir arrancando sola)
     let _ = autostart::apply(&app, false);
 
-    // 3. Limpiar el store en memoria y persistir el estado vacío
+    // 3. Vaciar el historial / índice (SQLite)
+    let _ = state.db.wipe();
+
+    // 3b. Limpiar el store en memoria y persistir el estado vacío
     if let Ok(store) = app.store("user-settings.json") {
         store.clear();
         let _ = store.save();

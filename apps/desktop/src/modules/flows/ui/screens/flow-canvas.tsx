@@ -6,9 +6,11 @@ import {
     useReactFlow,
 } from '@xyflow/react';
 
-import { useParams, useNavigate } from 'react-router';
-import { useTabs } from '@/shared/contexts/tabs-context';
-import { useFlowStore, setupFlowListeners, type AppNode } from '../../core/use-flow-store';
+import { useTabs } from '@/shared/state/tabs';
+import { useTab } from '@/shared/state/tab-context';
+import { tabScopedAtom } from '@/shared/state/tab-scoped';
+import { flowTabPath } from '@/shared/router/route-meta';
+import { useFlowStore, useFlowStoreApi, useFlowDirty, setupFlowListeners, type AppNode } from '../../core/use-flow-store';
 import { nodeTypes } from '../../plugins/node-types';
 import { pluginRegistry } from '../../plugins/registry';
 import { MessageSquare, Play, Save, Settings, TerminalSquare } from 'lucide-react';
@@ -27,13 +29,23 @@ import { useTerminalStore } from '../../../terminal/core/use-terminal-store';
 import { Bug } from 'lucide-react';
 import { Badge } from '@flux/ui';
 import { Spinner } from '@flux/ui';
+import { toast } from 'sonner';
+
+// Mini-estados de UI por tab (atoms): sobreviven al cambio de tab y se liberan al cerrarlo.
+const selectedNodeScope = tabScopedAtom<string | null>(null);
+const inspectorOpenScope = tabScopedAtom(false);
+const settingsOpenScope = tabScopedAtom(false);
 
 export default function FlowCanvas() {
-    const { pathId } = useParams();
-    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-    const [inspectorOpen, setInspectorOpen] = useState(false);
-    const [settingsOpen, setSettingsOpen] = useState(false);
-    const { updateActiveTabPath } = useTabs();
+    const { tabId, params, isActive } = useTab();
+    // `params.pathId` ya viene decodificado: es la ruta absoluta del archivo .flux
+    const filePath = params.pathId;
+    const [selectedNodeId, setSelectedNodeId] = selectedNodeScope.useTabAtom();
+    const [inspectorOpen, setInspectorOpen] = inspectorOpenScope.useTabAtom();
+    const [settingsOpen, setSettingsOpen] = settingsOpenScope.useTabAtom();
+    const { updateTabPath, closeTab } = useTabs();
+    const flowApi = useFlowStoreApi();
+    const isDirty = useFlowDirty(tabId);
     const { screenToFlowPosition, fitView } = useReactFlow();
     const wa = useWhatsAppSession();
 
@@ -50,19 +62,21 @@ export default function FlowCanvas() {
         stopWorkflow,
         loadWorkflow,
         isExecuting,
+        loadError,
     } = useFlowStore();
 
-    // Hydration
+    // Hydration: la carga es idempotente (no recarga si el tab ya tiene el flujo en memoria,
+    // así volver a este tab nunca descarta cambios sin guardar).
     useEffect(() => {
-        if (pathId) {
-            const decodedPath = decodeURIComponent(pathId);
-            loadWorkflow(decodedPath).then(() => {
+        if (!filePath) return;
+        loadWorkflow(filePath).then(() => {
+            if (flowApi.getState().loaded) {
                 fitView({ duration: 300 });
                 // Check if this workflow is currently executing in the backend
-                useFlowStore.getState().hydrateExecutionState();
-            }).catch(console.error);
-        }
-    }, [pathId, loadWorkflow, fitView]);
+                flowApi.getState().hydrateExecutionState();
+            }
+        }).catch(console.error);
+    }, [filePath, loadWorkflow, fitView, flowApi]);
 
     useEffect(() => {
         setupFlowListeners();
@@ -70,30 +84,41 @@ export default function FlowCanvas() {
 
     const [isSaving, setIsSaving] = useState(false);
 
-    const navigate = useNavigate();
-
     // ──── Save ────
     const onSave = useCallback(async () => {
-        if (!pathId) return;
+        if (!filePath) return;
         setIsSaving(true);
-        const decodedPath = decodeURIComponent(pathId);
 
         try {
-            const { saveWorkflow } = useFlowStore.getState();
-            const newPath = await saveWorkflow(decodedPath);
+            const newPath = await flowApi.getState().saveWorkflow(filePath);
 
-            if (newPath && newPath !== decodedPath) {
-                const nextRoute = `/flows/${encodeURIComponent(newPath)}`;
-                updateActiveTabPath(nextRoute);
-                navigate(nextRoute, { replace: true });
+            if (newPath && newPath !== filePath) {
+                // Renombrado: el tab pasa a apuntar al nuevo archivo.
+                updateTabPath(tabId, flowTabPath(newPath));
             }
-            console.log("Saved successfully");
+            toast.success('Flujo guardado');
         } catch (e) {
             console.error("Save failed", e);
+            toast.error('No se pudo guardar el flujo', {
+                description: typeof e === 'string' ? e : (e as { message?: string })?.message,
+            });
         } finally {
             setIsSaving(false);
         }
-    }, [pathId, navigate]);
+    }, [filePath, flowApi, tabId, updateTabPath]);
+
+    // Cmd/Ctrl+S guarda, solo en el tab visible
+    useEffect(() => {
+        if (!isActive) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                onSave();
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [isActive, onSave]);
 
     // ──── Drag & Drop (API nativa dataTransfer, sin React state) ────
     const onDragOver = useCallback((event: React.DragEvent) => {
@@ -166,6 +191,24 @@ export default function FlowCanvas() {
                 : n
         ));
     }, [nodes, setNodes]);
+
+    if (loadError) {
+        return (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center">
+                <p className="text-sm font-medium">No se pudo abrir el flujo</p>
+                <p className="max-w-md break-all font-mono text-xs text-muted-foreground">{filePath}</p>
+                <p className="max-w-md text-xs text-destructive">{loadError}</p>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => filePath && loadWorkflow(filePath, { force: true })}>
+                        Reintentar
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => closeTab(tabId)}>
+                        Cerrar tab
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <SidebarProvider className='min-h-full! h-full'>
@@ -271,6 +314,9 @@ export default function FlowCanvas() {
                                                 >
                                                     {isSaving ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4" />}
                                                     {isSaving ? 'Guardando...' : 'Save'}
+                                                    {isDirty && !isSaving && (
+                                                        <span className="size-1.5 rounded-full bg-amber-500" aria-label="Cambios sin guardar" />
+                                                    )}
                                                 </Button>
 
                                                 <Button

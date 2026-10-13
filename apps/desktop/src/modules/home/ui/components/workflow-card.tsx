@@ -5,8 +5,8 @@ import { Trash2, Workflow } from 'lucide-react';
 import { Button } from '@flux/ui';
 import { FluxEntry } from '@/types/data';
 import { useHomeStore } from '../../stores/home-store';
-import { useTabs } from '@/shared/contexts/tabs-context';
-import { useNavigate } from 'react-router';
+import { useTabs } from '@/shared/state/tabs';
+import { flowTabPath } from '@/shared/router/route-meta';
 import { toast } from 'sonner';
 import { Spinner } from '@flux/ui';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@flux/ui';
@@ -15,13 +15,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@flux/ui';
 export const WorkflowCard = memo(function WorkflowCard({ flow }: { flow: FluxEntry }) {
     const deleteWorkflow = useHomeStore((state) => state.deleteWorkflow);
     const { openTab } = useTabs();
-    const navigate = useNavigate();
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleOpen = () => {
-        const routePath = `/flows/${encodeURIComponent(flow.path)}`;
-        const openedPath = openTab(routePath);
-        navigate(openedPath);
+        openTab(flowTabPath(flow.path));
     };
 
     return (

@@ -4,10 +4,11 @@ import { AnimatePresence, motion } from 'motion/react';
 import { X } from 'lucide-react';
 
 import { cn } from '@/shared/utils/utils';
-import { getRoute, getTabIcon } from '@/shared/router/tab-routes';
-import { useTabs } from '@/shared/contexts/tabs-context';
+import { FLOW_ROUTE_PATTERN, getTabIcon, resolveRoute } from '@/shared/router/route-meta';
+import { useTabs } from '@/shared/state/tabs';
+import { useFlowDirty, isFlowTabDirty } from '@/modules/flows/core/use-flow-store';
+import { api } from '@flux/api';
 import { useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router';
 
 function ActiveTabSkin() {
     return (
@@ -23,20 +24,17 @@ function ActiveTabSkin() {
     );
 }
 
+/** Punto de "cambios sin guardar" (solo para tabs de flujo). */
+function DirtyDot({ tabId }: { tabId: string }) {
+    const dirty = useFlowDirty(tabId);
+    if (!dirty) return null;
+    return <span className="size-1.5 shrink-0 rounded-full bg-amber-500" role="img" aria-label="Cambios sin guardar" />;
+}
+
 export function TabBar() {
     const { tabs, activeId, activateTab, closeTab } = useTabs();
-    const navigate = useNavigate();
-    const location = useLocation();
 
     const scrollRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        // Sync active state if location changes from outside the tab bar
-        const matchingTab = tabs.find((t) => t.path === location.pathname);
-        if (matchingTab && matchingTab.id !== activeId) {
-            activateTab(matchingTab.id);
-        }
-    }, [location.pathname, tabs, activeId, activateTab]);
 
     // Enable mouse wheel scrolling for the tab list
     useEffect(() => {
@@ -55,23 +53,21 @@ export function TabBar() {
         return () => el.removeEventListener('wheel', onWheel);
     }, []);
 
-    const handleTabClick = useCallback(
-        (id: string, path: string) => {
-            activateTab(id);
-            navigate(path);
-        },
-        [activateTab, navigate]
-    );
+    const handleTabClick = useCallback((id: string) => activateTab(id), [activateTab]);
 
     const handleCloseTab = useCallback(
-        (e: React.MouseEvent, id: string) => {
+        async (e: React.MouseEvent, id: string, title: string) => {
             e.stopPropagation();
-            const nextPath = closeTab(id);
-            if (nextPath) {
-                navigate(nextPath);
+            if (isFlowTabDirty(id)) {
+                const discard = await api.dialog.ask(
+                    `"${title}" tiene cambios sin guardar. Si lo cierras se perderán.`,
+                    { title: 'Cambios sin guardar', kind: 'warning', okLabel: 'Cerrar sin guardar', cancelLabel: 'Cancelar' },
+                );
+                if (!discard) return;
             }
+            closeTab(id);
         },
-        [closeTab, navigate]
+        [closeTab]
     );
 
     return (
@@ -88,9 +84,10 @@ export function TabBar() {
                     <AnimatePresence initial={false} mode="popLayout">
                         {tabs.map((tab) => {
                             const Icon = getTabIcon(tab.path);
-                            const route = getRoute(tab.path);
+                            const route = resolveRoute(tab.path);
                             const title = route?.title ?? tab.path;
-                            const closable = route?.closable ?? true;
+                            const closable = route?.meta.closable ?? true;
+                            const isFlow = route?.meta.pattern === FLOW_ROUTE_PATTERN;
                             const isActive = tab.id === activeId;
 
                             return (
@@ -112,7 +109,7 @@ export function TabBar() {
                                             'rounded-t-lg text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground',
                                         isActive && 'text-foreground'
                                     )}
-                                    onClick={() => handleTabClick(tab.id, tab.path)}
+                                    onClick={() => handleTabClick(tab.id)}
                                 >
                                     {isActive ? <ActiveTabSkin /> : null}
 
@@ -128,12 +125,13 @@ export function TabBar() {
                                                 )}
                                             />
                                             <span className="truncate">{title}</span>
+                                            {isFlow && <DirtyDot tabId={tab.id} />}
                                         </div>
 
                                         {closable ? (
                                             <button
                                                 type="button"
-                                                onClick={(event) => handleCloseTab(event, tab.id)}
+                                                onClick={(event) => handleCloseTab(event, tab.id, title)}
                                                 aria-label={`Cerrar ${title}`}
                                                 className="grid size-5 shrink-0 place-items-center rounded-md text-muted-foreground opacity-0 transition hover:bg-foreground/10 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
                                             >

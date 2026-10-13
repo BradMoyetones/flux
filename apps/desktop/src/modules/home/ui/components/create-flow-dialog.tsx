@@ -7,8 +7,8 @@ import SelectWorkspaceModal from "./select-workspace";
 import { Folder } from "lucide-react";
 import { workspaceName } from "../../lib/format";
 import { useHomeStore } from "../../stores/home-store";
-import { useTabs } from '@/shared/contexts/tabs-context';
-import { useNavigate } from 'react-router';
+import { useTabs } from '@/shared/state/tabs';
+import { flowTabPath } from '@/shared/router/route-meta';
 
 export function CreateFlowDialog() {
     const open = useHomeStore((state) => state.dialogOpen);
@@ -19,7 +19,6 @@ export function CreateFlowDialog() {
     const loadData = useHomeStore((state) => state.loadData);
 
     const { openTab } = useTabs();
-    const navigate = useNavigate();
 
     const [name, setName] = useState("");
     const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
@@ -82,9 +81,7 @@ export function CreateFlowDialog() {
 
             loadData();
             
-            const routePath = `/flows/${encodeURIComponent(fullPath)}`;
-            const openedPath = openTab(routePath);
-            navigate(openedPath);
+            openTab(flowTabPath(fullPath));
             
             onOpenChange(false);
         } catch (err: any) {

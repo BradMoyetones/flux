@@ -35,14 +35,9 @@ pub async fn cmd_add_workspace(
         .await
         .map_err(join_error)?;
 
-    // Merge con el índice existente
-    let mut index = state.config.workflow_index();
-    for entry in new_entries {
-        if !index.iter().any(|e| e.path == entry.path) {
-            index.push(entry);
-        }
-    }
-    state.config.set_workflow_index(&app, index.clone())?;
+    // Merge con el índice existente (los ya conocidos no se duplican)
+    state.db.upsert_index_many(&new_entries)?;
+    let index = state.db.list_index()?;
 
     Ok(index)
 }
@@ -53,19 +48,19 @@ pub async fn cmd_remove_workspace(
     state: State<'_, Arc<AppState>>,
     path: String,
 ) -> Result<(), AppError> {
-    state.config.remove_workspace(&app, &path)
+    state.config.remove_workspace(&app, &path)?;
+    state.db.remove_workspace_index(&path)
 }
 
-/// Devuelve el índice de workflows desde la config en memoria. Sin I/O de disco.
+/// Devuelve el índice de workflows (SQLite). No toca el filesystem.
 #[command]
 pub async fn cmd_scan_workflows(state: State<'_, Arc<AppState>>) -> Result<Vec<FluxEntry>, AppError> {
-    Ok(state.config.workflow_index())
+    state.db.list_index()
 }
 
 /// Fuerza un re-escaneo completo de todos los workspaces y reconstruye el índice.
 #[command]
 pub async fn cmd_resync_workspaces(
-    app: AppHandle,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Vec<FluxEntry>, AppError> {
     let workspaces = state.config.workspaces();
@@ -74,8 +69,8 @@ pub async fn cmd_resync_workspaces(
         .await
         .map_err(join_error)?;
 
-    state.config.set_workflow_index(&app, entries.clone())?;
-    Ok(entries)
+    state.db.replace_index(&entries)?;
+    state.db.list_index()
 }
 
 #[command]
@@ -129,7 +124,6 @@ pub async fn cmd_get_workflow(
 /// Registra un workflow recién creado en el índice.
 #[command]
 pub async fn cmd_register_workflow(
-    app: AppHandle,
     state: State<'_, Arc<AppState>>,
     path: String,
     name: String,
@@ -139,7 +133,7 @@ pub async fn cmd_register_workflow(
     if !state.config.workspaces().contains(&workspace) {
         return Err(AppError::InvalidConfig("El workspace no está registrado".into()));
     }
-    state.config.add_to_index(&app, FluxEntry { name, path, workspace })
+    state.db.upsert_index(&FluxEntry { name, path, workspace })
 }
 
 /// Elimina un archivo .flux del disco y lo quita del índice (y del scheduler).
@@ -170,13 +164,12 @@ pub async fn cmd_delete_workflow(
         state.scheduler.unschedule_workflow(&id).await?;
     }
 
-    state.config.remove_from_index(&app, &path)
+    state.db.remove_index(&path)
 }
 
 /// Renombra un workflow cambiando su archivo .flux físico y actualizando el índice.
 #[command]
 pub async fn cmd_rename_workflow(
-    app: AppHandle,
     state: State<'_, Arc<AppState>>,
     old_path: String,
     new_name: String,
@@ -199,14 +192,7 @@ pub async fn cmd_rename_workflow(
         .unwrap_or("sin-nombre")
         .to_string();
 
-    state.config.update(&app, |c| {
-        if let Some(pos) = c.workflow_index.iter().position(|e| e.path == old_path) {
-            let mut entry = c.workflow_index.remove(pos);
-            entry.path = new_path.clone();
-            entry.name = name_stem;
-            c.workflow_index.push(entry);
-        }
-    })?;
+    state.db.rename_index(&old_path, &new_path, &name_stem)?;
 
     Ok(new_path)
 }

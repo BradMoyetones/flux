@@ -7,6 +7,7 @@ use std::sync::atomic::AtomicBool;
 use crate::plugins::registry::PluginRegistry;
 use crate::services::whatsapp_manager::WhatsAppManager;
 use crate::storage::config::ConfigService;
+use crate::storage::db::Db;
 
 /// Zona horaria por defecto cuando el usuario no ha elegido ninguna.
 pub const DEFAULT_TIMEZONE: &str = "America/Bogota";
@@ -63,7 +64,6 @@ pub struct AppConfig {
     pub notifications: NotificationConfig,
     pub variables: Vec<GlobalVariable>,
     pub workspaces: Vec<String>,
-    pub workflow_index: Vec<crate::storage::file_scanner::FluxEntry>,
 }
 
 impl Default for AppConfig {
@@ -79,14 +79,13 @@ impl Default for AppConfig {
             notifications: NotificationConfig::default(),
             variables: Vec::new(),
             workspaces: Vec::new(),
-            workflow_index: Vec::new(),
         }
     }
 }
 
-/// Cambios parciales que el frontend puede aplicar a la config. Los workspaces y el
-/// índice NO están aquí a propósito: tienen sus propios comandos y el frontend nunca
-/// debe poder sobrescribirlos en bloque.
+/// Cambios parciales que el frontend puede aplicar a la config. Los workspaces NO están
+/// aquí a propósito: tienen sus propios comandos y el frontend nunca debe poder
+/// sobrescribirlos en bloque.
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ConfigPatch {
@@ -118,6 +117,8 @@ pub struct StartupState {
 pub struct AppState {
     pub wa_manager: Arc<WhatsAppManager>,
     pub config: Arc<ConfigService>,
+    /// SQLite: índice de workflows e historial de ejecuciones.
+    pub db: Arc<Db>,
     pub scheduler: Arc<crate::services::scheduler::SchedulerService>,
     pub registry: Arc<PluginRegistry>,
     pub active_executions: Mutex<HashMap<String, ActiveRun>>,

@@ -15,8 +15,7 @@ import {
     CustomToastTitle,
 } from '@/components/custom-toast';
 import { useReleaseNotesStore } from '@/shared/contexts/release-notes-store';
-import { useTabsStore } from '@/shared/contexts/tabs-context';
-import router from '@/shared/router';
+import { tabActions } from '@/shared/state/tabs';
 
 import { Update } from '@tauri-apps/plugin-updater';
 
@@ -61,8 +60,7 @@ const useUpdater = () => {
                             onClick={() => {
                                 toast.dismiss(t);
                                 useReleaseNotesStore.getState().setPendingNotes(update.body || '');
-                                const tabPath = useTabsStore.getState().openTab('/release-notes');
-                                router.navigate(tabPath);
+                                tabActions.open('/release-notes');
                             }}
                             variant="outline"
                             size="sm"

@@ -1,5 +1,6 @@
 import { workflows } from './modules/workflows';
 import { execution } from './modules/execution';
+import { runs } from './modules/runs';
 import { whatsapp } from './modules/whatsapp';
 import { window, system } from './modules/window';
 import { config } from './modules/config';
@@ -13,6 +14,7 @@ import { notifications } from './modules/notifications';
 export const api = {
   workflows,
   execution,
+  runs,
   whatsapp,
   window,
   system,

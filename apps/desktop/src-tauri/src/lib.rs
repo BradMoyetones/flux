@@ -113,6 +113,28 @@ pub fn run() {
             let _ = storage::config::save_config(app.handle(), &config);
             let autostart_enabled = config.autostart;
 
+            // SQLite: índice de workflows e historial de ejecuciones.
+            let db = Arc::new(storage::db::Db::open(app.handle())?);
+            // Migración única del índice que antes vivía dentro de user-settings.json.
+            if db.meta_get("legacy_index_migrated")?.is_none() {
+                let legacy = storage::config::take_legacy_workflow_index(app.handle());
+                if !legacy.is_empty() {
+                    tracing::info!("Migrando {} workflows del índice antiguo a SQLite", legacy.len());
+                    db.upsert_index_many(&legacy)?;
+                }
+                db.meta_set("legacy_index_migrated", "1")?;
+            }
+            // Runs que quedaron "en curso" por un cierre forzado.
+            match db.mark_orphan_runs_interrupted() {
+                Ok(n) if n > 0 => tracing::warn!("{n} ejecución(es) interrumpida(s) por un cierre inesperado"),
+                Ok(_) => {}
+                Err(e) => tracing::warn!("No se pudo revisar el historial: {e}"),
+            }
+            // Retención del historial: 30 días / 200 runs por flujo.
+            if let Err(e) = db.prune_runs(30, 200) {
+                tracing::warn!("No se pudo podar el historial: {e}");
+            }
+
             let scheduler = tauri::async_runtime::block_on(async {
                 let s = crate::services::scheduler::SchedulerService::new(app.handle().clone()).await?;
                 s.start().await?;
@@ -122,6 +144,7 @@ pub fn run() {
             let app_state = Arc::new(crate::state::AppState {
                 wa_manager: Arc::new(crate::services::whatsapp_manager::WhatsAppManager::new()),
                 config: Arc::new(storage::config::ConfigService::new(config)),
+                db,
                 scheduler: Arc::new(scheduler),
                 registry: Arc::new(crate::plugins::build_registry()),
                 active_executions: std::sync::Mutex::new(std::collections::HashMap::new()),

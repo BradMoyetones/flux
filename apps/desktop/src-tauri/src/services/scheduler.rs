@@ -376,7 +376,7 @@ impl Inner {
         }
 
         let _ = self.app.emit("workflow://started-tick", TickEvent { workflow_id: workflow_id.to_string() });
-        match runs::start_run(&self.app, workflow) {
+        match runs::start_run(&self.app, workflow, "cron") {
             Ok(()) => {
                 let reached_max = {
                     let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
