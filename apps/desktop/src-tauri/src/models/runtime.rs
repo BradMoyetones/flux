@@ -7,6 +7,10 @@ pub enum NodeStatus {
     Running,
     Success,
     Error,
+    /// El usuario detuvo la ejecución mientras el nodo estaba pendiente o corriendo.
+    Cancelled,
+    /// No se ejecutó porque un nodo del que depende falló.
+    Skipped,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

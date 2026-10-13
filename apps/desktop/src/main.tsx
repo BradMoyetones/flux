@@ -17,14 +17,16 @@ function UpdaterComponent() {
     const { checkForUpdates, promptUpdate } = useUpdater();
 
     useEffect(() => {
-        // Ejecutar revisión de actualizaciones antes de cerrar el splash
+        // El splash se cierra en cuanto la UI montó: NUNCA depende de la red.
+        // (Rust además lo fuerza tras un timeout de seguridad.)
+        invoke('close_splashscreen').catch(console.error);
+
+        // La revisión de actualizaciones corre después, sin bloquear el arranque.
         checkForUpdates()
             .then((update) => {
                 if (update) promptUpdate(update);
             })
-            .finally(() => {
-                invoke('close_splashscreen').catch(console.error);
-            });
+            .catch(console.error);
     }, []);
 
     return null;

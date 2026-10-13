@@ -7,15 +7,30 @@ mod storage;
 mod services;
 mod state;
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::time::Duration;
+
 use tauri::{Manager, WindowEvent, Emitter};
 #[cfg(target_os = "macos")]
 use tauri::RunEvent;
 use tauri_plugin_os;
 use window_vibrancy::*;
 
+use crate::services::autostart;
+use crate::state::{AppConfig, StartupState};
+
+/// Si la UI no avisa en este tiempo (render roto, red lenta…), se muestra la
+/// ventana principal igualmente para que la app nunca parezca colgada tras el splash.
+const SPLASH_TIMEOUT: Duration = Duration::from_secs(15);
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    // La app se relanza con este argumento desde el inicio automático del sistema:
+    // en ese caso arranca oculta (System Tray) en vez de abrir la ventana.
+    let start_minimized = std::env::args().any(|a| a == autostart::MINIMIZED_ARG);
+
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
@@ -31,8 +46,16 @@ pub fn run() {
                 let _ = window.unminimize();
                 let _ = window.set_focus();
             }
-        }))
-        .setup(|app| {
+        }));
+
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_autostart::init(
+        tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+        Some(vec![autostart::MINIMIZED_ARG]),
+    ));
+
+    builder
+        .setup(move |app| {
             // Setup Tracing & Terminal Logger
             use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
             let terminal_layer = crate::core::terminal_logger::init_terminal_logger(app.handle().clone());
@@ -50,60 +73,109 @@ pub fn run() {
                         None => "Box<dyn Any>",
                     },
                 };
-                
-                let location = info.location().unwrap();
+
+                let location = info
+                    .location()
+                    .map(|l| l.to_string())
+                    .unwrap_or_else(|| "ubicación desconocida".to_string());
                 let panic_msg = format!("\x1b[31m[PANIC] Thread panicked at '{}', {}\x1b[0m\r\n", msg, location);
                 eprintln!("{}", panic_msg);
                 let _ = app_handle.emit("terminal://stdout", panic_msg);
             }));
 
-            // Obtenemos la ventana nativa de Tauri v2
-            let window = app.get_webview_window("main").unwrap();
-            // Aplicamos Vibrancy real de macOS usando los métodos del trait
-            #[cfg(target_os = "macos")]
-            apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None)
-                .expect("No se pudo aplicar el Vibrancy en macOS");
-
-            #[cfg(target_os = "windows")]
-            apply_acrylic(&window, Some((0, 0, 0, 0)))
-                .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
-
-            let config = storage::config::load_config(app.handle()).unwrap_or_default();
-            // Guardar inmediatamente asegura que el archivo se cree con los valores por defecto si no existía.
-            let _ = storage::config::save_config(app.handle(), &config);
-            
-            let scheduler = tauri::async_runtime::block_on(async {
-                let s = crate::services::scheduler::SchedulerService::new(app.handle().clone()).await.unwrap();
-                s.start().await.unwrap();
-                s
+            app.manage(StartupState {
+                start_minimized,
+                done: AtomicBool::new(false),
             });
 
-            let app_state = crate::state::AppState {
-                wa_manager: std::sync::Arc::new(crate::services::whatsapp_manager::WhatsAppManager::new()),
-                config: std::sync::Arc::new(tokio::sync::RwLock::new(config)),
-                scheduler: std::sync::Arc::new(scheduler),
+            // Obtenemos la ventana nativa de Tauri v2
+            let window = app
+                .get_webview_window("main")
+                .ok_or("No se encontró la ventana principal 'main'")?;
+
+            // El vibrancy es cosmético: si el SO no lo soporta NO debe tumbar la app.
+            #[cfg(target_os = "macos")]
+            if let Err(e) = apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None) {
+                tracing::warn!("No se pudo aplicar el vibrancy en macOS: {e}");
+            }
+
+            #[cfg(target_os = "windows")]
+            if let Err(e) = apply_acrylic(&window, Some((0, 0, 0, 0))) {
+                tracing::warn!("No se pudo aplicar acrylic en Windows: {e}");
+            }
+
+            // Config: dueño único en Rust (ConfigService).
+            let config = storage::config::load_config(app.handle()).unwrap_or_else(|e| {
+                tracing::error!("No se pudo cargar la configuración, se usan valores por defecto: {e}");
+                AppConfig::default()
+            });
+            // Guardar inmediatamente asegura que el archivo exista con todos los campos.
+            let _ = storage::config::save_config(app.handle(), &config);
+            let autostart_enabled = config.autostart;
+
+            let scheduler = tauri::async_runtime::block_on(async {
+                let s = crate::services::scheduler::SchedulerService::new(app.handle().clone()).await?;
+                s.start().await?;
+                Ok::<_, errors::AppError>(s)
+            })?;
+
+            let app_state = Arc::new(crate::state::AppState {
+                wa_manager: Arc::new(crate::services::whatsapp_manager::WhatsAppManager::new()),
+                config: Arc::new(storage::config::ConfigService::new(config)),
+                scheduler: Arc::new(scheduler),
+                registry: Arc::new(crate::plugins::build_registry()),
                 active_executions: std::sync::Mutex::new(std::collections::HashMap::new()),
-            };
-            app.manage(std::sync::Arc::new(app_state));
+            });
+            let scheduler_for_restore = Arc::clone(&app_state.scheduler);
+            app.manage(app_state);
+
+            // El SO debe reflejar la preferencia del usuario (p. ej. tras reinstalar/mover la app).
+            if let Err(e) = autostart::apply(app.handle(), autostart_enabled) {
+                tracing::warn!("No se pudo sincronizar el inicio automático: {e}");
+            }
+
+            // Reprogramar los crons que estaban activos antes de cerrar la app.
+            tauri::async_runtime::spawn(async move {
+                scheduler_for_restore.restore().await;
+            });
 
             // Setup System Tray
             crate::core::tray::setup_tray(app)?;
 
             // Window close behavior: hide instead of close if runInBackground is true
-            let window = app.get_webview_window("main").unwrap();
             let window_clone = window.clone();
             let app_handle_for_close = app.handle().clone();
             window.on_window_event(move |event| match event {
                 WindowEvent::CloseRequested { api, .. } => {
                     let run_in_background = crate::storage::config::get_run_in_background(&app_handle_for_close);
-                        
+
                     if run_in_background {
-                        window_clone.hide().unwrap();
+                        let _ = window_clone.hide();
                         api.prevent_close();
                     }
                 }
                 _ => {}
             });
+
+            // Arranque: splash → ventana principal.
+            if start_minimized {
+                // Inicio automático: sin splash ni ventana, solo System Tray.
+                let _ = crate::commands::window::finish_startup(app.handle());
+            } else {
+                // Red de seguridad: si la UI nunca avisa, mostramos la app igualmente.
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(SPLASH_TIMEOUT).await;
+                    let pending = handle
+                        .try_state::<StartupState>()
+                        .map(|s| !s.done.load(Ordering::SeqCst))
+                        .unwrap_or(false);
+                    if pending {
+                        tracing::warn!("La UI no terminó de cargar en {SPLASH_TIMEOUT:?}; se muestra la ventana principal");
+                        let _ = crate::commands::window::finish_startup(&handle);
+                    }
+                });
+            }
 
             Ok(())
         })

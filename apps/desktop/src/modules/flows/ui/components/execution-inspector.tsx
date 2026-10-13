@@ -1,7 +1,7 @@
 import { useFlowStore } from '../../core/use-flow-store';
 import { ScrollArea } from '@flux/ui';
 import { Badge } from '@flux/ui';
-import { Bug, CheckCircle2, CircleDashed, AlertCircle } from 'lucide-react';
+import { Bug, CheckCircle2, CircleDashed, AlertCircle, Ban, MinusCircle } from 'lucide-react';
 
 export function ExecutionInspector() {
     const { nodes } = useFlowStore();
@@ -30,6 +30,8 @@ export function ExecutionInspector() {
                                         {node.data.status === 'success' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                         {node.data.status === 'error' && <AlertCircle className="w-4 h-4 text-red-500" />}
                                         {node.data.status === 'running' && <CircleDashed className="w-4 h-4 text-blue-500 animate-spin" />}
+                                        {node.data.status === 'cancelled' && <Ban className="w-4 h-4 text-amber-500" />}
+                                        {node.data.status === 'skipped' && <MinusCircle className="w-4 h-4 text-muted-foreground" />}
                                         <span className="text-sm font-medium">{node.data.label}</span>
                                     </div>
                                     <Badge variant="outline" className="text-[9px] font-mono">

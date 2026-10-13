@@ -1,147 +1,212 @@
-use tauri::{AppHandle, command};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use serde_json::Value;
+use tauri::{AppHandle, State, command};
 use crate::models::workflow::Workflow;
-use crate::storage::config::{
-    add_workspace, get_workspaces, remove_workspace,
-    get_workflow_index, set_workflow_index, add_to_index, remove_from_index,
+use crate::state::AppState;
+use crate::storage::file_scanner::{
+    scan_flux_paths, save_workflow_file, delete_workflow_file, rename_workflow_file,
+    ensure_workflow_path, read_disk_metadata, FluxEntry,
 };
-use crate::storage::file_scanner::{scan_flux_paths, save_workflow_file, delete_workflow_file, rename_workflow_file, FluxEntry};
 use crate::errors::AppError;
-use std::path::PathBuf;
 
-#[command]
-pub async fn cmd_get_workspaces(app: AppHandle) -> Result<Vec<String>, AppError> {
-    get_workspaces(&app)
+fn join_error(e: tauri::Error) -> AppError {
+    AppError::Internal(format!("spawn_blocking error: {e}"))
 }
 
 #[command]
-pub async fn cmd_add_workspace(app: AppHandle, path: String) -> Result<Vec<FluxEntry>, AppError> {
-    add_workspace(&app, path.clone())?;
+pub async fn cmd_get_workspaces(state: State<'_, Arc<AppState>>) -> Result<Vec<String>, AppError> {
+    Ok(state.config.workspaces())
+}
+
+#[command]
+pub async fn cmd_add_workspace(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+    path: String,
+) -> Result<Vec<FluxEntry>, AppError> {
+    if !Path::new(&path).is_dir() {
+        return Err(AppError::InvalidConfig(format!("'{path}' no es una carpeta válida")));
+    }
+    state.config.add_workspace(&app, path.clone())?;
 
     // Escanear solo este workspace nuevo (solo paths, sin leer archivos)
-    let new_entries = tauri::async_runtime::spawn_blocking(move || {
-        scan_flux_paths(&[path])
-    })
-    .await
-    .map_err(|e| AppError::Internal(format!("spawn_blocking error: {e}")))?;
+    let new_entries = tauri::async_runtime::spawn_blocking(move || scan_flux_paths(&[path]))
+        .await
+        .map_err(join_error)?;
 
     // Merge con el índice existente
-    let mut index = get_workflow_index(&app)?;
-    for entry in &new_entries {
+    let mut index = state.config.workflow_index();
+    for entry in new_entries {
         if !index.iter().any(|e| e.path == entry.path) {
-            index.push(entry.clone());
+            index.push(entry);
         }
     }
-    set_workflow_index(&app, &index)?;
+    state.config.set_workflow_index(&app, index.clone())?;
 
     Ok(index)
 }
 
 #[command]
-pub async fn cmd_remove_workspace(app: AppHandle, path: String) -> Result<(), AppError> {
-    remove_workspace(&app, path)
+pub async fn cmd_remove_workspace(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+    path: String,
+) -> Result<(), AppError> {
+    state.config.remove_workspace(&app, &path)
 }
 
-/// Devuelve el índice de workflows desde el store. Sin I/O de disco. Instantáneo.
+/// Devuelve el índice de workflows desde la config en memoria. Sin I/O de disco.
 #[command]
-pub async fn cmd_scan_workflows(app: AppHandle) -> Result<Vec<FluxEntry>, AppError> {
-    get_workflow_index(&app)
+pub async fn cmd_scan_workflows(state: State<'_, Arc<AppState>>) -> Result<Vec<FluxEntry>, AppError> {
+    Ok(state.config.workflow_index())
 }
 
 /// Fuerza un re-escaneo completo de todos los workspaces y reconstruye el índice.
 #[command]
-pub async fn cmd_resync_workspaces(app: AppHandle) -> Result<Vec<FluxEntry>, AppError> {
-    let workspaces = get_workspaces(&app)?;
+pub async fn cmd_resync_workspaces(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+) -> Result<Vec<FluxEntry>, AppError> {
+    let workspaces = state.config.workspaces();
 
-    let entries = tauri::async_runtime::spawn_blocking(move || {
-        scan_flux_paths(&workspaces)
-    })
-    .await
-    .map_err(|e| AppError::Internal(format!("spawn_blocking error: {e}")))?;
+    let entries = tauri::async_runtime::spawn_blocking(move || scan_flux_paths(&workspaces))
+        .await
+        .map_err(join_error)?;
 
-    set_workflow_index(&app, &entries)?;
+    state.config.set_workflow_index(&app, entries.clone())?;
     Ok(entries)
 }
 
 #[command]
-pub async fn cmd_save_workflow(path: String, workflow: Workflow) -> Result<(), AppError> {
-    let path_clone = path.clone();
-    let content = serde_json::to_string_pretty(&workflow).map_err(|e| AppError::InvalidConfig(e.to_string()))?;
+pub async fn cmd_save_workflow(
+    state: State<'_, Arc<AppState>>,
+    path: String,
+    workflow: Workflow,
+) -> Result<(), AppError> {
+    let workspaces = state.config.workspaces();
 
-    tauri::async_runtime::spawn_blocking(move || {
-        save_workflow_file(&path_clone, &content)
+    tauri::async_runtime::spawn_blocking(move || -> Result<(), AppError> {
+        ensure_workflow_path(&workspaces, &path)?;
+
+        let mut value = serde_json::to_value(&workflow).map_err(|e| AppError::InvalidConfig(e.to_string()))?;
+        if let Some(obj) = value.as_object_mut() {
+            // La ruta absoluta es un dato de runtime: no se persiste dentro del archivo
+            // (el archivo debe ser portable). `cmd_get_workflow` la rellena al leer.
+            obj.remove("path");
+            // Las estadísticas de ejecución las gestiona el backend. Siempre se conserva
+            // lo que hay en disco, nunca lo que el editor tenía en memoria.
+            match read_disk_metadata(&path) {
+                Some(meta) => { obj.insert("metadata".into(), meta); }
+                None => { obj.remove("metadata"); }
+            }
+        }
+        let content = serde_json::to_string_pretty(&value).map_err(|e| AppError::InvalidConfig(e.to_string()))?;
+        save_workflow_file(&path, &content)
     })
     .await
-    .map_err(|e| AppError::Internal(format!("spawn_blocking error: {e}")))??;
-    
-    Ok(())
+    .map_err(join_error)?
 }
 
 #[command]
-pub async fn cmd_get_workflow(path: String) -> Result<Workflow, AppError> {
-    let path_clone = path.clone();
+pub async fn cmd_get_workflow(
+    state: State<'_, Arc<AppState>>,
+    path: String,
+) -> Result<Workflow, AppError> {
+    let workspaces = state.config.workspaces();
 
     tauri::async_runtime::spawn_blocking(move || {
-        let abs = PathBuf::from(&path_clone);
-        if !abs.is_absolute() {
-            return Err(AppError::InvalidConfig("Se requiere una ruta absoluta para leer el workflow".into()));
-        }
-        let content = std::fs::read_to_string(&abs).map_err(|e| AppError::Storage(e.to_string()))?;
+        ensure_workflow_path(&workspaces, &path)?;
+        let content = std::fs::read_to_string(&path).map_err(|e| AppError::Storage(e.to_string()))?;
         let mut workflow: Workflow = serde_json::from_str(&content).map_err(|e| AppError::InvalidConfig(e.to_string()))?;
-        workflow.path = Some(path_clone);
+        workflow.path = Some(path);
         Ok(workflow)
     })
     .await
-    .map_err(|e| AppError::Internal(format!("spawn_blocking error: {e}")))?
+    .map_err(join_error)?
 }
 
 /// Registra un workflow recién creado en el índice.
 #[command]
-pub async fn cmd_register_workflow(app: AppHandle, path: String, name: String, workspace: String) -> Result<(), AppError> {
-    add_to_index(&app, FluxEntry { name, path, workspace })
+pub async fn cmd_register_workflow(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+    path: String,
+    name: String,
+    workspace: String,
+) -> Result<(), AppError> {
+    ensure_workflow_path(&state.config.workspaces(), &path)?;
+    if !state.config.workspaces().contains(&workspace) {
+        return Err(AppError::InvalidConfig("El workspace no está registrado".into()));
+    }
+    state.config.add_to_index(&app, FluxEntry { name, path, workspace })
 }
 
-/// Elimina un archivo .flux del disco y lo quita del índice.
+/// Elimina un archivo .flux del disco y lo quita del índice (y del scheduler).
 #[command]
-pub async fn cmd_delete_workflow(app: AppHandle, path: String) -> Result<(), AppError> {
+pub async fn cmd_delete_workflow(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+    path: String,
+) -> Result<(), AppError> {
+    let workspaces = state.config.workspaces();
     let path_clone = path.clone();
 
-    // Borrar el archivo físico
-    tauri::async_runtime::spawn_blocking(move || {
-        delete_workflow_file(&path_clone)
+    // Borrar el archivo físico (devolvemos el id para detener su ejecución/programación)
+    let workflow_id = tauri::async_runtime::spawn_blocking(move || -> Result<Option<String>, AppError> {
+        ensure_workflow_path(&workspaces, &path_clone)?;
+        let id = std::fs::read_to_string(&path_clone)
+            .ok()
+            .and_then(|c| serde_json::from_str::<Value>(&c).ok())
+            .and_then(|v| v.get("id").and_then(|i| i.as_str().map(String::from)));
+        delete_workflow_file(&path_clone)?;
+        Ok(id)
     })
     .await
-    .map_err(|e| AppError::Internal(format!("spawn_blocking error: {e}")))??;
+    .map_err(join_error)??;
 
-    // Quitar del índice
-    remove_from_index(&app, &path)
+    if let Some(id) = workflow_id {
+        crate::core::runs::stop_run(&app, &id)?;
+        state.scheduler.unschedule_workflow(&id).await?;
+    }
+
+    state.config.remove_from_index(&app, &path)
 }
 
 /// Renombra un workflow cambiando su archivo .flux físico y actualizando el índice.
 #[command]
-pub async fn cmd_rename_workflow(app: AppHandle, old_path: String, new_name: String) -> Result<String, AppError> {
+pub async fn cmd_rename_workflow(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+    old_path: String,
+    new_name: String,
+) -> Result<String, AppError> {
+    let workspaces = state.config.workspaces();
     let old_path_clone = old_path.clone();
-    
+
     // 1. Mover el archivo físico
     let new_path = tauri::async_runtime::spawn_blocking(move || {
+        ensure_workflow_path(&workspaces, &old_path_clone)?;
         rename_workflow_file(&old_path_clone, &new_name)
     })
     .await
-    .map_err(|e| AppError::Internal(format!("spawn_blocking error: {}", e)))??;
-    
+    .map_err(join_error)??;
+
     // 2. Actualizar el índice
-    let mut index = get_workflow_index(&app)?;
-    if let Some(pos) = index.iter().position(|e| e.path == old_path) {
-        let mut entry = index.remove(pos);
-        entry.path = new_path.clone();
-        let name_stem = std::path::Path::new(&new_path)
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("sin-nombre")
-            .to_string();
-        entry.name = name_stem;
-        index.push(entry);
-        set_workflow_index(&app, &index)?;
-    }
-    
+    let name_stem = PathBuf::from(&new_path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("sin-nombre")
+        .to_string();
+
+    state.config.update(&app, |c| {
+        if let Some(pos) = c.workflow_index.iter().position(|e| e.path == old_path) {
+            let mut entry = c.workflow_index.remove(pos);
+            entry.path = new_path.clone();
+            entry.name = name_stem;
+            c.workflow_index.push(entry);
+        }
+    })?;
+
     Ok(new_path)
 }

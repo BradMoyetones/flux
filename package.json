@@ -6,6 +6,7 @@
     "private": true,
     "packageManager": "pnpm@11.21.0",
     "scripts": {
+        "tauri": "cd apps/desktop && pnpm tauri dev",
         "typecheck": "turbo run typecheck",
         "typecheck-app": "cd apps/desktop && pnpm typecheck",
         "typecheck-ui": "cd packages/ui && pnpm typecheck",

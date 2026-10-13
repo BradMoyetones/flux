@@ -1,7 +1,31 @@
 import { create } from 'zustand';
-import { api, LazyStore, type NotificationConfig } from '@flux/api';
+import { api, CONFIG_CHANGED_EVENT, type AppConfig, type ConfigPatch, type NotificationConfig } from '@flux/api';
 
-const store = new LazyStore('user-settings.json');
+/**
+ * Espejo en el frontend de la configuración del backend.
+ *
+ * La fuente de verdad es Rust (`ConfigService`). Este store:
+ *   - lee con `api.config.getConfig()` y se mantiene sincronizado con `config://changed`;
+ *   - escribe SOLO con `api.config.patchConfig()` (nunca abre `user-settings.json`).
+ *
+ * Los setters aplican el cambio de forma optimista y lo revierten si el backend lo rechaza.
+ */
+
+type ConfigFields = Pick<
+    AppConfig,
+    'isFirstTime' | 'userName' | 'theme' | 'avatarPath' | 'runInBackground' | 'autostart' | 'timezone' | 'notifications'
+>;
+
+const pickFields = (c: AppConfig): ConfigFields => ({
+    isFirstTime: c.isFirstTime,
+    userName: c.userName,
+    theme: c.theme,
+    avatarPath: c.avatarPath,
+    runInBackground: c.runInBackground,
+    autostart: c.autostart,
+    timezone: c.timezone,
+    notifications: c.notifications,
+});
 
 const DEFAULT_NOTIFICATIONS: NotificationConfig = {
     desktopEnabled: true,
@@ -13,115 +37,94 @@ const DEFAULT_NOTIFICATIONS: NotificationConfig = {
     onlyWhenUnfocused: true,
 };
 
-interface UserState {
-    isFirstTime: boolean;
-    userName: string;
-    theme: string;
-    avatarPath: string;
-    runInBackground: boolean;
-    notifications: NotificationConfig;
-
+interface UserState extends ConfigFields {
     // Flag la terminacion del Onboarding
     finishOnboarding: boolean;
     setFinishOnboarding: (val: boolean) => void;
-    
+
     // Actions
     setIsFirstTime: (val: boolean) => Promise<void>;
     setUserName: (val: string) => Promise<void>;
     setTheme: (val: string) => Promise<void>;
     setAvatarPath: (val: string) => Promise<void>;
     setRunInBackground: (val: boolean) => Promise<void>;
+    setAutostart: (val: boolean) => Promise<void>;
+    setTimezone: (val: string) => Promise<void>;
     updateNotificationConfig: (partial: Partial<NotificationConfig>) => Promise<void>;
     uploadAvatar: () => Promise<void>;
     initStore: () => Promise<void>;
 }
 
+let listening = false;
 
-
-export const useUserStore = create<UserState>((set, get) => ({
-    isFirstTime: true,
-    userName: '',
-    theme: 'system',
-    avatarPath: '',
-    runInBackground: true,
-    notifications: { ...DEFAULT_NOTIFICATIONS },
-
-    // Flag la terminacion del Onboarding
-    finishOnboarding: false,
-    setFinishOnboarding: (val) => {
-        set({ finishOnboarding: val });
-    },
-    
-    setIsFirstTime: async (val) => {
-        await store.set('isFirstTime', val);
-        await store.save();
-        set({ isFirstTime: val });
-    },
-    setUserName: async (val) => {
-        await store.set('userName', val);
-        await store.save();
-        set({ userName: val });
-    },
-    setTheme: async (val) => {
-        await store.set('theme', val);
-        await store.save();
-        set({ theme: val });
-    },
-    setAvatarPath: async (val) => {
-        await store.set('avatarPath', val);
-        await store.save();
-        set({ avatarPath: val });
-    },
-    setRunInBackground: async (val) => {
-        const enabled = !!val;
-        await store.set('runInBackground', enabled);
-        await store.save();
-        set({ runInBackground: enabled });
-    },
-    updateNotificationConfig: async (partial) => {
-        const current = get().notifications;
-        const updated = { ...current, ...partial };
-        await store.set('notifications', updated);
-        await store.save();
-        set({ notifications: updated });
-    },
-    uploadAvatar: async () => {
+export const useUserStore = create<UserState>((set, get) => {
+    /** Optimista + backend como árbitro final; revierte si el backend rechaza el cambio. */
+    const patch = async (partial: ConfigPatch & Partial<ConfigFields>) => {
+        const keys = Object.keys(partial) as (keyof ConfigFields)[];
+        const previous = Object.fromEntries(keys.map((k) => [k, get()[k]]));
+        set(partial as Partial<UserState>);
         try {
-            const selected = await api.dialog.open({
-                multiple: false,
-                filters: [{
-                    name: 'Image',
-                    extensions: ['png', 'jpeg', 'jpg', 'gif', 'webp', 'heic', 'heif']
-                }]
-            });
-            if (selected) {
-                const path = typeof selected === 'string' ? selected : (selected as any).path;
-                if (!path) return;
+            const next = await api.config.patchConfig(partial);
+            set(pickFields(next));
+        } catch (error) {
+            console.error('No se pudo guardar la configuración:', error);
+            set(previous as Partial<UserState>);
+        }
+    };
 
-                const newPath = await api.profile.processAndSaveAvatar(path);
-                await get().setAvatarPath(newPath);
+    return {
+        isFirstTime: true,
+        userName: '',
+        theme: 'system',
+        avatarPath: '',
+        runInBackground: true,
+        autostart: true,
+        timezone: 'America/Bogota',
+        notifications: { ...DEFAULT_NOTIFICATIONS },
+
+        finishOnboarding: false,
+        setFinishOnboarding: (val) => set({ finishOnboarding: val }),
+
+        setIsFirstTime: (val) => patch({ isFirstTime: val }),
+        setUserName: (val) => patch({ userName: val }),
+        setTheme: (val) => patch({ theme: val }),
+        setAvatarPath: (val) => patch({ avatarPath: val }),
+        setRunInBackground: (val) => patch({ runInBackground: !!val }),
+        setAutostart: (val) => patch({ autostart: !!val }),
+        setTimezone: (val) => patch({ timezone: val }),
+        updateNotificationConfig: (partial) =>
+            patch({ notifications: { ...get().notifications, ...partial } }),
+
+        uploadAvatar: async () => {
+            try {
+                const selected = await api.dialog.open({
+                    multiple: false,
+                    filters: [{
+                        name: 'Image',
+                        extensions: ['png', 'jpeg', 'jpg', 'gif', 'webp', 'heic', 'heif'],
+                    }],
+                });
+                if (selected) {
+                    const path = typeof selected === 'string' ? selected : (selected as any).path;
+                    if (!path) return;
+
+                    const newPath = await api.profile.processAndSaveAvatar(path);
+                    await get().setAvatarPath(newPath);
+                }
+            } catch (e) {
+                console.error('Failed to upload avatar:', e);
             }
-        } catch (e) {
-            console.error('Failed to upload avatar:', e);
-        }
-    },
-    initStore: async () => {
-        const isFirstTime = await store.get<boolean>('isFirstTime');
-        const userName = await store.get<string>('userName');
-        const theme = await store.get<string>('theme');
-        const avatarPath = await store.get<string>('avatarPath');
-        const runInBackground = await store.get<boolean>('runInBackground');
-        const notifications = await store.get<NotificationConfig>('notifications');
-        
-        if (isFirstTime !== null && isFirstTime !== undefined) set({ isFirstTime });
-        if (userName !== null && userName !== undefined) set({ userName });
-        if (theme !== null && theme !== undefined) set({ theme });
-        if (avatarPath !== null && avatarPath !== undefined) set({ avatarPath });
-        if (runInBackground !== null && runInBackground !== undefined) {
-            set({ runInBackground: !!runInBackground });
-        }
-        if (notifications !== null && notifications !== undefined) {
-            set({ notifications: { ...DEFAULT_NOTIFICATIONS, ...notifications } });
-        }
-    }
-}));
+        },
+
+        initStore: async () => {
+            set(pickFields(await api.config.getConfig()));
+
+            if (!listening) {
+                listening = true;
+                await api.events.listen<AppConfig>(CONFIG_CHANGED_EVENT, (event) => {
+                    set(pickFields(event.payload));
+                });
+            }
+        },
+    };
+});

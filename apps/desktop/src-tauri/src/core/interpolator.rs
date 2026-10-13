@@ -1,50 +1,67 @@
 use regex::Regex;
+use std::sync::OnceLock;
 use serde_json::Value;
 use crate::core::context::ExecutionContext;
 
-/// Resuelve todas las expresiones `{{ ... }}` dentro de un string
-/// usando los resultados de nodos previos y variables globales.
-pub fn interpolate(template: &str, ctx: &ExecutionContext) -> String {
-    let re = Regex::new(r"\{\{\s*(.+?)\s*\}\}").unwrap();
+/// Resuelve todas las expresiones `{{ ... }}` dentro de un string usando los
+/// resultados de nodos previos y variables globales.
+///
+/// Si una expresión no se puede resolver devuelve `Err` (el nodo falla con un mensaje
+/// claro) en lugar de enviar el literal `{{ERR: ...}}` a la API destino.
+pub fn interpolate(template: &str, ctx: &ExecutionContext) -> Result<String, String> {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    let re = RE.get_or_init(|| Regex::new(r"\{\{\s*(.+?)\s*\}\}").unwrap());
 
-    re.replace_all(template, |caps: &regex::Captures| {
-        let expr = caps.get(1).unwrap().as_str();
-        resolve_expression(expr, ctx)
-    })
-    .to_string()
+    let mut out = String::with_capacity(template.len());
+    let mut last = 0;
+    for caps in re.captures_iter(template) {
+        let whole = caps.get(0).unwrap();
+        out.push_str(&template[last..whole.start()]);
+        out.push_str(&resolve_expression(caps.get(1).unwrap().as_str(), ctx)?);
+        last = whole.end();
+    }
+    out.push_str(&template[last..]);
+    Ok(out)
 }
 
 /// Recorre recursivamente un Value y aplica interpolación a cada String que encuentre.
-pub fn interpolate_value(value: &Value, ctx: &ExecutionContext) -> Value {
+pub fn interpolate_value(value: &Value, ctx: &ExecutionContext) -> Result<Value, String> {
     match value {
-        Value::String(s) => Value::String(interpolate(s, ctx)),
+        Value::String(s) => Ok(Value::String(interpolate(s, ctx)?)),
         Value::Object(map) => {
-            let new_map = map
-                .iter()
-                .map(|(k, v)| (k.clone(), interpolate_value(v, ctx)))
-                .collect();
-            Value::Object(new_map)
+            let mut new_map = serde_json::Map::with_capacity(map.len());
+            for (k, v) in map {
+                new_map.insert(k.clone(), interpolate_value(v, ctx)?);
+            }
+            Ok(Value::Object(new_map))
         }
-        Value::Array(arr) => Value::Array(arr.iter().map(|v| interpolate_value(v, ctx)).collect()),
-        other => other.clone(),
+        Value::Array(arr) => arr
+            .iter()
+            .map(|v| interpolate_value(v, ctx))
+            .collect::<Result<Vec<_>, _>>()
+            .map(Value::Array),
+        other => Ok(other.clone()),
     }
 }
 
-fn resolve_expression(expr: &str, ctx: &ExecutionContext) -> String {
+fn resolve_expression(expr: &str, ctx: &ExecutionContext) -> Result<String, String> {
     let parts: Vec<&str> = expr.splitn(2, '.').collect();
+    let rest = parts.get(1).copied().unwrap_or("");
 
     match parts[0] {
-        "global" => resolve_global(parts.get(1).copied().unwrap_or("")),
-        "env" => std::env::var(parts.get(1).copied().unwrap_or(""))
-            .unwrap_or_default(),
-        "custom" => ctx.get_custom_variable(parts.get(1).copied().unwrap_or(""))
-            .unwrap_or_else(|| format!("{{{{ERR: custom '{}' no encontrado}}}}", parts.get(1).copied().unwrap_or(""))),
+        "global" => resolve_global(rest),
+        // `env.*` fue eliminado a propósito: los .flux son compartibles y exponer las
+        // variables de entorno del proceso permitiría exfiltrar datos del equipo.
+        "env" => Err("{{env.*}} ya no está disponible. Usa una variable global (custom.*)".to_string()),
+        "custom" => ctx
+            .get_custom_variable(rest)
+            .ok_or_else(|| format!("La variable global '{rest}' no existe")),
         node_id => {
             // Soporta tanto nodeId.data.path.to.value como nodeId.path.to.value
             let suffix = expr.strip_prefix(node_id).unwrap_or("");
             let json_path = if let Some(stripped) = suffix.strip_prefix(".data.") {
                 stripped
-            } else if let Some(stripped) = suffix.strip_prefix(".") {
+            } else if let Some(stripped) = suffix.strip_prefix('.') {
                 stripped
             } else {
                 suffix
@@ -54,14 +71,16 @@ fn resolve_expression(expr: &str, ctx: &ExecutionContext) -> String {
     }
 }
 
-fn resolve_node_output(node_id: &str, json_path: &str, ctx: &ExecutionContext) -> String {
+fn resolve_node_output(node_id: &str, json_path: &str, ctx: &ExecutionContext) -> Result<String, String> {
     match ctx.get_node_result(node_id) {
-        Some(value) => navigate_json(&value, json_path),
-        None => format!("{{{{ERR: node '{}' sin resultado}}}}", node_id),
+        Some(value) => navigate_json(node_id, &value, json_path),
+        None => Err(format!(
+            "El nodo '{node_id}' no tiene resultado (¿está conectado antes de este nodo y se ejecutó con éxito?)"
+        )),
     }
 }
 
-fn navigate_json(value: &Value, path: &str) -> String {
+fn navigate_json(node_id: &str, value: &Value, path: &str) -> Result<String, String> {
     let mut current = value;
     for key in path.split('.') {
         if key.is_empty() {
@@ -71,26 +90,26 @@ fn navigate_json(value: &Value, path: &str) -> String {
         if let Ok(index) = key.parse::<usize>() {
             match current.get(index) {
                 Some(v) => current = v,
-                None => return format!("{{{{ERR: índice '{}' fuera de rango}}}}", index),
+                None => return Err(format!("{node_id}.{path}: el índice {index} está fuera de rango")),
             }
         } else {
             match current.get(key) {
                 Some(v) => current = v,
-                None => return format!("{{{{ERR: campo '{}' no encontrado}}}}", key),
+                None => return Err(format!("{node_id}.{path}: el campo '{key}' no existe en el resultado")),
             }
         }
     }
-    match current {
+    Ok(match current {
         Value::String(s) => s.clone(),
         Value::Null => String::new(),
         other => other.to_string(),
-    }
+    })
 }
 
-fn resolve_global(key: &str) -> String {
+fn resolve_global(key: &str) -> Result<String, String> {
     let now = chrono::Local::now();
 
-    match key {
+    Ok(match key {
         "time_pm" => now.format("%I:%M %p").to_string(),
         "time_24" => now.format("%H:%M").to_string(),
         "date" => now.format("%Y-%m-%d").to_string(),
@@ -100,8 +119,8 @@ fn resolve_global(key: &str) -> String {
         "month_name" => now.format("%B").to_string(),
         "year" => now.format("%Y").to_string(),
         "timeEmoji" => get_clock_emoji(&now),
-        _ => format!("{{{{ERR: global '{}' desconocido}}}}", key),
-    }
+        _ => return Err(format!("La variable global '{key}' es desconocida")),
+    })
 }
 
 /// Devuelve el emoji de reloj correcto para la hora actual,

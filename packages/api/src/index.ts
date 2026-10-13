@@ -9,7 +9,6 @@ import { scheduler } from './modules/scheduler';
 import { profile } from './modules/profile';
 import { path } from './modules/path';
 import { notifications } from './modules/notifications';
-import { LazyStore } from '@tauri-apps/plugin-store';
 
 export const api = {
   workflows,
@@ -26,5 +25,5 @@ export const api = {
   notifications,
 };
 
-export { LazyStore };
+export { CONFIG_CHANGED_EVENT } from './modules/config';
 export * from './types';

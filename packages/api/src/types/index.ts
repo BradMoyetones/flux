@@ -41,7 +41,7 @@ export interface Workflow {
   edges: Edge[];
 }
 
-export type NodeStatus = 'pending' | 'running' | 'success' | 'error';
+export type NodeStatus = 'pending' | 'running' | 'success' | 'error' | 'cancelled' | 'skipped';
 
 export interface NodeExecutionEvent {
   workflow_id: string;
@@ -93,9 +93,40 @@ export interface AppConfig {
   theme: string;
   avatarPath: string;
   runInBackground: boolean;
+  /** Iniciar Flux con el sistema (necesario para que los crons corran con la app cerrada). */
+  autostart: boolean;
+  /** Zona horaria IANA por defecto para triggers cron (ej. "America/Bogota"). */
+  timezone: string;
   notifications: NotificationConfig;
   variables: GlobalVariable[];
   workspaces: string[];
   workflowIndex: FluxEntry[];
+}
+
+/**
+ * Cambios parciales de configuración. Workspaces e índice no se pueden modificar
+ * desde aquí a propósito (tienen sus propios comandos en `api.workflows`).
+ */
+export type ConfigPatch = Partial<
+  Pick<
+    AppConfig,
+    | 'isFirstTime'
+    | 'userName'
+    | 'theme'
+    | 'avatarPath'
+    | 'runInBackground'
+    | 'autostart'
+    | 'timezone'
+    | 'notifications'
+    | 'variables'
+  >
+>;
+
+/** Estado del scheduler emitido en `workflow://scheduler-status`. */
+export type SchedulerStatus = 'scheduled' | 'unscheduled' | 'expired' | 'completed';
+
+export interface ActiveWorkflows {
+  executing: string[];
+  scheduled: string[];
 }
 

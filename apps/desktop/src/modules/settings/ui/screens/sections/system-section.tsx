@@ -5,6 +5,8 @@ import { SectionCard, SettingRow } from "@/modules/settings/ui/components/contro
 import { useUserStore } from "@/shared/stores/user-store";
 import { Switch } from '@flux/ui'
 import { Button } from '@flux/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui'
+import { useTimezones } from "@/shared/hooks/use-timezones"
 import { api } from "@flux/api"
 import {
     Dialog,
@@ -19,7 +21,8 @@ import { AlertTriangle } from "lucide-react"
 import { Spinner } from '@flux/ui';
 
 export function SystemSection() {
-    const { runInBackground, setRunInBackground } = useUserStore();
+    const { runInBackground, setRunInBackground, autostart, setAutostart, timezone, setTimezone } = useUserStore();
+    const timezones = useTimezones();
     const [isResetting, setIsResetting] = useState(false);
 
     const handleReset = async (restart: boolean) => {
@@ -40,6 +43,30 @@ export function SystemSection() {
                     description="Al cerrar la ventana, la aplicación permanecerá activa en el menú del sistema (System Tray) para procesar tus flujos."
                 >
                     <Switch checked={runInBackground} onCheckedChange={setRunInBackground} />
+                </SettingRow>
+                <SettingRow
+                    title="Iniciar con el sistema"
+                    description="Flux arranca oculto en el menú del sistema al iniciar sesión, para que tus flujos programados (cron) sigan ejecutándose sin abrir la app."
+                >
+                    <Switch checked={autostart} onCheckedChange={setAutostart} />
+                </SettingRow>
+            </SectionCard>
+
+            <SectionCard title="Región">
+                <SettingRow
+                    title="Zona horaria"
+                    description="Zona por defecto para los flujos programados. Cada flujo puede usar una distinta en sus ajustes."
+                >
+                    <Select value={timezone} onValueChange={(v) => v && setTimezone(v)}>
+                        <SelectTrigger className="w-64">
+                            <SelectValue placeholder="Selecciona..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {(timezones.length ? timezones : [timezone]).map((tz) => (
+                                <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </SettingRow>
             </SectionCard>
 

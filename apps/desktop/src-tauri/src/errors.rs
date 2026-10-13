@@ -25,6 +25,9 @@ pub enum AppError {
     #[error("Sidecar error: {0}")]
     Sidecar(String),
 
+    #[error("Workflow already running: {0}")]
+    AlreadyRunning(String),
+
     #[error("Internal error: {0}")]
     Internal(String),
 }
@@ -44,6 +47,7 @@ impl Serialize for AppError {
             AppError::Scheduler(_) => ("SCHEDULER", "scheduler"),
             AppError::Storage(_) => ("STORAGE", "storage"),
             AppError::Sidecar(_) => ("SIDECAR", "sidecar"),
+            AppError::AlreadyRunning(_) => ("ALREADY_RUNNING", "execution"),
             AppError::Internal(_) => ("INTERNAL", "system"),
         };
 

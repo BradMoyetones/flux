@@ -6,6 +6,8 @@ import { Textarea } from '@flux/ui'
 import { Input } from '@flux/ui'
 import { Label } from '@flux/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui'
+import { useTimezones } from "@/shared/hooks/use-timezones"
+import { useUserStore } from "@/shared/stores/user-store"
 
 interface WorkflowSettingsPanelProps {
     onClose: () => void;
@@ -13,6 +15,9 @@ interface WorkflowSettingsPanelProps {
 
 export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
     const { workflowName, setWorkflowName, description, setDescription, trigger, setTrigger } = useFlowStore()
+    const defaultTimezone = useUserStore((s) => s.timezone)
+    const timezones = useTimezones()
+    const effectiveTimezone = (trigger.type === "cron" && trigger.timezone) || defaultTimezone
 
     const handleTriggerChange = (type: "manual" | "cron" | "webhook") => {
         if (type === "manual") {
@@ -89,20 +94,20 @@ export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
 
                             <div className="space-y-2 sm:col-span-1">
                                 <Label>Zona horaria</Label>
-                                <Select 
-                                    value={(trigger as any).timezone || ""} 
-                                    onValueChange={(val) => setTrigger({ ...trigger, timezone: val })}
+                                <Select
+                                    value={effectiveTimezone}
+                                    onValueChange={(val) => val && setTrigger({ ...trigger, timezone: val })}
                                 >
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Selecciona..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="America/Bogota">America/Bogota</SelectItem>
-                                        <SelectItem value="America/Mexico_City">America/Mexico_City</SelectItem>
-                                        <SelectItem value="America/New_York">America/New_York</SelectItem>
-                                        <SelectItem value="UTC">UTC</SelectItem>
+                                        {(timezones.length ? timezones : [effectiveTimezone]).map((tz) => (
+                                            <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
+                                <p className="text-[10px] text-muted-foreground">Por defecto: {defaultTimezone}</p>
                             </div>
                             
                             <div className="space-y-2">
@@ -117,6 +122,7 @@ export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
                                     value={trigger.starts_at || ""}
                                     onChange={(e) => setTrigger({ ...trigger, starts_at: e.target.value || undefined })}
                                 />
+                                <p className="text-[10px] text-muted-foreground">Vacío = activo de inmediato. Hora en {effectiveTimezone}.</p>
                             </div>
 
                             <div className="space-y-2">
@@ -131,6 +137,7 @@ export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
                                     value={trigger.expires_at || ""}
                                     onChange={(e) => setTrigger({ ...trigger, expires_at: e.target.value || undefined })}
                                 />
+                                <p className="text-[10px] text-muted-foreground">Vacío = nunca expira. Hora en {effectiveTimezone}.</p>
                             </div>
 
                             <div className="space-y-2 sm:col-span-2">
@@ -138,7 +145,7 @@ export function WorkflowSettingsPanel({ onClose }: WorkflowSettingsPanelProps) {
                                 <Input
                                     type="number"
                                     min={1}
-                                    placeholder="Sin límite"
+                                    placeholder="Sin límite (vacío)"
                                     value={trigger.max_runs || ""}
                                     onChange={(e) => setTrigger({ ...trigger, max_runs: e.target.value ? parseInt(e.target.value, 10) : undefined })}
                                 />

@@ -12,6 +12,7 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
 } from '@xyflow/react';
+import { toast } from 'sonner';
 import {
   api,
   type NodeExecutionEvent,
@@ -19,8 +20,16 @@ import {
   type NodeStatus,
   type Workflow,
   type Trigger,
+  type SchedulerStatus,
   type WorkflowMetadata
 } from '@flux/api';
+
+/** Los errores del backend llegan como `{ code, category, message }` (AppError) o como string. */
+function errorMessage(err: unknown): string {
+  if (typeof err === 'string') return err;
+  if (err && typeof err === 'object' && 'message' in err) return String((err as { message: unknown }).message);
+  return 'Error desconocido';
+}
 
 export type AppNodeData = {
   name: string;
@@ -199,7 +208,14 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       }
     } catch (err) {
       console.error("Workflow execution failed to start", err);
-      set({ isExecuting: false });
+      set({
+        isExecuting: false,
+        nodes: get().nodes.map(n => ({ ...n, data: { ...n.data, status: undefined } })),
+      });
+      toast.error(
+        state.trigger.type === 'cron' ? 'No se pudo programar el flujo' : 'No se pudo ejecutar el flujo',
+        { description: errorMessage(err) },
+      );
     }
   },
 
@@ -212,9 +228,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         await api.scheduler.unscheduleWorkflow(state.workflowId);
       }
       await api.execution.stopWorkflow(state.workflowId);
-      // El backend emitirá workflow://status con Error/Cancelled y actualizaremos isExecuting en el listener
+      // El backend emite workflow://status (cancelled) y los nodos pendientes pasan a 'cancelled'.
     } catch (err) {
       console.error("Failed to stop workflow", err);
+      toast.error('No se pudo detener el flujo', { description: errorMessage(err) });
     }
   },
 
@@ -223,7 +240,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     if (!state.workflowId) return;
 
     try {
-      const activeFlows = await api.execution.getActiveWorkflows() as unknown as { executing: string[], scheduled: string[] };
+      const activeFlows = await api.execution.getActiveWorkflows();
       const isExecuting = activeFlows.executing.includes(state.workflowId) || activeFlows.scheduled.includes(state.workflowId);
       
       set({ isExecuting });
@@ -310,7 +327,7 @@ export const setupFlowListeners = async () => {
     
     // Solo cambiar a false si NO es un trigger cron. 
     // Los flujos cron se quedan "Ejecutándose" (esperando su próxima iteración) hasta que se desprogramen.
-    if ((statusStr === 'success' || statusStr === 'error') && store.workflowId === payload.workflow_id) {
+    if ((statusStr === 'success' || statusStr === 'error' || statusStr === 'cancelled') && store.workflowId === payload.workflow_id) {
       if (store.trigger.type !== 'cron') {
         useFlowStore.setState({ isExecuting: false });
       }
@@ -330,32 +347,27 @@ export const setupFlowListeners = async () => {
     }
   });
 
-  await api.events.listen<{ workflow_id: string, status: string }>('workflow://scheduler-status', (event) => {
+  await api.events.listen<{ workflow_id: string, status: SchedulerStatus }>('workflow://scheduler-status', (event) => {
     const { workflow_id, status } = event.payload;
     const store = useFlowStore.getState();
-    
-    console.log(`[Scheduler] Workflow ${workflow_id} status changed to ${status}`);
-    
-    if (store.workflowId === workflow_id) {
-      if (status === 'scheduled') {
-        useFlowStore.setState({ isExecuting: true });
-      } else if (status === 'unscheduled') {
-        useFlowStore.setState({ isExecuting: false });
-      }
+
+    if (store.workflowId !== workflow_id) return;
+
+    if (status === 'scheduled') {
+      useFlowStore.setState({ isExecuting: true });
+    } else {
+      // unscheduled | expired | completed → el flujo ya no está programado
+      useFlowStore.setState({ isExecuting: false });
+      if (status === 'expired') toast.info('El flujo programado expiró', { description: 'Llegó su fecha de expiración y se desprogramó.' });
+      if (status === 'completed') toast.info('El flujo programado terminó', { description: 'Alcanzó su máximo de ejecuciones y se desprogramó.' });
     }
   });
 
   await api.events.listen<{ path: string, metadata: WorkflowMetadata }>('workflow://metadata-updated', (event) => {
-    const { metadata } = event.payload;
-    // Update store only if the currently loaded workflow matches the path
-    const store = useFlowStore.getState();
-    if (store.workflowId) {
-        // Technically we don't store `path` in the store currently.
-        // We can just update it, or we could add `workflowPath` to the store.
-        // But since this listener is global, updating the global `metadata` is fine
-        // if we assume `workflowId` or `path` matches. 
-        // We probably should just update the global store's metadata. 
-        useFlowStore.setState({ metadata });
+    const { path, metadata } = event.payload;
+    // Solo si es el flujo que está cargado en el editor (el evento es global).
+    if (useFlowStore.getState().workflowPath === path) {
+      useFlowStore.setState({ metadata });
     }
   });
 };

@@ -1,3 +1,4 @@
-pub mod whatsapp_manager;
-pub mod scheduler;
+pub mod autostart;
 pub mod notifications;
+pub mod scheduler;
+pub mod whatsapp_manager;
