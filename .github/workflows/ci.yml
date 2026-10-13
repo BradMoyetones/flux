@@ -12,22 +12,19 @@ concurrency:
 jobs:
   frontend:
     name: Frontend (tests)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: latest
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      # @flux/desktop consume @flux/api desde su build (dist/)
       - name: Build @flux/api
         run: pnpm --filter @flux/api build
 
@@ -41,7 +38,7 @@ jobs:
       run:
         working-directory: apps/desktop/src-tauri
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Linux dependencies (Tauri)
         working-directory: .
@@ -55,7 +52,6 @@ jobs:
         with:
           workspaces: apps/desktop/src-tauri
 
-      # `generate_context!` exige que exista `frontendDist` y el sidecar declarado en `externalBin`
       - name: Create sidecar placeholder
         run: |
           mkdir -p ../dist binaries
