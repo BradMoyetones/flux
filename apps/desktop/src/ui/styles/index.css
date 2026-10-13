@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/geist';
+@import "@xyflow/react/dist/style.css";
+@source "../../../node_modules/streamdown/dist/*.js";
+
+@source "../../../node_modules/@flux/ui";
+@import "@flux/ui/styles.css";
+@import './themes.css';
+
+
+@custom-variant dark (&:is(.dark *));
+ 
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    body {
+        @apply text-foreground;
+    }
+
+    html {
+        @apply font-sans;
+    }
+    
+    .react-flow__attribution {
+        background-color: var(--muted) !important;
+        color: var(--muted-foreground) !important;
+        border: 1px solid var(--border) !important;
+        /* Solo borde esquina superior derecha */
+        border-radius: .5rem 0 0 0 !important;
+    }
+    .react-flow__attribution a {
+        color: var(--muted-foreground) !important;
+    }
+    .react-flow__attribution a:hover {
+        color: var(--primary) !important;
+    }
+}
+
+.layout {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 250px 1fr;
+}

@@ -1,0 +1,159 @@
+export interface WorkflowMetadata {
+  last_execution?: string;
+  total_executions: number;
+}
+
+export type Trigger = 
+  | { type: 'manual'; config?: any }
+  | { type: 'cron'; expression: string; timezone?: string; starts_at?: string; expires_at?: string; max_runs?: number }
+  | { type: 'webhook'; path: string; method?: string };
+
+export interface XYPosition {
+  x: number;
+  y: number;
+}
+
+export interface Node {
+  id: string;
+  name: string;
+  type: string;
+  label: string;
+  config: any;
+  position?: XYPosition;
+}
+
+export interface Edge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
+}
+
+export interface Workflow {
+  id: string;
+  name: string;
+  description?: string;
+  path?: string;
+  metadata?: WorkflowMetadata;
+  trigger: Trigger;
+  nodes: Node[];
+  edges: Edge[];
+}
+
+export type NodeStatus = 'pending' | 'running' | 'success' | 'error' | 'cancelled' | 'skipped';
+
+export interface NodeExecutionEvent {
+  workflow_id: string;
+  node_id: string;
+  status: NodeStatus;
+  result?: any;
+  error?: string;
+}
+
+export interface WorkflowExecutionEvent {
+  workflow_id: string;
+  status: NodeStatus;
+}
+
+export interface WhatsAppSessionInfo {
+  id: string;
+  port: number;
+  connected?: boolean;
+  jid?: string | null;
+}
+
+export type Workspace = string;
+
+export interface FluxEntry {
+  name: string;
+  path: string;
+  workspace: string;
+}
+
+export interface NotificationConfig {
+  desktopEnabled: boolean;
+  onFlowSuccess: boolean;
+  onFlowError: boolean;
+  onSessionDisconnect: boolean;
+  sound: boolean;
+  quietHours: boolean;
+  onlyWhenUnfocused: boolean;
+}
+
+export interface GlobalVariable {
+  key: string;
+  value: string;
+  secret: boolean;
+}
+
+export interface AppConfig {
+  isFirstTime: boolean;
+  userName: string;
+  theme: string;
+  avatarPath: string;
+  runInBackground: boolean;
+  /** Iniciar Flux con el sistema (necesario para que los crons corran con la app cerrada). */
+  autostart: boolean;
+  /** Zona horaria IANA por defecto para triggers cron (ej. "America/Bogota"). */
+  timezone: string;
+  notifications: NotificationConfig;
+  variables: GlobalVariable[];
+  workspaces: string[];
+}
+
+/**
+ * Cambios parciales de configuración. Workspaces e índice no se pueden modificar
+ * desde aquí a propósito (tienen sus propios comandos en `api.workflows`).
+ */
+export type ConfigPatch = Partial<
+  Pick<
+    AppConfig,
+    | 'isFirstTime'
+    | 'userName'
+    | 'theme'
+    | 'avatarPath'
+    | 'runInBackground'
+    | 'autostart'
+    | 'timezone'
+    | 'notifications'
+    | 'variables'
+  >
+>;
+
+/** Estado del scheduler emitido en `workflow://scheduler-status`. */
+export type SchedulerStatus = 'scheduled' | 'unscheduled' | 'expired' | 'completed';
+
+export interface ActiveWorkflows {
+  executing: string[];
+  scheduled: string[];
+}
+
+
+export type RunStatus = 'running' | 'success' | 'error' | 'cancelled' | 'interrupted';
+export type RunTrigger = 'manual' | 'cron' | (string & {});
+
+/** Una ejecución del historial (SQLite). */
+export interface RunRecord {
+  id: string;
+  workflowId: string;
+  workflowName: string;
+  workflowPath: string | null;
+  trigger: RunTrigger;
+  status: RunStatus;
+  startedAt: string;
+  finishedAt: string | null;
+  error: string | null;
+}
+
+export interface NodeRunRecord {
+  nodeId: string;
+  status: NodeStatus;
+  startedAt: string | null;
+  finishedAt: string | null;
+  error: string | null;
+}
+
+export interface RunDetail extends RunRecord {
+  nodes: NodeRunRecord[];
+}

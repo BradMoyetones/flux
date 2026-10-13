@@ -1,0 +1,84 @@
+use serde::ser::SerializeStruct;
+use serde::Serialize;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum AppError {
+    #[error("Step execution failed in '{step_id}': {message}")]
+    StepExecution { step_id: String, message: String },
+
+    #[error("Invalid configuration: {0}")]
+    InvalidConfig(String),
+
+    #[error("HTTP error: {0}")]
+    HttpClient(String),
+
+    #[error("WhatsApp error: {0}")]
+    WhatsApp(String),
+
+    #[error("Scheduler error: {0}")]
+    Scheduler(String),
+
+    #[error("Storage error: {0}")]
+    Storage(String),
+
+    #[error("Sidecar error: {0}")]
+    Sidecar(String),
+
+    #[error("Workflow already running: {0}")]
+    AlreadyRunning(String),
+
+    #[error("Internal error: {0}")]
+    Internal(String),
+}
+
+impl Serialize for AppError {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("AppError", 3)?;
+        
+        let (code, category) = match self {
+            AppError::StepExecution { .. } => ("STEP_EXECUTION", "execution"),
+            AppError::InvalidConfig(_) => ("INVALID_CONFIG", "config"),
+            AppError::HttpClient(_) => ("HTTP_CLIENT", "network"),
+            AppError::WhatsApp(_) => ("WHATSAPP", "sidecar"),
+            AppError::Scheduler(_) => ("SCHEDULER", "scheduler"),
+            AppError::Storage(_) => ("STORAGE", "storage"),
+            AppError::Sidecar(_) => ("SIDECAR", "sidecar"),
+            AppError::AlreadyRunning(_) => ("ALREADY_RUNNING", "execution"),
+            AppError::Internal(_) => ("INTERNAL", "system"),
+        };
+
+        state.serialize_field("code", code)?;
+        state.serialize_field("category", category)?;
+        state.serialize_field("message", &self.to_string())?;
+        state.end()
+    }
+}
+
+// Conversiones para poder usar `?` en vez de `.map_err(|e| AppError::…(e.to_string()))`.
+impl From<std::io::Error> for AppError {
+    fn from(e: std::io::Error) -> Self {
+        AppError::Storage(e.to_string())
+    }
+}
+
+impl From<serde_json::Error> for AppError {
+    fn from(e: serde_json::Error) -> Self {
+        AppError::InvalidConfig(e.to_string())
+    }
+}
+
+impl From<rusqlite::Error> for AppError {
+    fn from(e: rusqlite::Error) -> Self {
+        AppError::Storage(format!("Base de datos: {e}"))
+    }
+}
+
+impl From<tauri::Error> for AppError {
+    fn from(e: tauri::Error) -> Self {
+        AppError::Internal(e.to_string())
+    }
+}

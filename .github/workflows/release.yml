@@ -108,8 +108,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: 'src-tauri/sidecar/go.mod'
-          cache-dependency-path: src-tauri/sidecar/go.sum
+          go-version-file: 'apps/desktop/src-tauri/sidecar/go.mod'
+          cache-dependency-path: apps/desktop/src-tauri/sidecar/go.sum
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -134,7 +134,7 @@ jobs:
 
       - name: Build Go Sidecar
         shell: bash
-        working-directory: src-tauri/sidecar
+        working-directory: apps/desktop/src-tauri/sidecar
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
@@ -154,9 +154,9 @@ jobs:
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "body<<$EOF" >> "$GITHUB_OUTPUT"
-          if [ -f releases/latest.md ]; then
+          if [ -f apps/desktop/releases/latest.md ]; then
             # Extraer el YAML frontmatter del archivo para que la Release de GitHub quede limpia
-            awk 'NR==1 && /^---$/ {in_fm=1; next} in_fm && /^---$/ {in_fm=0; next} !in_fm {print}' releases/latest.md >> "$GITHUB_OUTPUT"
+            awk 'NR==1 && /^---$/ {in_fm=1; next} in_fm && /^---$/ {in_fm=0; next} !in_fm {print}' apps/desktop/releases/latest.md >> "$GITHUB_OUTPUT"
           else
             echo "Nueva versión de Flux disponible." >> "$GITHUB_OUTPUT"
           fi
@@ -174,4 +174,5 @@ jobs:
           releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: false
+          projectPath: apps/desktop
           args: ${{ matrix.args }}
