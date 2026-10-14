@@ -5,7 +5,7 @@ import {
   BaseNodeContent,
   BaseNodeHeader,
 } from "@/components/react-flow/base-node";
-import { TableBody, TableRow, TableCell } from '@flux/ui';
+import { TableBody, TableRow, TableCell } from '@/components/table';
 
 /* DATABASE SCHEMA NODE HEADER ------------------------------------------------ */
 /**

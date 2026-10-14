@@ -15,7 +15,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@flux/ui';
+} from '@/components/command';
 
 export interface NodeSearchProps extends Omit<PanelProps, "children"> {
   // The function to search for nodes, should return an array of nodes that match the search string

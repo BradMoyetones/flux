@@ -5,7 +5,7 @@ import { api } from '@flux/api';
 import { useTerminalStore } from '../../core/use-terminal-store';
 import '@xterm/xterm/css/xterm.css';
 import { Trash2 } from 'lucide-react';
-import { Button } from '@flux/ui';
+import { Button } from '@flux/ui/button';
 
 export function TerminalConsole() {
     const terminalRef = useRef<HTMLDivElement>(null);

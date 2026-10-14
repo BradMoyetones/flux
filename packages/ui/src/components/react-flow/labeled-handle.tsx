@@ -1,7 +1,7 @@
 import { type ComponentProps } from "react";
 import { type HandleProps } from "@xyflow/react";
 
-import { cn } from "@/shared/utils/utils";
+import { cn } from "cn";
 import { BaseHandle } from "@/components/react-flow/base-handle";
 
 const flexDirections = {

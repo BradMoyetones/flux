@@ -3,6 +3,9 @@
     "extends": "../shared/tsconfig.json",
     "compilerOptions": {
         "outDir": "dist",
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
         "baseUrl": ".",
         "paths": {
             "@/*": ["src/*"]

@@ -3,7 +3,7 @@ import { CreateFlowDialog } from '../components/create-flow-dialog';
 import { WorkspaceSidebar } from '../components/workspace-sidebar';
 import { HomeHeader } from '../components/home-header';
 import { HomeToolbar } from '../components/home-toolbar';
-import { cn } from '@/shared/utils/utils';
+import { cn } from 'cn';
 import { useHomeFilters } from '../../hooks/use-home-filters';
 import { HomeEmptyState } from '../components/home-empty-state';
 import { WorkflowCollection, WorkflowGroups } from '../components/workflow-collection';

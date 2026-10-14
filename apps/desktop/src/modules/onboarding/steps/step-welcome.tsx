@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react"
 import { ArrowRight } from "lucide-react"
-import { Button } from '@flux/ui'
+import { Button } from '@flux/ui/button'
 import { containerVariants, itemVariants } from "../motion"
 
 interface StepWelcomeProps {

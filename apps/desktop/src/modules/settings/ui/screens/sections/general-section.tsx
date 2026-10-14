@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import { Field, SectionCard, SettingRow, Switch, TextInput } from "@/modules/settings/ui/components/controls"
-import { Button } from '@flux/ui'
+import { Button } from '@flux/ui/button'
 import { Camera, RotateCcw, Save, Sparkles } from "lucide-react"
 import { useUserStore } from "@/shared/stores/user-store"
 import { convertFileSrc } from "@tauri-apps/api/core"
-import { Tooltip, TooltipContent, TooltipTrigger } from '@flux/ui'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@flux/ui/tooltip'
 
 export function GeneralSection() {
     const { userName, avatarPath, isFirstTime, setIsFirstTime, setUserName, uploadAvatar } = useUserStore();

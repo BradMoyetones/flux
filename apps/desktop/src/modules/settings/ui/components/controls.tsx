@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { Check, ChevronDown } from "lucide-react"
-import { cn } from "@/shared/utils/utils"
+import { cn } from "cn"
 
 /* ---------------------------------- Switch --------------------------------- */
 

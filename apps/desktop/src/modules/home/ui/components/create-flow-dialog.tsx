@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@flux/ui';
-import { Button } from '@flux/ui';
-import { Input } from '@flux/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@flux/ui/dialog';
+import { Button } from '@flux/ui/button';
+import { Input } from '@flux/ui/input';
 import { api, type Workspace } from "@flux/api";
 import SelectWorkspaceModal from "./select-workspace";
 import { Folder } from "lucide-react";

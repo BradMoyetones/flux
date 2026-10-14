@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { SectionCard, SettingRow } from "@/modules/settings/ui/components/controls"
 import { useUserStore } from "@/shared/stores/user-store"
-import { Switch } from '@flux/ui'
-import { Button } from '@flux/ui'
+import { Switch } from '@flux/ui/switch'
+import { Button } from '@flux/ui/button'
 import { api } from "@flux/api"
 import { Bell, Loader2 } from "lucide-react"
 

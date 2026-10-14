@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Input } from '@flux/ui'
+import { Input } from '@flux/ui/input'
 import {
     Search,
 } from "lucide-react"
@@ -12,7 +12,7 @@ import { WhatsAppSection } from "./sections/whatsapp-section"
 import { AutomationSection } from "./sections/automation-section"
 import { NotificationsSection } from "./sections/notifications-section"
 import { AboutSection } from "./sections/about-section"
-import { cn } from "@/shared/utils/utils"
+import { cn } from "cn"
 import { useUserStore } from "@/shared/stores/user-store"
 import { convertFileSrc } from "@tauri-apps/api/core"
 import { SectionId, NAV, SECTION_TITLES } from "../../lib/data"

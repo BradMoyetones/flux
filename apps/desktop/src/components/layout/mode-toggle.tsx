@@ -3,13 +3,13 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-import { Button } from '@flux/ui';
+import { Button } from '@flux/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@flux/ui';
+} from '@flux/ui/dropdown-menu';
 
 export function ModeToggle() {
     const { setTheme } = useTheme();

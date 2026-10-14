@@ -1,5 +1,5 @@
 import App from '@/modules/app/react/App';
-import { Button } from '@flux/ui';
+import { Button } from '@flux/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { createBrowserRouter, Link } from 'react-router';
 import { OnboardingView } from '@/modules/onboarding/onboarding-view';

@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@flux/ui';
-import { Button } from '@flux/ui';
-import { Input } from '@flux/ui';
-import { Badge } from '@flux/ui';
-import { Separator } from '@flux/ui';
-import { ScrollArea } from '@flux/ui';
-import { Spinner } from '@flux/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@flux/ui/dialog';
+import { Button } from '@flux/ui/button';
+import { Input } from '@flux/ui/input';
+import { Badge } from '@flux/ui/badge';
+import { Separator } from '@flux/ui/separator';
+import { ScrollArea } from '@flux/ui/scroll-area';
+import { Spinner } from '@flux/ui/spinner';
 import { MessageSquare, Plus, Power, PowerOff, RefreshCw, Wifi, Smartphone, Trash2 } from 'lucide-react';
 import type { WhatsAppSessionInfo } from '@flux/api';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@flux/ui';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@flux/ui/tooltip';
 
 interface WaSessionDialogProps {
     sessions: WhatsAppSessionInfo[];

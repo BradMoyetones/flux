@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { NodeToolbar, type NodeToolbarProps } from "@xyflow/react";
 
-import { cn } from "@/shared/utils/utils";
+import { cn } from "cn";
 
 /* TOOLTIP CONTEXT ---------------------------------------------------------- */
 

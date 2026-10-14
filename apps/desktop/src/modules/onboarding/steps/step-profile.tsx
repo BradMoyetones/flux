@@ -3,9 +3,9 @@
 import { useState } from "react"
 import { motion } from "motion/react"
 import { Upload, Loader2, ArrowLeft, ArrowRight } from "lucide-react"
-import { Button } from '@flux/ui'
-import { Input } from '@flux/ui'
-import { Label } from '@flux/ui'
+import { Button } from '@flux/ui/button'
+import { Input } from '@flux/ui/input'
+import { Label } from '@flux/ui/label'
 import { containerVariants, itemVariants } from "../motion"
 import { useUserStore } from "@/shared/stores/user-store"
 import { convertFileSrc } from "@tauri-apps/api/core"

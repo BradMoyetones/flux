@@ -2,9 +2,9 @@
 
 import { useWhatsAppSession } from "@/modules/flows/plugins/whatsapp/use-whatsapp-session"
 import { Badge, SectionCard } from "@/modules/settings/ui/components/controls"
-import { cn } from "@/shared/utils/utils"
-import { Button } from '@flux/ui'
-import { Switch } from '@flux/ui'
+import { cn } from "cn"
+import { Button } from '@flux/ui/button'
+import { Switch } from '@flux/ui/switch'
 import {
     MessageCircle,
     Plug,

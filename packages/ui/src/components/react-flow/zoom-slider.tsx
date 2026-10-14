@@ -10,9 +10,9 @@ import {
   type PanelProps,
 } from "@xyflow/react";
 
-import { Slider } from '@flux/ui';
-import { Button } from '@flux/ui';
-import { cn } from "@/shared/utils/utils";
+import { Slider } from '@/components/slider';
+import { Button } from '@/components/button';
+import { cn } from "cn";
 
 export function ZoomSlider({
   className,

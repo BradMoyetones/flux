@@ -9,8 +9,8 @@ import {
     SidebarMenu,
     SidebarMenuItem,
     SidebarMenuButton,
-} from '@flux/ui';
-import { Separator } from '@flux/ui';
+} from '@flux/ui/sidebar';
+import { Separator } from '@flux/ui/separator';
 import { pluginRegistry, PLUGIN_CATEGORIES, type PluginCategory, type PluginDefinition } from "../../plugins/registry";
 import { Globe, MessageSquare, Database, GitBranch, Puzzle, Wrench, GripVertical, type LucideIcon } from "lucide-react";
 

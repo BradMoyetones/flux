@@ -3,9 +3,9 @@
 import { useState } from "react"
 import { SectionCard, SettingRow } from "@/modules/settings/ui/components/controls"
 import { useUserStore } from "@/shared/stores/user-store";
-import { Switch } from '@flux/ui'
-import { Button } from '@flux/ui'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui'
+import { Switch } from '@flux/ui/switch'
+import { Button } from '@flux/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui/select'
 import { useTimezones } from "@/shared/hooks/use-timezones"
 import { api } from "@flux/api"
 import {
@@ -16,9 +16,9 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@flux/ui'
+} from '@flux/ui/dialog'
 import { AlertTriangle } from "lucide-react"
-import { Spinner } from '@flux/ui';
+import { Spinner } from '@flux/ui/spinner';
 
 export function SystemSection() {
     const { runInBackground, setRunInBackground, autostart, setAutostart, timezone, setTimezone } = useUserStore();

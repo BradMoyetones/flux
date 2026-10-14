@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { Spinner } from '@flux/ui';
+import { Spinner } from '@flux/ui/spinner';
 import { api } from '@flux/api';
 
-import { cn } from '@/shared/utils/utils';
+import { cn } from 'cn';
 import { resolveRoute } from '@/shared/router/route-meta';
 import { tabViews } from '@/shared/router/tab-views';
 import { TabProvider } from '@/shared/state/tab-context';

@@ -1,7 +1,7 @@
 "use client"
 
 import { SectionCard, SettingRow } from "@/modules/settings/ui/components/controls"
-import { Button } from "@flux/ui"
+import { Button } from "@flux/ui/button"
 import { useUpdater } from "@/ui/hooks/use-updater"
 import { BookOpen, Bug, Code2, FileText, RefreshCw } from "lucide-react"
 import { useState } from "react";

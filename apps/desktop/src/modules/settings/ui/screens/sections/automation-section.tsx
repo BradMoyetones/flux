@@ -9,9 +9,9 @@ import {
     SettingRow,
     TextInput,
 } from "@/modules/settings/ui/components/controls"
-import { Button } from '@flux/ui'
+import { Button } from '@flux/ui/button'
 import { Eye, EyeOff, Plus, Trash2 } from "lucide-react"
-import { Switch } from '@flux/ui'
+import { Switch } from '@flux/ui/switch'
 
 export function AutomationSection() {
     const [revealed, setRevealed] = useState<Record<number, boolean>>({})

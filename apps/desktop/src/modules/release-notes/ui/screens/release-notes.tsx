@@ -3,7 +3,7 @@ import { Calendar, Code2, Sparkles } from 'lucide-react';
 import { Streamdown } from 'streamdown';
 
 import { APP_CONFIG } from '@/config/app';
-import { cn } from '@/shared/utils/utils';
+import { cn } from 'cn';
 import { useReleaseNotesViewModel, generateSlug } from '../viewModels/useReleaseNotes.viewModel';
 
 // Helper to extract text from ReactNode children to generate slug

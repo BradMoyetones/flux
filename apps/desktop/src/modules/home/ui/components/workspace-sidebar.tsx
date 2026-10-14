@@ -2,8 +2,8 @@
 
 import { memo, useState } from 'react';
 import { Ellipsis, Folder, FolderOpen, FolderPlus, Layers, Trash2 } from 'lucide-react';
-import { Button } from '@flux/ui';
-import { cn } from '@/shared/utils/utils';
+import { Button } from '@flux/ui/button';
+import { cn } from 'cn';
 import { workspaceName } from '../../lib/format';
 import { useHomeStore } from '../../stores/home-store';
 import { useHomeFilters } from '../../hooks/use-home-filters';
@@ -15,8 +15,8 @@ import {
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuTrigger,
-} from '@flux/ui'
-import { Spinner } from '@flux/ui';
+} from '@flux/ui/dropdown-menu'
+import { Spinner } from '@flux/ui/spinner';
 
 const itemClass = (active: boolean) =>
     cn(

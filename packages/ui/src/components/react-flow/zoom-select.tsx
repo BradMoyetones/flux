@@ -9,8 +9,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@flux/ui';
-import { cn } from "@/shared/utils/utils";
+} from '@/components/select';
+import { cn } from "cn";
 
 export function ZoomSelect({
   className,

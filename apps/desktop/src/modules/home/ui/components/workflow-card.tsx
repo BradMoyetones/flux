@@ -2,14 +2,14 @@
 
 import { memo, useState } from 'react';
 import { Trash2, Workflow } from 'lucide-react';
-import { Button } from '@flux/ui';
+import { Button } from '@flux/ui/button';
 import { FluxEntry } from '@/types/data';
 import { useHomeStore } from '../../stores/home-store';
 import { useTabs } from '@/shared/state/tabs';
 import { flowTabPath } from '@/shared/router/route-meta';
 import { toast } from 'sonner';
-import { Spinner } from '@flux/ui';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@flux/ui';
+import { Spinner } from '@flux/ui/spinner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@flux/ui/tooltip';
 
 /** Compact card used in grid view. Memoized: only re-renders when the flow changes. */
 export const WorkflowCard = memo(function WorkflowCard({ flow }: { flow: FluxEntry }) {

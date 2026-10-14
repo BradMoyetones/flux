@@ -2,10 +2,10 @@ import { memo } from 'react';
 import { Position, type NodeProps } from '@xyflow/react';
 import { AppNode } from '../../core/use-flow-store';
 import { MessageSquare } from 'lucide-react';
-import { BaseNode, BaseNodeHeader, BaseNodeHeaderTitle, BaseNodeContent } from '@/components/react-flow/base-node';
-import { NodeStatusIndicator, type NodeStatus } from '@/components/react-flow/node-status-indicator';
-import { BaseHandle } from '@/components/react-flow/base-handle';
-import { Badge } from '@flux/ui';
+import { BaseNode, BaseNodeHeader, BaseNodeHeaderTitle, BaseNodeContent } from '@flux/ui/react-flow/base-node';
+import { NodeStatusIndicator, type NodeStatus } from '@flux/ui/react-flow/node-status-indicator';
+import { BaseHandle } from '@flux/ui/react-flow/base-handle';
+import { Badge } from '@flux/ui/badge';
 
 const ACTION_LABELS: Record<string, string> = {
   send_message: 'Enviar Mensaje',

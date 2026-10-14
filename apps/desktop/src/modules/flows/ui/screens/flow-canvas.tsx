@@ -14,21 +14,21 @@ import { useFlowStore, useFlowStoreApi, useFlowDirty, setupFlowListeners, type A
 import { nodeTypes } from '../../plugins/node-types';
 import { pluginRegistry } from '../../plugins/registry';
 import { MessageSquare, Play, Save, Settings, TerminalSquare } from 'lucide-react';
-import { ZoomSlider } from '@/components/react-flow/zoom-slider';
-import { SidebarProvider, SidebarTrigger } from '@flux/ui';
+import { ZoomSlider } from '@flux/ui/react-flow/zoom-slider';
+import { SidebarProvider, SidebarTrigger } from '@flux/ui/sidebar';
 import { FlowSidebar } from '../components/sidebar';
 import { NodeConfigPanel } from '../components/node-config-panel';
 import { WorkflowSettingsPanel } from '../components/workflow-settings-panel';
-import { Button } from '@flux/ui';
+import { Button } from '@flux/ui/button';
 import { useWhatsAppSession } from '../../plugins/whatsapp/use-whatsapp-session';
 import { WaSessionDialog } from '../../plugins/whatsapp/wa-session-dialog';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@flux/ui';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@flux/ui/resizable';
 import { ExecutionInspector } from '../components/execution-inspector';
 import { TerminalConsole } from '../../../terminal/ui/components/terminal-console';
 import { useTerminalStore } from '../../../terminal/core/use-terminal-store';
 import { Bug } from 'lucide-react';
-import { Badge } from '@flux/ui';
-import { Spinner } from '@flux/ui';
+import { Badge } from '@flux/ui/badge';
+import { Spinner } from '@flux/ui/spinner';
 import { toast } from 'sonner';
 
 // Mini-estados de UI por tab (atoms): sobreviven al cambio de tab y se liberan al cerrarlo.

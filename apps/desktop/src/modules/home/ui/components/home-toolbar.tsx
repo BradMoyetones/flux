@@ -2,17 +2,17 @@
 
 import { memo, useEffect, useRef } from 'react';
 import { ArrowUpDown, Check, LayoutGrid, List, Search, X } from 'lucide-react';
-import { Button } from '@flux/ui';
+import { Button } from '@flux/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@flux/ui';
-import { Input } from '@flux/ui';
-import { Kbd } from '@flux/ui';
-import { Tabs, TabsList, TabsTrigger } from '@flux/ui';
+} from '@flux/ui/dropdown-menu';
+import { Input } from '@flux/ui/input';
+import { Kbd } from '@flux/ui/kbd';
+import { Tabs, TabsList, TabsTrigger } from '@flux/ui/tabs';
 import { useHomeStore, ViewMode } from '../../stores/home-store';
 
 export const HomeToolbar = memo(function HomeToolbar() {

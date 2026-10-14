@@ -1,6 +1,6 @@
 import { useFlowStore } from '../../core/use-flow-store';
-import { ScrollArea } from '@flux/ui';
-import { Badge } from '@flux/ui';
+import { ScrollArea } from '@flux/ui/scroll-area';
+import { Badge } from '@flux/ui/badge';
 import { Bug, CheckCircle2, CircleDashed, AlertCircle, Ban, MinusCircle } from 'lucide-react';
 
 export function ExecutionInspector() {

@@ -4,7 +4,7 @@ import { api } from '@flux/api';
 import { TabBar } from './tab-bar';
 import { WindowControls } from './window-controls';
 import { Settings } from 'lucide-react';
-import { cn } from '@/shared/utils/utils';
+import { cn } from 'cn';
 import { useTabs } from '@/shared/state/tabs';
 import { Logo } from '../logo';
 

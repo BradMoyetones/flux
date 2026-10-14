@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@flux/ui'
-import { Label } from '@flux/ui'
-import { Input } from '@flux/ui'
-import { Tabs, TabsList, TabsTrigger } from '@flux/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@flux/ui/card'
+import { Label } from '@flux/ui/label'
+import { Input } from '@flux/ui/input'
+import { Tabs, TabsList, TabsTrigger } from '@flux/ui/tabs'
 import { useFlowStore } from "@/modules/flows/core/use-flow-store"
-import { Button } from '@flux/ui'
+import { Button } from '@flux/ui/button'
 import { Trigger } from "@/types/data"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui/select'
 import {
     Folder,
     Play,
@@ -18,12 +18,12 @@ import {
     Trash2,
     Workflow,
 } from "lucide-react"
-import { cn } from "@/shared/utils/utils"
+import { cn } from "cn"
 import { useHomeStore } from "@/modules/home/stores/home-store"
 import { FluxEntry, Workspace } from "@/types/data"
 import { workspaceName } from "@/modules/home/lib/format"
 import { toast } from "sonner"
-import { Spinner } from '@flux/ui'
+import { Spinner } from '@flux/ui/spinner'
 
 export function WorkspacesSection() {
     const { workspaces, workflows, loadData, addWorkspace } = useHomeStore()

@@ -1,8 +1,8 @@
 'use client';
 
 import { FolderOpen, Plus, Search } from 'lucide-react';
-import { Button } from '@flux/ui';
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@flux/ui';
+import { Button } from '@flux/ui/button';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@flux/ui/empty';
 import { useHomeStore } from '../../stores/home-store';
 
 export function HomeEmptyState({ query }: { query: string }) {

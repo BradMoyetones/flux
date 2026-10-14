@@ -1,11 +1,11 @@
 import { X } from "lucide-react"
-import { Button } from '@flux/ui'
+import { Button } from '@flux/ui/button'
 import { useFlowStore } from "../../core/use-flow-store"
-import { ScrollArea } from '@flux/ui'
-import { Textarea } from '@flux/ui'
-import { Input } from '@flux/ui'
-import { Label } from '@flux/ui'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui'
+import { ScrollArea } from '@flux/ui/scroll-area'
+import { Textarea } from '@flux/ui/textarea'
+import { Input } from '@flux/ui/input'
+import { Label } from '@flux/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui/select'
 import { useTimezones } from "@/shared/hooks/use-timezones"
 import { useUserStore } from "@/shared/stores/user-store"
 

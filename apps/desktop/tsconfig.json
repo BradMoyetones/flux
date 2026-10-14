@@ -25,12 +25,10 @@
             "@/*": ["./src/*"],
             "@releases/*": ["./releases/*"],
             "@flux/api": ["../../packages/api/src/index.ts"],
-            "@flux/ui": ["../../packages/ui/src/index.tsx"]
         }
     },
     "include": [
         "src",
-        "../../packages/ui/src/index.tsx",
         "../../packages/api/src/index.ts"
     ],
     "references": [

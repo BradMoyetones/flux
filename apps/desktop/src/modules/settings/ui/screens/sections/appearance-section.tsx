@@ -3,7 +3,7 @@
 import { useTheme, UseThemeProps } from "next-themes"
 import { Field, SectionCard, SegmentedControl, SettingRow } from "@/modules/settings/ui/components/controls"
 import { Monitor, Moon, Sun } from "lucide-react"
-import { cn } from "@/shared/utils/utils"
+import { cn } from "cn"
 import { useColorTheme } from "@/shared/contexts/color-theme-provider"
 import { COLORS, UiDensity } from "@/shared/utils/themes"
 

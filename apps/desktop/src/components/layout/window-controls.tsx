@@ -4,7 +4,7 @@ import { api } from '@flux/api';
 import { useInterval } from '@mantine/hooks';
 import { ButtonHTMLAttributes, useEffect, useState } from 'react';
 import { VscChromeMaximize, VscChromeMinimize, VscChromeClose, VscChromeRestore } from 'react-icons/vsc';
-import { cn } from '@/shared/utils/utils';
+import { cn } from 'cn';
 
 const ButtonWindowControl = (props: ButtonHTMLAttributes<HTMLButtonElement>) => {
     return (

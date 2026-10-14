@@ -2,7 +2,7 @@ import { type ReactNode, type ComponentProps } from "react";
 import { Panel, type NodeProps, type PanelPosition } from "@xyflow/react";
 
 import { BaseNode } from "@/components/react-flow/base-node";
-import { cn } from "@/shared/utils/utils";
+import { cn } from "cn";
 
 /* GROUP NODE Label ------------------------------------------------------- */
 

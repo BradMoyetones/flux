@@ -38,6 +38,11 @@
     .react-flow__attribution a:hover {
         color: var(--primary) !important;
     }
+
+    button:not(:disabled),
+    [role="button"]:not(:disabled) {
+        cursor: pointer;
+    }
 }
 
 .layout {

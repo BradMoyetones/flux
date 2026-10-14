@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { X } from 'lucide-react';
 
-import { cn } from '@/shared/utils/utils';
+import { cn } from 'cn';
 import { FLOW_ROUTE_PATTERN, getTabIcon, resolveRoute } from '@/shared/router/route-meta';
 import { useTabs } from '@/shared/state/tabs';
 import { useFlowDirty, isFlowTabDirty } from '@/modules/flows/core/use-flow-store';

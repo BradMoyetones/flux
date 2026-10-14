@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { Input } from '@flux/ui';
-import { Button } from '@flux/ui';
+import { Input } from '@flux/ui/input';
+import { Button } from '@flux/ui/button';
 import { Plus, Trash2 } from "lucide-react";
 
 interface KVPair {

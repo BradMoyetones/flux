@@ -1,4 +1,4 @@
-import { Button } from '@flux/ui';
+import { Button } from '@flux/ui/button';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check } from '@tauri-apps/plugin-updater';
 import { CircleCheck, Info } from 'lucide-react';

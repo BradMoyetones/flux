@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Input } from '@flux/ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui';
-import { Separator } from '@flux/ui';
-import { Textarea } from '@flux/ui';
-import { Button } from '@flux/ui';
+import { Input } from '@flux/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@flux/ui/select';
+import { Separator } from '@flux/ui/separator';
+import { Textarea } from '@flux/ui/textarea';
+import { Button } from '@flux/ui/button';
 import { Settings } from 'lucide-react';
 import { useWhatsAppSession } from './use-whatsapp-session';
 import { WaSessionDialog } from './wa-session-dialog';
 import { FieldGroup } from '../../ui/components/node-config-panel';
-import { Switch } from '@flux/ui';
-import { Label } from '@flux/ui';
+import { Switch } from '@flux/ui/switch';
+import { Label } from '@flux/ui/label';
 
 export function WhatsAppConfigFields({ config, update }: {
     config: Record<string, any>;

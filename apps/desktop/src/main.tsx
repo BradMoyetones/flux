@@ -4,9 +4,9 @@ import { ThemeProvider } from '@/components/layout/theme-provider';
 import { RouterProvider } from 'react-router';
 import { invoke } from '@tauri-apps/api/core';
 import router from './shared/router';
-import { Toaster } from '@flux/ui';
+import { Toaster } from '@flux/ui/sonner';
 import { useUpdater } from './ui/hooks/use-updater';
-import { TooltipProvider } from '@flux/ui';
+import { TooltipProvider } from '@flux/ui/tooltip';
 import { ColorThemeProvider } from './shared/contexts/color-theme-provider';
 import { useUserStore } from './shared/stores/user-store';
 
