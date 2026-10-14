@@ -28,6 +28,9 @@ jobs:
       - name: Build @flux/api
         run: pnpm --filter @flux/api build
 
+      - name: Build @flux/ui
+        run: pnpm --filter @flux/ui build
+
       - name: Unit tests
         run: pnpm --filter @flux/desktop test
 

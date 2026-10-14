@@ -101,6 +101,9 @@ jobs:
       - name: Build @flux/api
         run: pnpm --filter @flux/api build
 
+      - name: Build @flux/ui
+        run: pnpm --filter @flux/ui build
+
       - name: Read release notes
         id: notes
         shell: bash
