@@ -132,3 +132,40 @@ jobs:
           prerelease: false
           projectPath: apps/desktop
           args: ${{ matrix.args }}
+
+  sync-updater-notes:
+    name: Sync latest.json metadata
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Update latest.json with full markdown metadata
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ ! "$TAG" =~ ^v ]]; then
+            PKG_VERSION=$(node -p "require('./apps/desktop/package.json').version")
+            TAG="v$PKG_VERSION"
+          fi
+          echo "Sincronizando latest.json para la release: $TAG"
+
+          gh release download "$TAG" -p "latest.json" --clobber || true
+
+          if [ -f latest.json ] && [ -f apps/desktop/releases/latest.md ]; then
+            node -e '
+              const fs = require("fs");
+              const fullNotes = fs.readFileSync("apps/desktop/releases/latest.md", "utf-8");
+              const latestJson = JSON.parse(fs.readFileSync("latest.json", "utf-8"));
+              latestJson.notes = fullNotes;
+              fs.writeFileSync("latest.json", JSON.stringify(latestJson, null, 2) + "\n", "utf-8");
+            '
+            gh release upload "$TAG" latest.json --clobber
+            echo "✅ latest.json actualizado con éxito con la metadata YAML completa."
+          else
+            echo "⚠️ No se encontró latest.json o apps/desktop/releases/latest.md."
+          fi
